@@ -23,7 +23,7 @@ export default function ForgotPasswordPage() {
               Reset Password
             </h1>
             <p className="text-xl text-center opacity-90 max-w-md mb-8">
-              Don't worry, we'll help you regain access to your TransactX admin account
+              Don&apos;t worry, we&apos;ll help you regain access to your TransactX admin account
             </p>
             
             {/* Feature Cards */}
