@@ -25,10 +25,8 @@ export function MobileNav() {
           {/* Logo */}
           <div className="flex items-center justify-between p-6 border-b">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg tx-bg-primary flex items-center justify-center">
-                <span className="text-white font-bold text-lg">T</span>
-              </div>
-              <span className="font-bold text-xl">TransaXcrt</span>
+              <img className="h-8 w-auto" src="/transactx.svg" alt="TransactX Logo" />
+              <span className="font-bold text-xl tx-text-primary">TransactX</span>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
               <X className="h-5 w-5" />
