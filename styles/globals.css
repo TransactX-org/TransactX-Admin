@@ -175,6 +175,16 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Ensure light theme is applied by default */
+  :root:not(.dark) {
+    color-scheme: light;
+  }
+  
+  /* Only apply dark theme when explicitly set */
+  .dark {
+    color-scheme: dark;
+  }
 }
 
 /* Sleek Dark Mode Enhancements */
