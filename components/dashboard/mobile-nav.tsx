@@ -22,12 +22,9 @@ export function MobileNav() {
       </SheetTrigger>
       <SheetContent side="left" className="w-72 p-0">
         <div className="flex flex-col h-full">
-          {/* Logo */}
+          {/* Header */}
           <div className="flex items-center justify-between p-6 border-b">
-            <div className="flex items-center gap-2">
-              <img className="h-8 w-auto" src="/transactx.svg" alt="TransactX Logo" />
-              <span className="font-bold text-xl tx-text-primary">TransactX</span>
-            </div>
+            <h2 className="text-lg font-semibold">Menu</h2>
             <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
               <X className="h-5 w-5" />
             </Button>

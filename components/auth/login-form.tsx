@@ -60,7 +60,7 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="border border-gray-200 shadow-xl animate-slide-up bg-white/95 backdrop-blur-sm">
+    <Card className="border-0 shadow-none animate-slide-up">
       <CardHeader className="text-center pb-6">
         <CardTitle className="text-2xl font-bold text-gray-900">Welcome Back</CardTitle>
         <CardDescription className="text-gray-600">Sign in to your TransactX admin account</CardDescription>
