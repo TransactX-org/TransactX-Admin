@@ -60,15 +60,15 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="border-2 animate-slide-up">
-      <CardHeader>
-        <CardTitle>Sign In</CardTitle>
-        <CardDescription>Enter your credentials to access the admin panel</CardDescription>
+    <Card className="border border-gray-200 shadow-xl animate-slide-up bg-white/95 backdrop-blur-sm">
+      <CardHeader className="text-center pb-6">
+        <CardTitle className="text-2xl font-bold text-gray-900">Welcome Back</CardTitle>
+        <CardDescription className="text-gray-600">Sign in to your TransactX admin account</CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <CardContent className="pt-0">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-sm font-semibold text-gray-700">Email Address</Label>
             <Input
               id="email"
               type="email"
@@ -78,13 +78,13 @@ export function LoginForm() {
                 setEmail(e.target.value)
                 setErrors({ ...errors, email: undefined })
               }}
-              className={errors.email ? "border-destructive" : ""}
+              className={`h-12 text-base ${errors.email ? "border-destructive" : "border-gray-300 focus:border-tx-primary"}`}
             />
             {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="text-sm font-semibold text-gray-700">Password</Label>
             <div className="relative">
               <Input
                 id="password"
@@ -95,7 +95,7 @@ export function LoginForm() {
                   setPassword(e.target.value)
                   setErrors({ ...errors, password: undefined })
                 }}
-                className={errors.password ? "border-destructive" : ""}
+                className={`h-12 text-base ${errors.password ? "border-destructive" : "border-gray-300 focus:border-tx-primary"}`}
               />
               <button
                 type="button"
@@ -108,34 +108,35 @@ export function LoginForm() {
             {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pt-2">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="remember"
                 checked={rememberMe}
                 onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                className="border-gray-300"
               />
-              <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
+              <Label htmlFor="remember" className="text-sm font-medium text-gray-600 cursor-pointer">
                 Remember me
               </Label>
             </div>
-            <a href="/forgot-password" className="text-sm tx-text-primary hover:underline">
+            <a href="/forgot-password" className="text-sm font-medium tx-text-primary hover:underline transition-colors">
               Forgot password?
             </a>
           </div>
 
           <Button
             type="submit"
-            className="w-full tx-bg-primary hover:opacity-90 transition-opacity"
+            className="w-full h-12 tx-bg-primary hover:opacity-90 transition-all duration-200 text-base font-semibold"
             disabled={isLoading}
           >
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Signing in...
               </>
             ) : (
-              "Sign In"
+              "Sign In to Dashboard"
             )}
           </Button>
         </form>
