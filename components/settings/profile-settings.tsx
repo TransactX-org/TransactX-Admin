@@ -19,9 +19,8 @@ export function ProfileSettings() {
         <CardContent className="space-y-6">
           {/* Profile Picture */}
           <div className="flex items-center gap-6">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src="/placeholder.svg?height=96&width=96" />
-              <AvatarFallback className="text-2xl">AD</AvatarFallback>
+            <Avatar className="h-24 w-24 bg-tx-primary/10">
+              <AvatarFallback className="tx-bg-primary text-white text-2xl font-semibold">AU</AvatarFallback>
             </Avatar>
             <div className="space-y-2">
               <Button variant="outline" size="sm">

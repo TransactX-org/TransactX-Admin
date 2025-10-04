@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useSidebar } from "@/contexts/sidebar-context"
 import {
   LayoutDashboard,
   CreditCard,
@@ -59,11 +60,18 @@ export const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { isCollapsed } = useSidebar()
 
   return (
-    <aside className="hidden md:flex w-64 flex-col border-r border-border bg-background">
+    <aside className={cn(
+      "hidden md:flex flex-col border-r border-border bg-background sleek-sidebar transition-all duration-300",
+      isCollapsed ? "w-16" : "w-64"
+    )}>
       {/* Logo */}
-      <div className="flex items-center gap-3 p-6 border-b border-border">
+      <div className={cn(
+        "flex items-center border-b border-border transition-all duration-300",
+        isCollapsed ? "justify-center p-4" : "gap-3 p-6"
+      )}>
         <img className="h-10 w-auto" src="/transactx.svg" alt="TransactX Logo" />
       </div>
 
@@ -78,16 +86,18 @@ export function Sidebar() {
               <Link
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm font-medium",
+                  "flex items-center rounded-lg transition-all text-sm font-medium",
+                  isCollapsed ? "justify-center px-3 py-2.5" : "gap-3 px-4 py-2.5",
                   isActive ? "tx-bg-primary text-white" : "hover:bg-muted text-muted-foreground hover:text-foreground",
                 )}
+                title={isCollapsed ? item.label : undefined}
               >
                 <Icon className="h-5 w-5" />
-                <span>{item.label}</span>
+                {!isCollapsed && <span>{item.label}</span>}
               </Link>
 
               {/* Sub-navigation for Services */}
-              {item.children && isActive && (
+              {item.children && isActive && !isCollapsed && (
                 <div className="ml-4 mt-1 space-y-1 border-l border-border pl-4">
                   {item.children.map((child) => {
                     const ChildIcon = child.icon
@@ -117,9 +127,16 @@ export function Sidebar() {
 
       {/* Logout */}
       <div className="p-4 border-t border-border">
-        <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground">
-          <LogOut className="h-5 w-5 mr-3" />
-          Logout
+        <Button 
+          variant="ghost" 
+          className={cn(
+            "w-full text-muted-foreground hover:text-foreground",
+            isCollapsed ? "justify-center px-3" : "justify-start"
+          )}
+          title={isCollapsed ? "Logout" : undefined}
+        >
+          <LogOut className="h-5 w-5" />
+          {!isCollapsed && <span className="ml-3">Logout</span>}
         </Button>
       </div>
     </aside>

@@ -53,9 +53,8 @@ export function UserDetailsModal({ userId, onClose }: UserDetailsModalProps) {
         <div className="space-y-6">
           {/* User Header */}
           <div className="flex items-start gap-4">
-            <Avatar className="h-20 w-20">
-              <AvatarImage src="/placeholder.svg?height=80&width=80" />
-              <AvatarFallback className="text-2xl">
+            <Avatar className="h-20 w-20 bg-tx-primary/10">
+              <AvatarFallback className="tx-bg-primary text-white text-2xl font-semibold">
                 {user.name
                   .split(" ")
                   .map((n) => n[0])

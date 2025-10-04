@@ -93,7 +93,7 @@ export function TransactionsTable() {
 
   return (
     <>
-      <Card className="border-2">
+      <Card className="border-2 sleek-card">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>All Transactions</CardTitle>
@@ -109,7 +109,7 @@ export function TransactionsTable() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <Table>
+            <Table className="sleek-table">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
@@ -144,7 +144,7 @@ export function TransactionsTable() {
               </TableHeader>
               <TableBody>
                 {mockTransactions.map((transaction) => (
-                  <TableRow key={transaction.id} className="hover:bg-accent transition-colors cursor-pointer">
+                  <TableRow key={transaction.id} className="hover:bg-accent transition-colors cursor-pointer sleek-transition">
                     <TableCell>
                       <Checkbox
                         checked={selectedRows.includes(transaction.id)}

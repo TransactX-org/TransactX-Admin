@@ -53,7 +53,7 @@ const activities = [
 
 export function RecentActivity() {
   return (
-    <Card className="border-2">
+    <Card className="border-2 sleek-card">
       <CardHeader>
         <CardTitle>Recent Activity</CardTitle>
         <CardDescription>Latest transactions from your users</CardDescription>
@@ -63,12 +63,11 @@ export function RecentActivity() {
           {activities.map((activity) => (
             <div
               key={activity.id}
-              className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors"
+              className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors sleek-transition"
             >
               <div className="flex items-center gap-4">
-                <Avatar>
-                  <AvatarImage src={`/generic-placeholder-graphic.png?height=40&width=40`} />
-                  <AvatarFallback>
+                <Avatar className="bg-tx-primary/10">
+                  <AvatarFallback className="tx-bg-primary text-white font-semibold">
                     {activity.user
                       .split(" ")
                       .map((n) => n[0])

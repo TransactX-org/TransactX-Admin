@@ -13,7 +13,7 @@ export function TransactionsFilters() {
   const [searchQuery, setSearchQuery] = useState("")
 
   return (
-    <Card className="border-2">
+    <Card className="border-2 sleek-card">
       <CardContent className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Search */}
@@ -25,7 +25,7 @@ export function TransactionsFilters() {
                 placeholder="Transaction ID, user..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 sleek-input sleek-focus"
               />
             </div>
           </div>
