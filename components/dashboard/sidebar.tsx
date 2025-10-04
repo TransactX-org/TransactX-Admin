@@ -1,0 +1,130 @@
+"use client"
+
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
+import {
+  LayoutDashboard,
+  CreditCard,
+  Users,
+  BarChart3,
+  Settings,
+  LogOut,
+  Smartphone,
+  Wifi,
+  Zap,
+  Tv,
+  Gift,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+
+export const navItems = [
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    label: "Transactions",
+    href: "/dashboard/transactions",
+    icon: CreditCard,
+  },
+  {
+    label: "Users",
+    href: "/dashboard/users",
+    icon: Users,
+  },
+  {
+    label: "Services",
+    href: "/dashboard/services",
+    icon: Gift,
+    children: [
+      { label: "Airtime", href: "/dashboard/services/airtime", icon: Smartphone },
+      { label: "Data", href: "/dashboard/services/data", icon: Wifi },
+      { label: "Electricity", href: "/dashboard/services/electricity", icon: Zap },
+      { label: "TV", href: "/dashboard/services/tv", icon: Tv },
+    ],
+  },
+  {
+    label: "Reports",
+    href: "/dashboard/reports",
+    icon: BarChart3,
+  },
+  {
+    label: "Settings",
+    href: "/dashboard/settings",
+    icon: Settings,
+  },
+]
+
+export function Sidebar() {
+  const pathname = usePathname()
+
+  return (
+    <aside className="hidden md:flex w-64 flex-col border-r border-border bg-background">
+      {/* Logo */}
+      <div className="flex items-center gap-3 p-6 border-b border-border">
+        <div className="h-10 w-10 rounded-lg tx-bg-primary flex items-center justify-center">
+          <span className="text-white font-bold text-lg">TX</span>
+        </div>
+        <span className="font-bold text-xl">TransactX</span>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-1">
+        {navItems.map((item) => {
+          const Icon = item.icon
+          const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+
+          return (
+            <div key={item.href}>
+              <Link
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm font-medium",
+                  isActive ? "tx-bg-primary text-white" : "hover:bg-muted text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                <span>{item.label}</span>
+              </Link>
+
+              {/* Sub-navigation for Services */}
+              {item.children && isActive && (
+                <div className="ml-4 mt-1 space-y-1 border-l border-border pl-4">
+                  {item.children.map((child) => {
+                    const ChildIcon = child.icon
+                    const isChildActive = pathname === child.href
+                    return (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm",
+                          isChildActive
+                            ? "tx-text-primary font-medium bg-muted"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                        )}
+                      >
+                        <ChildIcon className="h-4 w-4" />
+                        <span>{child.label}</span>
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </nav>
+
+      {/* Logout */}
+      <div className="p-4 border-t border-border">
+        <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground">
+          <LogOut className="h-5 w-5 mr-3" />
+          Logout
+        </Button>
+      </div>
+    </aside>
+  )
+}
