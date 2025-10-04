@@ -3,41 +3,19 @@ import { LoginForm } from "@/components/auth/login-form"
 export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
-      {/* Left Side - Fintech Background Section */}
+      {/* Left Side - Image Section */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-tx-primary via-tx-secondary to-blue-600">
-          {/* Fintech Pattern Overlay */}
-          <div className="absolute inset-0 opacity-10">
-            {/* Geometric Shapes */}
-            <div className="absolute top-10 left-10 w-32 h-32 border-2 border-white rounded-full"></div>
-            <div className="absolute top-32 right-20 w-24 h-24 border-2 border-white rounded-full"></div>
-            <div className="absolute bottom-20 left-16 w-20 h-20 border-2 border-white rounded-full"></div>
-            <div className="absolute bottom-32 right-32 w-16 h-16 border-2 border-white rounded-full"></div>
-            
-            {/* Additional Fintech Elements */}
-            <div className="absolute top-1/2 left-8 w-12 h-12 border border-white rounded-lg rotate-45"></div>
-            <div className="absolute bottom-1/4 right-8 w-8 h-8 border border-white rounded-lg rotate-12"></div>
-            <div className="absolute top-1/4 right-1/4 w-6 h-6 border border-white rounded-full"></div>
-            
-            {/* Grid Pattern */}
-            <div className="absolute inset-0" style={{
-              backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)`,
-              backgroundSize: '20px 20px'
-            }}></div>
-            
-            {/* Floating Elements */}
-            <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white rounded-full animate-pulse"></div>
-            <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-white rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
-            <div className="absolute bottom-1/3 left-1/3 w-1.5 h-1.5 bg-white rounded-full animate-pulse" style={{animationDelay: '2s'}}></div>
-            <div className="absolute bottom-1/4 right-1/4 w-1 h-1 bg-white rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
-            
-            {/* Data Flow Lines */}
-            <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-30"></div>
-            <div className="absolute top-1/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-20"></div>
-            <div className="absolute bottom-1/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-20"></div>
-          </div>
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')"
+          }}
+        >
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-tx-primary/90 via-tx-secondary/80 to-blue-900/90"></div>
           
-          <div className="absolute inset-0 bg-black/30"></div>
+          {/* Content */}
           <div className="relative z-10 flex flex-col items-center justify-center h-full p-12 text-white">
             <img className="h-20 w-auto mb-8" src="/transactx.svg" alt="TransactX Logo" />
             <h1 className="text-4xl font-bold mb-4 text-center">
