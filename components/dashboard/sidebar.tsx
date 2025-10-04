@@ -65,7 +65,6 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex items-center gap-3 p-6 border-b border-border">
         <img className="h-10 w-auto" src="/transactx.svg" alt="TransactX Logo" />
-        <span className="font-bold text-xl tx-text-primary">TransactX</span>
       </div>
 
       {/* Navigation */}

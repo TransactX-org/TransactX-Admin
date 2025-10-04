@@ -1,6 +1,6 @@
-import { LoginForm } from "@/components/auth/login-form"
+import { ForgotPasswordForm } from "@/components/auth/forgot-password-form"
 
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Image Section */}
@@ -20,24 +20,14 @@ export default function LoginPage() {
           <div className="relative z-10 flex flex-col items-center justify-center h-full p-12 text-white">
             <img className="h-20 w-auto mb-8" src="/transactx.svg" alt="TransactX Logo" />
             <h1 className="text-4xl font-bold mb-4 text-center">
-              TransactX Admin
+              Reset Password
             </h1>
             <p className="text-xl text-center opacity-90 max-w-md mb-8">
-              Monitor bank account transactions in real time, manage payments, and oversee financial operations
+              Don't worry, we'll help you regain access to your TransactX admin account
             </p>
             
             {/* Feature Cards */}
             <div className="grid grid-cols-2 gap-4 w-full max-w-md">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
-                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mb-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-sm">Real-time</h3>
-                <p className="text-xs opacity-75">Live monitoring</p>
-              </div>
-              
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mb-2">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -51,21 +41,32 @@ export default function LoginPage() {
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mb-2">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
                   </svg>
                 </div>
-                <h3 className="font-semibold text-sm">Analytics</h3>
-                <p className="text-xs opacity-75">Smart insights</p>
+                <h3 className="font-semibold text-sm">Email</h3>
+                <p className="text-xs opacity-75">Reset via email</p>
               </div>
               
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mb-2">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"/>
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
                   </svg>
                 </div>
-                <h3 className="font-semibold text-sm">24/7</h3>
-                <p className="text-xs opacity-75">Always available</p>
+                <h3 className="font-semibold text-sm">Quick</h3>
+                <p className="text-xs opacity-75">Fast recovery</p>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mb-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-sm">Help</h3>
+                <p className="text-xs opacity-75">24/7 support</p>
               </div>
             </div>
           </div>
@@ -73,15 +74,15 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side - Form Section */}
-      <div className="w-full lg:w-[70%] flex flex-col justify-center p-8 min-h-screen">
-        <div className="w-full max-w-2xl mx-auto">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center p-8 min-h-screen">
+        <div className="w-full max-w-md mx-auto">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
             <img className="h-12 w-auto mx-auto mb-4" src="/transactx.svg" alt="TransactX Logo" />
             <h1 className="text-2xl font-bold tx-text-primary">TransactX Admin</h1>
           </div>
           
-          <LoginForm />
+          <ForgotPasswordForm />
           
           {/* Footer */}
           <div className="mt-8 text-center text-sm text-gray-500">
