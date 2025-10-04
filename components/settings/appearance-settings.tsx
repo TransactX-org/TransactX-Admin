@@ -10,6 +10,9 @@ import { Sun, Moon, Monitor } from "lucide-react"
 export function AppearanceSettings() {
   const { theme, setTheme } = useTheme()
   const { isCollapsed, setCollapsed } = useSidebar()
+  
+  // Ensure we have a valid theme value, defaulting to 'light'
+  const currentTheme = theme || 'light'
 
   return (
     <div className="space-y-6">
@@ -19,7 +22,7 @@ export function AppearanceSettings() {
           <CardDescription>Choose your preferred theme</CardDescription>
         </CardHeader>
         <CardContent>
-          <RadioGroup value={theme} onValueChange={setTheme} className="grid grid-cols-3 gap-4">
+          <RadioGroup value={currentTheme} onValueChange={setTheme} className="grid grid-cols-3 gap-4">
             <div>
               <RadioGroupItem value="light" id="light" className="peer sr-only" />
               <Label
