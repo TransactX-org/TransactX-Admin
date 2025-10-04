@@ -73,7 +73,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side - Form Section */}
-      <div className="w-full lg:w-[70%] flex flex-col justify-center p-8 min-h-screen">
+      <div className="w-full lg:w-[50%] flex flex-col justify-center p-8 min-h-screen">
         <div className="w-full max-w-2xl mx-auto">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
