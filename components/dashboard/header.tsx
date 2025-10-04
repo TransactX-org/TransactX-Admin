@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Bell, Search } from "lucide-react"
+import { Bell, Search, PanelLeft } from "lucide-react"
+import { useSidebar } from "@/contexts/sidebar-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -18,12 +19,23 @@ import { MobileNav } from "./mobile-nav"
 
 export function Header() {
   const [notificationCount] = useState(3)
+  const { toggleSidebar } = useSidebar()
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background">
       <div className="flex h-16 items-center justify-between px-4 lg:px-6">
         <div className="flex items-center gap-4">
           <MobileNav />
+          
+          {/* Sidebar Toggle - Desktop Only */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className="hidden md:flex"
+          >
+            <PanelLeft className="h-5 w-5" />
+          </Button>
           
           {/* Search */}
           <div className="max-w-xl">
@@ -32,7 +44,7 @@ export function Header() {
               <Input
                 type="search"
                 placeholder="Search transactions, users, services..."
-                className="pl-10 border-border bg-muted/30 w-80"
+                className="pl-10 border-border bg-muted/30 w-80 sleek-input sleek-focus"
               />
             </div>
           </div>
@@ -84,7 +96,6 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-muted/50 transition-all duration-200">
                 <Avatar className="h-10 w-10 border-2 border-border hover:border-tx-primary/50 transition-all duration-200">
-                  <AvatarImage src="/placeholder.svg?height=40&width=40" />
                   <AvatarFallback className="tx-bg-primary text-white font-semibold">AU</AvatarFallback>
                 </Avatar>
               </Button>

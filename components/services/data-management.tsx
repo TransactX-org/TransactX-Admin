@@ -60,7 +60,7 @@ export function DataManagement() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card className="sleek-card">
           <CardHeader className="pb-3">
             <CardDescription>Total Purchases</CardDescription>
             <CardTitle className="text-2xl">2,456</CardTitle>
@@ -69,7 +69,7 @@ export function DataManagement() {
             <p className="text-xs text-muted-foreground">+18% from last month</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="sleek-card">
           <CardHeader className="pb-3">
             <CardDescription>Total Revenue</CardDescription>
             <CardTitle className="text-2xl">₦3.8M</CardTitle>
@@ -78,7 +78,7 @@ export function DataManagement() {
             <p className="text-xs text-muted-foreground">+15% from last month</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="sleek-card">
           <CardHeader className="pb-3">
             <CardDescription>Success Rate</CardDescription>
             <CardTitle className="text-2xl">99.2%</CardTitle>
@@ -87,7 +87,7 @@ export function DataManagement() {
             <p className="text-xs text-muted-foreground">+1% from last month</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="sleek-card">
           <CardHeader className="pb-3">
             <CardDescription>Active Plans</CardDescription>
             <CardTitle className="text-2xl">45</CardTitle>
@@ -99,7 +99,7 @@ export function DataManagement() {
       </div>
 
       {/* Filters and Table */}
-      <Card>
+      <Card className="sleek-card">
         <CardHeader>
           <CardTitle>Data Purchases</CardTitle>
           <CardDescription>View and manage all data bundle transactions</CardDescription>
@@ -113,12 +113,12 @@ export function DataManagement() {
                   placeholder="Search by user, phone, or transaction ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 sleek-input sleek-focus"
                 />
               </div>
             </div>
             <Select defaultValue="all">
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="w-full md:w-[180px] sleek-input">
                 <SelectValue placeholder="Network" />
               </SelectTrigger>
               <SelectContent>
@@ -129,14 +129,14 @@ export function DataManagement() {
                 <SelectItem value="9mobile">9mobile</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline">
+            <Button variant="outline" className="sleek-focus">
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
           </div>
 
-          <div className="border rounded-lg">
-            <Table>
+          <div className="border rounded-lg sleek-table">
+            <Table className="sleek-table">
               <TableHeader>
                 <TableRow>
                   <TableHead>Transaction ID</TableHead>
@@ -152,7 +152,7 @@ export function DataManagement() {
               </TableHeader>
               <TableBody>
                 {mockDataPurchases.map((purchase) => (
-                  <TableRow key={purchase.id}>
+                  <TableRow key={purchase.id} className="sleek-transition">
                     <TableCell className="font-medium">{purchase.id}</TableCell>
                     <TableCell>{purchase.user}</TableCell>
                     <TableCell>{purchase.phone}</TableCell>
@@ -175,7 +175,7 @@ export function DataManagement() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{purchase.date}</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" className="sleek-focus">
                         View
                       </Button>
                     </TableCell>

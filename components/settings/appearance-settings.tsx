@@ -4,10 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useTheme } from "next-themes"
+import { useSidebar } from "@/contexts/sidebar-context"
 import { Sun, Moon, Monitor } from "lucide-react"
 
 export function AppearanceSettings() {
   const { theme, setTheme } = useTheme()
+  const { isCollapsed, setCollapsed } = useSidebar()
 
   return (
     <div className="space-y-6">
@@ -22,7 +24,7 @@ export function AppearanceSettings() {
               <RadioGroupItem value="light" id="light" className="peer sr-only" />
               <Label
                 htmlFor="light"
-                className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-muted [&:has([data-state=checked])]:border-muted cursor-pointer sleek-transition"
               >
                 <Sun className="mb-3 h-6 w-6" />
                 Light
@@ -32,7 +34,7 @@ export function AppearanceSettings() {
               <RadioGroupItem value="dark" id="dark" className="peer sr-only" />
               <Label
                 htmlFor="dark"
-                className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-muted [&:has([data-state=checked])]:border-muted cursor-pointer sleek-transition"
               >
                 <Moon className="mb-3 h-6 w-6" />
                 Dark
@@ -42,7 +44,7 @@ export function AppearanceSettings() {
               <RadioGroupItem value="system" id="system" className="peer sr-only" />
               <Label
                 htmlFor="system"
-                className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-muted [&:has([data-state=checked])]:border-muted cursor-pointer sleek-transition"
               >
                 <Monitor className="mb-3 h-6 w-6" />
                 System
@@ -52,7 +54,7 @@ export function AppearanceSettings() {
         </CardContent>
       </Card>
 
-      <Card className="border-2">
+      <Card className="border-2 sleek-card">
         <CardHeader>
           <CardTitle>Display</CardTitle>
           <CardDescription>Customize how content is displayed</CardDescription>
@@ -60,7 +62,7 @@ export function AppearanceSettings() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Sidebar</Label>
-            <RadioGroup defaultValue="expanded">
+            <RadioGroup value={isCollapsed ? "collapsed" : "expanded"} onValueChange={(value) => setCollapsed(value === "collapsed")}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="expanded" id="expanded" />
                 <Label htmlFor="expanded">Expanded</Label>
