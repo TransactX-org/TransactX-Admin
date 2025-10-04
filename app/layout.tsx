@@ -13,8 +13,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: "TransaXcrt Admin Dashboard",
-  description: "Modern admin panel for transaction management",
+  title: "TransactX Admin Dashboard",
+  description: "Monitor bank account transactions in real time, manage payments, and oversee financial operations with TransactX admin panel",
   generator: "Next.js",
 }
 

@@ -53,7 +53,7 @@ export function LoginForm() {
       setIsLoading(false)
       toast({
         title: "Login successful",
-        description: "Welcome back to TransaXcrt Admin",
+        description: "Welcome back to TransactX Admin",
       })
       router.push("/dashboard")
     }, 1500)
@@ -72,7 +72,7 @@ export function LoginForm() {
             <Input
               id="email"
               type="email"
-              placeholder="admin@transaxcrt.com"
+              placeholder="admin@transactx.com"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value)

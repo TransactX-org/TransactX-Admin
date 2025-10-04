@@ -26,10 +26,8 @@ export function Header() {
 
         {/* Logo - Desktop */}
         <div className="hidden md:flex items-center gap-3">
-          <div className="h-9 w-9 rounded-lg tx-bg-primary flex items-center justify-center">
-            <span className="text-white font-bold text-lg">TX</span>
-          </div>
-          <span className="font-bold text-xl">TransactX</span>
+          <img className="h-9 w-auto" src="/transactx.svg" alt="TransactX Logo" />
+          <span className="font-bold text-xl tx-text-primary">TransactX</span>
         </div>
 
         {/* Search */}

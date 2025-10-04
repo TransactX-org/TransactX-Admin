@@ -115,6 +115,59 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* TransactX Brand Colors */
+:root {
+  --tx-primary: #AB0B4B;
+  --tx-secondary: #457EAC;
+  --tx-primary-hover: #8A0939;
+  --tx-secondary-hover: #3A6B95;
+}
+
+.tx-bg-primary {
+  background-color: var(--tx-primary);
+}
+
+.tx-text-primary {
+  color: var(--tx-primary);
+}
+
+.tx-bg-secondary {
+  background-color: var(--tx-secondary);
+}
+
+.tx-text-secondary {
+  color: var(--tx-secondary);
+}
+
+.tx-border-primary {
+  border-color: var(--tx-primary);
+}
+
+.tx-border-secondary {
+  border-color: var(--tx-secondary);
+}
+
+/* TransactX Button Styles */
+.tx-btn-primary {
+  @apply px-4 py-2 rounded-md font-medium transition-colors duration-200;
+  background-color: var(--tx-primary);
+  color: white;
+}
+
+.tx-btn-primary:hover {
+  background-color: var(--tx-primary-hover);
+}
+
+.tx-btn-secondary {
+  @apply px-4 py-2 rounded-md font-medium transition-colors duration-200;
+  background-color: var(--tx-secondary);
+  color: white;
+}
+
+.tx-btn-secondary:hover {
+  background-color: var(--tx-secondary-hover);
+}
+
 @layer base {
   * {
     @apply border-box;

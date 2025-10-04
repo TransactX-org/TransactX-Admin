@@ -64,10 +64,8 @@ export function Sidebar() {
     <aside className="hidden md:flex w-64 flex-col border-r border-border bg-background">
       {/* Logo */}
       <div className="flex items-center gap-3 p-6 border-b border-border">
-        <div className="h-10 w-10 rounded-lg tx-bg-primary flex items-center justify-center">
-          <span className="text-white font-bold text-lg">TX</span>
-        </div>
-        <span className="font-bold text-xl">TransactX</span>
+        <img className="h-10 w-auto" src="/transactx.svg" alt="TransactX Logo" />
+        <span className="font-bold text-xl tx-text-primary">TransactX</span>
       </div>
 
       {/* Navigation */}
