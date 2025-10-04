@@ -13,12 +13,12 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
 
-  /* Purple as primary color */
-  --primary: oklch(0.55 0.25 290);
+  /* TransactX Primary Color */
+  --primary: oklch(0.45 0.15 15);
   --primary-foreground: oklch(1 0 0);
 
-  /* Black as secondary */
-  --secondary: oklch(0.145 0 0);
+  /* TransactX Secondary Color */
+  --secondary: oklch(0.55 0.12 240);
   --secondary-foreground: oklch(1 0 0);
 
   --muted: oklch(0.97 0 0);
@@ -31,10 +31,10 @@
   /* Light borders only */
   --border: oklch(0.95 0 0);
   --input: oklch(0.95 0 0);
-  --ring: oklch(0.55 0.25 290);
+  --ring: oklch(0.45 0.15 15);
 
-  --chart-1: oklch(0.55 0.25 290);
-  --chart-2: oklch(0.6 0.2 320);
+  --chart-1: oklch(0.45 0.15 15);
+  --chart-2: oklch(0.55 0.12 240);
   --chart-3: oklch(0.5 0.2 260);
   --chart-4: oklch(0.65 0.15 300);
   --chart-5: oklch(0.45 0.2 280);
@@ -42,12 +42,12 @@
 
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.55 0.25 290);
+  --sidebar-primary: oklch(0.45 0.15 15);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.145 0 0);
   --sidebar-border: oklch(0.95 0 0);
-  --sidebar-ring: oklch(0.55 0.25 290);
+  --sidebar-ring: oklch(0.45 0.15 15);
 }
 
 .dark {
@@ -57,7 +57,7 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.18 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.65 0.25 290);
+  --primary: oklch(0.55 0.15 15);
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.25 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -69,20 +69,20 @@
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(0.25 0 0);
   --input: oklch(0.25 0 0);
-  --ring: oklch(0.65 0.25 290);
-  --chart-1: oklch(0.65 0.25 290);
-  --chart-2: oklch(0.7 0.2 320);
+  --ring: oklch(0.55 0.15 15);
+  --chart-1: oklch(0.55 0.15 15);
+  --chart-2: oklch(0.65 0.12 240);
   --chart-3: oklch(0.6 0.2 260);
   --chart-4: oklch(0.75 0.15 300);
   --chart-5: oklch(0.55 0.2 280);
   --sidebar: oklch(0.18 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.65 0.25 290);
+  --sidebar-primary: oklch(0.55 0.15 15);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.25 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.25 0 0);
-  --sidebar-ring: oklch(0.65 0.25 290);
+  --sidebar-ring: oklch(0.55 0.15 15);
 }
 
 @theme inline {
@@ -145,23 +145,23 @@
 
 /* TransactX Utility Classes */
 .tx-bg-primary {
-  background-color: oklch(0.55 0.25 290);
+  background-color: #AB0B4B;
 }
 
 .tx-text-primary {
-  color: oklch(0.55 0.25 290);
+  color: #AB0B4B;
 }
 
 .tx-bg-secondary {
-  background-color: oklch(0.145 0 0);
+  background-color: #457EAC;
 }
 
 .tx-text-secondary {
-  color: oklch(0.145 0 0);
+  color: #457EAC;
 }
 
 .tx-border-primary {
-  border-color: oklch(0.55 0.25 290);
+  border-color: #AB0B4B;
 }
 
 /* Background Ripple Effect Animations */

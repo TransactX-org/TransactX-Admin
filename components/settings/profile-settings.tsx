@@ -44,7 +44,7 @@ export function ProfileSettings() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="admin@transaxcrt.com" defaultValue="admin@transaxcrt.com" />
+              <Input id="email" type="email" placeholder="admin@transactx.com" defaultValue="admin@transactx.com" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
