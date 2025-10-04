@@ -13,7 +13,7 @@ export default function LoginPage() {
           }}
         >
           {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-tx-primary/90 via-tx-secondary/80 to-blue-900/90"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-tx-primary/90 via-tx-secondary/80 to-tx-primary/90"></div>
           
           {/* Content */}
           <div className="relative z-10 flex flex-col items-center justify-center h-full p-12 text-white">
