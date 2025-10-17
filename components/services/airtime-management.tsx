@@ -52,53 +52,53 @@ export function AirtimeManagement() {
   const [searchQuery, setSearchQuery] = useState("")
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Airtime Management</h1>
-          <p className="text-muted-foreground mt-2">Manage airtime purchases and recharge cards</p>
+          <h1 className="text-xl sm:text-3xl font-bold tracking-tight">Airtime Management</h1>
+          <p className="text-muted-foreground mt-2 text-xs sm:text-base">Manage airtime purchases and recharge cards</p>
         </div>
-        <Button className="tx-bg-primary hover:opacity-90">
+        <Button className="tx-bg-primary hover:opacity-90 w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Add Recharge Card
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Total Purchases</CardDescription>
-            <CardTitle className="text-2xl">1,234</CardTitle>
+          <CardHeader className="pb-3 p-4 sm:p-6">
+            <CardDescription className="text-xs sm:text-sm">Total Purchases</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl">1,234</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0">
             <p className="text-xs text-muted-foreground">+12% from last month</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Total Revenue</CardDescription>
-            <CardTitle className="text-2xl">₦2.4M</CardTitle>
+          <CardHeader className="pb-3 p-4 sm:p-6">
+            <CardDescription className="text-xs sm:text-sm">Total Revenue</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl">₦2.4M</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0">
             <p className="text-xs text-muted-foreground">+8% from last month</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Success Rate</CardDescription>
-            <CardTitle className="text-2xl">98.5%</CardTitle>
+          <CardHeader className="pb-3 p-4 sm:p-6">
+            <CardDescription className="text-xs sm:text-sm">Success Rate</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl">98.5%</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0">
             <p className="text-xs text-muted-foreground">+2% from last month</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Pending</CardDescription>
-            <CardTitle className="text-2xl">23</CardTitle>
+          <CardHeader className="pb-3 p-4 sm:p-6">
+            <CardDescription className="text-xs sm:text-sm">Pending</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl">23</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0">
             <p className="text-xs text-muted-foreground">Requires attention</p>
           </CardContent>
         </Card>
@@ -106,12 +106,12 @@ export function AirtimeManagement() {
 
       {/* Filters */}
       <Card>
-        <CardHeader>
-          <CardTitle>Airtime Purchases</CardTitle>
-          <CardDescription>View and manage all airtime purchase transactions</CardDescription>
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-lg sm:text-xl">Airtime Purchases</CardTitle>
+          <CardDescription className="text-sm">View and manage all airtime purchase transactions</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <CardContent className="p-4 sm:p-6 pt-0">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -124,7 +124,7 @@ export function AirtimeManagement() {
               </div>
             </div>
             <Select defaultValue="all">
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Network" />
               </SelectTrigger>
               <SelectContent>
@@ -136,7 +136,7 @@ export function AirtimeManagement() {
               </SelectContent>
             </Select>
             <Select defaultValue="all">
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -146,35 +146,35 @@ export function AirtimeManagement() {
                 <SelectItem value="failed">Failed</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline">
+            <Button variant="outline" className="w-full sm:w-auto">
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
           </div>
 
           {/* Table */}
-          <div className="border rounded-lg">
+          <div className="border rounded-lg overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Transaction ID</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Phone Number</TableHead>
-                  <TableHead>Network</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Transaction ID</TableHead>
+                  <TableHead className="text-xs sm:text-sm">User</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Phone Number</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Network</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Amount</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Date</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {mockAirtimePurchases.map((purchase) => (
                   <TableRow key={purchase.id}>
-                    <TableCell className="font-medium">{purchase.id}</TableCell>
-                    <TableCell>{purchase.user}</TableCell>
-                    <TableCell>{purchase.phone}</TableCell>
-                    <TableCell>{purchase.network}</TableCell>
-                    <TableCell className="font-semibold">{purchase.amount}</TableCell>
+                    <TableCell className="font-medium text-xs sm:text-sm">{purchase.id}</TableCell>
+                    <TableCell className="text-xs sm:text-sm">{purchase.user}</TableCell>
+                    <TableCell className="text-xs sm:text-sm">{purchase.phone}</TableCell>
+                    <TableCell className="text-xs sm:text-sm">{purchase.network}</TableCell>
+                    <TableCell className="font-semibold text-xs sm:text-sm">{purchase.amount}</TableCell>
                     <TableCell>
                       <Badge
                         variant={
@@ -184,14 +184,14 @@ export function AirtimeManagement() {
                               ? "secondary"
                               : "destructive"
                         }
-                        className={purchase.status === "Successful" ? "bg-green-500 hover:bg-green-600" : ""}
+                        className={`text-xs ${purchase.status === "Successful" ? "bg-green-500 hover:bg-green-600" : ""}`}
                       >
                         {purchase.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{purchase.date}</TableCell>
+                    <TableCell className="text-xs sm:text-sm text-muted-foreground">{purchase.date}</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" className="text-xs sm:text-sm">
                         View
                       </Button>
                     </TableCell>

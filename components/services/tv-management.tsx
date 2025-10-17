@@ -46,47 +46,47 @@ export function TvManagement() {
   const [searchQuery, setSearchQuery] = useState("")
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">TV Subscription Management</h1>
-        <p className="text-muted-foreground mt-2">Manage TV subscriptions and renewals</p>
+        <h1 className="text-xl sm:text-3xl font-bold tracking-tight">TV Subscription Management</h1>
+        <p className="text-muted-foreground mt-2 text-xs sm:text-base">Manage TV subscriptions and renewals</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Total Subscriptions</CardDescription>
-            <CardTitle className="text-2xl">987</CardTitle>
+          <CardHeader className="pb-3 p-4 sm:p-6">
+            <CardDescription className="text-xs sm:text-sm">Total Subscriptions</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl">987</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0">
             <p className="text-xs text-muted-foreground">+10% from last month</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Total Revenue</CardDescription>
-            <CardTitle className="text-2xl">₦1.9M</CardTitle>
+          <CardHeader className="pb-3 p-4 sm:p-6">
+            <CardDescription className="text-xs sm:text-sm">Total Revenue</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl">₦1.9M</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0">
             <p className="text-xs text-muted-foreground">+7% from last month</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Success Rate</CardDescription>
-            <CardTitle className="text-2xl">99.5%</CardTitle>
+          <CardHeader className="pb-3 p-4 sm:p-6">
+            <CardDescription className="text-xs sm:text-sm">Success Rate</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl">99.5%</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0">
             <p className="text-xs text-muted-foreground">Excellent performance</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Active Providers</CardDescription>
-            <CardTitle className="text-2xl">5</CardTitle>
+          <CardHeader className="pb-3 p-4 sm:p-6">
+            <CardDescription className="text-xs sm:text-sm">Active Providers</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl">5</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0">
             <p className="text-xs text-muted-foreground">All major providers</p>
           </CardContent>
         </Card>
@@ -94,12 +94,12 @@ export function TvManagement() {
 
       {/* Filters and Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>TV Subscriptions</CardTitle>
-          <CardDescription>View and manage all TV subscription transactions</CardDescription>
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-lg sm:text-xl">TV Subscriptions</CardTitle>
+          <CardDescription className="text-sm">View and manage all TV subscription transactions</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <CardContent className="p-4 sm:p-6 pt-0">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -112,7 +112,7 @@ export function TvManagement() {
               </div>
             </div>
             <Select defaultValue="all">
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Provider" />
               </SelectTrigger>
               <SelectContent>
@@ -123,36 +123,36 @@ export function TvManagement() {
                 <SelectItem value="showmax">Showmax</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline">
+            <Button variant="outline" className="w-full sm:w-auto">
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
           </div>
 
-          <div className="border rounded-lg">
+          <div className="border rounded-lg overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Transaction ID</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Smartcard Number</TableHead>
-                  <TableHead>Provider</TableHead>
-                  <TableHead>Package</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Transaction ID</TableHead>
+                  <TableHead className="text-xs sm:text-sm">User</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Smartcard Number</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Provider</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Package</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Amount</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Date</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {mockTvSubscriptions.map((subscription) => (
                   <TableRow key={subscription.id}>
-                    <TableCell className="font-medium">{subscription.id}</TableCell>
-                    <TableCell>{subscription.user}</TableCell>
-                    <TableCell>{subscription.smartcardNumber}</TableCell>
-                    <TableCell>{subscription.provider}</TableCell>
-                    <TableCell>{subscription.package}</TableCell>
-                    <TableCell className="font-semibold">{subscription.amount}</TableCell>
+                    <TableCell className="font-medium text-xs sm:text-sm">{subscription.id}</TableCell>
+                    <TableCell className="text-xs sm:text-sm">{subscription.user}</TableCell>
+                    <TableCell className="text-xs sm:text-sm">{subscription.smartcardNumber}</TableCell>
+                    <TableCell className="text-xs sm:text-sm">{subscription.provider}</TableCell>
+                    <TableCell className="text-xs sm:text-sm">{subscription.package}</TableCell>
+                    <TableCell className="font-semibold text-xs sm:text-sm">{subscription.amount}</TableCell>
                     <TableCell>
                       <Badge
                         variant={
@@ -162,14 +162,14 @@ export function TvManagement() {
                               ? "secondary"
                               : "destructive"
                         }
-                        className={subscription.status === "Successful" ? "bg-green-500 hover:bg-green-600" : ""}
+                        className={`text-xs ${subscription.status === "Successful" ? "bg-green-500 hover:bg-green-600" : ""}`}
                       >
                         {subscription.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{subscription.date}</TableCell>
+                    <TableCell className="text-xs sm:text-sm text-muted-foreground">{subscription.date}</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" className="text-xs sm:text-sm">
                         View
                       </Button>
                     </TableCell>

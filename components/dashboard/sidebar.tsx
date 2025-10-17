@@ -72,7 +72,10 @@ export function Sidebar() {
         "flex items-center border-b border-border transition-all duration-300",
         isCollapsed ? "justify-center p-4" : "gap-3 p-6"
       )}>
-        <img className="h-10 w-auto" src="/transactx.svg" alt="TransactX Logo" />
+        <img className={cn(
+          "w-auto transition-all duration-300",
+          isCollapsed ? "h-8" : "h-10"
+        )} src="/transactx.svg" alt="TransactX Logo" />
       </div>
 
       {/* Navigation */}
@@ -92,7 +95,10 @@ export function Sidebar() {
                 )}
                 title={isCollapsed ? item.label : undefined}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className={cn(
+                  "transition-all duration-300",
+                  isCollapsed ? "h-5 w-5" : "h-5 w-5"
+                )} />
                 {!isCollapsed && <span>{item.label}</span>}
               </Link>
 
@@ -135,7 +141,10 @@ export function Sidebar() {
           )}
           title={isCollapsed ? "Logout" : undefined}
         >
-          <LogOut className="h-5 w-5" />
+          <LogOut className={cn(
+            "transition-all duration-300",
+            isCollapsed ? "h-5 w-5" : "h-5 w-5"
+          )} />
           {!isCollapsed && <span className="ml-3">Logout</span>}
         </Button>
       </div>

@@ -38,14 +38,14 @@ const userGrowthData = [
 
 export function ReportsCharts() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
       {/* Revenue Chart */}
       <Card className="border-2">
-        <CardHeader>
-          <CardTitle>Revenue Overview</CardTitle>
-          <CardDescription>Monthly revenue and transaction trends</CardDescription>
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-lg sm:text-xl">Revenue Overview</CardTitle>
+          <CardDescription className="text-sm">Monthly revenue and transaction trends</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-6 pt-0">
           <ChartContainer
             config={{
               revenue: {
@@ -57,13 +57,13 @@ export function ReportsCharts() {
                 color: "hsl(var(--chart-2))",
               },
             }}
-            className="h-[300px]"
+            className="h-[250px] sm:h-[300px]"
           >
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={revenueData}>
+              <LineChart data={revenueData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
+                <XAxis dataKey="month" fontSize={12} />
+                <YAxis fontSize={12} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Legend />
                 <Line type="monotone" dataKey="revenue" stroke="var(--color-revenue)" strokeWidth={2} />
@@ -76,11 +76,11 @@ export function ReportsCharts() {
 
       {/* Transaction Types */}
       <Card className="border-2">
-        <CardHeader>
-          <CardTitle>Transaction Types</CardTitle>
-          <CardDescription>Distribution by transaction type</CardDescription>
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-lg sm:text-xl">Transaction Types</CardTitle>
+          <CardDescription className="text-sm">Distribution by transaction type</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-6 pt-0">
           <ChartContainer
             config={{
               count: {
@@ -88,15 +88,15 @@ export function ReportsCharts() {
                 color: "hsl(var(--chart-1))",
               },
             }}
-            className="h-[300px]"
+            className="h-[250px] sm:h-[300px]"
           >
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={transactionTypeData}>
+              <BarChart data={transactionTypeData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="type" />
-                <YAxis />
+                <XAxis dataKey="type" fontSize={12} />
+                <YAxis fontSize={12} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="count" fill="var(--color-count)" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="count" fill="var(--color-count)" radius={[8, 8, 0, 0]} maxBarSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
@@ -104,12 +104,12 @@ export function ReportsCharts() {
       </Card>
 
       {/* User Growth */}
-      <Card className="border-2 lg:col-span-2">
-        <CardHeader>
-          <CardTitle>User Growth</CardTitle>
-          <CardDescription>Total active users over time</CardDescription>
+      <Card className="border-2 xl:col-span-2">
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-lg sm:text-xl">User Growth</CardTitle>
+          <CardDescription className="text-sm">Total active users over time</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-6 pt-0">
           <ChartContainer
             config={{
               users: {
@@ -117,15 +117,15 @@ export function ReportsCharts() {
                 color: "hsl(var(--chart-3))",
               },
             }}
-            className="h-[300px]"
+            className="h-[250px] sm:h-[300px]"
           >
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={userGrowthData}>
+              <BarChart data={userGrowthData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
+                <XAxis dataKey="month" fontSize={12} />
+                <YAxis fontSize={12} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="users" fill="var(--color-users)" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="users" fill="var(--color-users)" radius={[8, 8, 0, 0]} maxBarSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>

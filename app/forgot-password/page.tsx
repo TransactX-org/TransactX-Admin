@@ -74,18 +74,17 @@ export default function ForgotPasswordPage() {
       </div>
 
       {/* Right Side - Form Section */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center p-8 min-h-screen">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center p-4 sm:p-6 lg:p-8 min-h-screen">
         <div className="w-full max-w-md mx-auto">
           {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
-            <img className="h-12 w-auto mx-auto mb-4" src="/transactx.svg" alt="TransactX Logo" />
-            <h1 className="text-2xl font-bold tx-text-primary">TransactX Admin</h1>
+          <div className="lg:hidden text-center mb-6 sm:mb-8">
+            <img className="h-10 sm:h-12 w-auto mx-auto mb-3 sm:mb-4" src="/transactx.svg" alt="TransactX Logo" />
           </div>
           
           <ForgotPasswordForm />
           
           {/* Footer */}
-          <div className="mt-8 text-center text-sm text-gray-500">
+          <div className="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-gray-500">
             <p>© 2025 TransactX. All rights reserved.</p>
           </div>
         </div>

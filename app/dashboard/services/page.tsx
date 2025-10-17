@@ -41,34 +41,34 @@ const services = [
 
 export default function ServicesPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Services Management</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-xl sm:text-3xl font-bold tracking-tight">Services Management</h1>
+        <p className="text-muted-foreground mt-2 text-xs sm:text-base">
           Manage all service purchases including airtime, data, electricity, and TV subscriptions
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {services.map((service) => {
           const Icon = service.icon
           return (
             <Link key={service.href} href={service.href}>
               <Card className="hover:border-primary transition-colors cursor-pointer h-full">
-                <CardHeader>
+                <CardHeader className="p-4 sm:p-6">
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-lg tx-bg-primary flex items-center justify-center">
-                      <Icon className="h-6 w-6 text-white" />
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg tx-bg-primary flex items-center justify-center flex-shrink-0">
+                      <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
-                    <div>
-                      <CardTitle>{service.title}</CardTitle>
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-sm sm:text-base">{service.title}</CardTitle>
                       <CardDescription className="text-xs">{service.stats.count}</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-3">{service.description}</p>
-                  <p className="text-2xl font-bold tx-text-primary">{service.stats.total}</p>
+                <CardContent className="p-4 sm:p-6 pt-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-3">{service.description}</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold tx-text-primary">{service.stats.total}</p>
                   <p className="text-xs text-muted-foreground">Total this month</p>
                 </CardContent>
               </Card>
