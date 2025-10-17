@@ -54,42 +54,42 @@ const activities = [
 export function RecentActivity() {
   return (
     <Card className="border-2 sleek-card">
-      <CardHeader>
-        <CardTitle>Recent Activity</CardTitle>
-        <CardDescription>Latest transactions from your users</CardDescription>
+      <CardHeader className="pb-3 sm:pb-6">
+        <CardTitle className="text-lg sm:text-xl">Recent Activity</CardTitle>
+        <CardDescription className="text-sm">Latest transactions from your users</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+      <CardContent className="p-3 sm:p-6 pt-0">
+        <div className="space-y-3 sm:space-y-4">
           {activities.map((activity) => (
             <div
               key={activity.id}
-              className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors sleek-transition"
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border border-border rounded-lg hover:bg-accent transition-colors sleek-transition gap-3 sm:gap-4"
             >
-              <div className="flex items-center gap-4">
-                <Avatar className="bg-tx-primary/10">
-                  <AvatarFallback className="tx-bg-primary text-white font-semibold">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <Avatar className="bg-tx-primary/10 h-8 w-8 sm:h-10 sm:w-10">
+                  <AvatarFallback className="tx-bg-primary text-white font-semibold text-xs sm:text-sm">
                     {activity.user
                       .split(" ")
                       .map((n) => n[0])
                       .join("")}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="font-medium">{activity.user}</p>
-                  <p className="text-sm text-muted-foreground">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm sm:text-base truncate">{activity.user}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     {activity.type} • {activity.time}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="text-right">
-                  <p className="font-medium flex items-center gap-1">
+              <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
+                <div className="text-left sm:text-right">
+                  <p className="font-medium flex items-center gap-1 text-sm sm:text-base">
                     {activity.direction === "in" ? (
-                      <ArrowDownLeft className="h-4 w-4 text-green-600" />
+                      <ArrowDownLeft className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
                     ) : (
-                      <ArrowUpRight className="h-4 w-4 text-red-600" />
+                      <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4 text-red-600 flex-shrink-0" />
                     )}
-                    {activity.amount}
+                    <span className="truncate">{activity.amount}</span>
                   </p>
                   <Badge
                     variant={
@@ -99,7 +99,7 @@ export function RecentActivity() {
                           ? "secondary"
                           : "destructive"
                     }
-                    className="mt-1"
+                    className="mt-1 text-xs"
                   >
                     {activity.status}
                   </Badge>

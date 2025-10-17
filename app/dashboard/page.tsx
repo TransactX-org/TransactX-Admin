@@ -12,12 +12,17 @@ export default function DashboardPage() {
   })
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in p-4 sm:p-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Monitor transactions and manage your platform - {currentDate}</p>
+          <h1 className="text-xl sm:text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground mt-1 text-xs sm:text-base">
+            Monitor transactions and manage your platform
+          </p>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-1">
+            {currentDate}
+          </p>
         </div>
       </div>
 
@@ -25,7 +30,7 @@ export default function DashboardPage() {
       <StatsCards />
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
         <RevenueChart />
         <TransactionVolumeChart />
       </div>

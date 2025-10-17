@@ -94,52 +94,53 @@ export function TransactionsTable() {
   return (
     <>
       <Card className="border-2 sleek-card">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>All Transactions</CardTitle>
+        <CardHeader className="pb-3 sm:pb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <CardTitle className="text-lg sm:text-xl">All Transactions</CardTitle>
             {selectedRows.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">{selectedRows.length} selected</span>
-                <Button variant="outline" size="sm">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <span className="text-xs sm:text-sm text-muted-foreground">{selectedRows.length} selected</span>
+                <Button variant="outline" size="sm" className="w-full sm:w-auto">
                   Bulk Actions
                 </Button>
               </div>
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6 pt-0">
           <div className="overflow-x-auto">
             <Table className="sleek-table">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12">
+                  <TableHead className="w-6 sm:w-12">
                     <Checkbox
                       checked={selectedRows.length === mockTransactions.length}
                       onCheckedChange={toggleAllRows}
+                      className="h-3 w-3 sm:h-4 sm:w-4"
                     />
                   </TableHead>
-                  <TableHead>
-                    <Button variant="ghost" size="sm" className="h-8 px-2">
+                  <TableHead className="text-xs sm:text-sm">
+                    <Button variant="ghost" size="sm" className="h-6 sm:h-8 px-1 sm:px-2 text-xs sm:text-sm">
                       Transaction ID
-                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                      <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                   </TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>
-                    <Button variant="ghost" size="sm" className="h-8 px-2">
+                  <TableHead className="text-xs sm:text-sm">User</TableHead>
+                  <TableHead className="text-xs sm:text-sm">
+                    <Button variant="ghost" size="sm" className="h-6 sm:h-8 px-1 sm:px-2 text-xs sm:text-sm">
                       Amount
-                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                      <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                   </TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>
-                    <Button variant="ghost" size="sm" className="h-8 px-2">
+                  <TableHead className="text-xs sm:text-sm">Type</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                  <TableHead className="text-xs sm:text-sm">
+                    <Button variant="ghost" size="sm" className="h-6 sm:h-8 px-1 sm:px-2 text-xs sm:text-sm">
                       Date & Time
-                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                      <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                   </TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right text-xs sm:text-sm">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -149,12 +150,13 @@ export function TransactionsTable() {
                       <Checkbox
                         checked={selectedRows.includes(transaction.id)}
                         onCheckedChange={() => toggleRowSelection(transaction.id)}
+                        className="h-3 w-3 sm:h-4 sm:w-4"
                       />
                     </TableCell>
-                    <TableCell className="font-mono text-sm">{transaction.id}</TableCell>
-                    <TableCell className="font-medium">{transaction.user}</TableCell>
-                    <TableCell className="font-semibold">{transaction.amount}</TableCell>
-                    <TableCell>{transaction.type}</TableCell>
+                    <TableCell className="font-mono text-xs sm:text-sm">{transaction.id}</TableCell>
+                    <TableCell className="font-medium text-xs sm:text-sm">{transaction.user}</TableCell>
+                    <TableCell className="font-semibold text-xs sm:text-sm">{transaction.amount}</TableCell>
+                    <TableCell className="text-xs sm:text-sm">{transaction.type}</TableCell>
                     <TableCell>
                       <Badge
                         variant={
@@ -164,29 +166,30 @@ export function TransactionsTable() {
                               ? "secondary"
                               : "destructive"
                         }
+                        className="text-xs"
                       >
                         {transaction.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{transaction.date}</TableCell>
+                    <TableCell className="text-xs sm:text-sm text-muted-foreground">{transaction.date}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
+                          <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-8 sm:w-8">
+                            <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => setSelectedTransaction(transaction.id)}>
-                            <Eye className="h-4 w-4 mr-2" />
+                            <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            <Edit className="h-4 w-4 mr-2" />
+                            <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem className="text-destructive">
-                            <Trash2 className="h-4 w-4 mr-2" />
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                             Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -199,22 +202,22 @@ export function TransactionsTable() {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between mt-4">
-            <p className="text-sm text-muted-foreground">Showing 1 to {mockTransactions.length} of 234 transactions</p>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled>
+          <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3 sm:gap-4">
+            <p className="text-xs sm:text-sm text-muted-foreground">Showing 1 to {mockTransactions.length} of 234 transactions</p>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Button variant="outline" size="sm" disabled className="text-xs sm:text-sm">
                 Previous
               </Button>
-              <Button variant="outline" size="sm" className="tx-bg-primary text-white bg-transparent">
+              <Button variant="outline" size="sm" className="tx-bg-primary text-white bg-transparent text-xs sm:text-sm">
                 1
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">
                 2
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">
                 3
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">
                 Next
               </Button>
             </div>

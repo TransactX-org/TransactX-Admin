@@ -5,13 +5,13 @@ import { UserPlus } from "lucide-react"
 
 export default function UsersPage() {
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Users</h1>
-          <p className="text-muted-foreground mt-1">Manage user accounts and permissions</p>
+          <h1 className="text-xl sm:text-3xl font-bold">Users</h1>
+          <p className="text-muted-foreground mt-1 text-xs sm:text-base">Manage user accounts and permissions</p>
         </div>
-        <Button className="tx-bg-primary hover:opacity-90">
+        <Button className="tx-bg-primary hover:opacity-90 w-full sm:w-auto">
           <UserPlus className="h-4 w-4 mr-2" />
           Add New User
         </Button>

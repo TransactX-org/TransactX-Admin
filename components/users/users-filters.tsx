@@ -13,11 +13,11 @@ export function UsersFilters() {
 
   return (
     <Card className="border-2">
-      <CardContent className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <CardContent className="p-4 sm:p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Search */}
           <div className="space-y-2">
-            <Label>Search</Label>
+            <Label className="text-sm">Search</Label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -31,7 +31,7 @@ export function UsersFilters() {
 
           {/* Status Filter */}
           <div className="space-y-2">
-            <Label>Status</Label>
+            <Label className="text-sm">Status</Label>
             <Select defaultValue="all">
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
@@ -47,7 +47,7 @@ export function UsersFilters() {
 
           {/* Role Filter */}
           <div className="space-y-2">
-            <Label>Role</Label>
+            <Label className="text-sm">Role</Label>
             <Select defaultValue="all">
               <SelectTrigger>
                 <SelectValue placeholder="Select role" />
@@ -63,7 +63,7 @@ export function UsersFilters() {
 
           {/* Sort By */}
           <div className="space-y-2">
-            <Label>Sort By</Label>
+            <Label className="text-sm">Sort By</Label>
             <Select defaultValue="recent">
               <SelectTrigger>
                 <SelectValue placeholder="Sort by" />
@@ -78,16 +78,16 @@ export function UsersFilters() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap gap-2 mt-4">
-          <Button variant="outline" size="sm">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 mt-4">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">
             <Filter className="h-4 w-4 mr-2" />
             More Filters
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Button variant="outline" size="sm" className="tx-text-primary bg-transparent">
+          <Button variant="outline" size="sm" className="tx-text-primary bg-transparent w-full sm:w-auto">
             <Download className="h-4 w-4 mr-2" />
             Export Users
           </Button>

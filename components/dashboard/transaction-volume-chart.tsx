@@ -16,18 +16,41 @@ const data = [
 export function TransactionVolumeChart() {
   return (
     <Card className="border-2">
-      <CardHeader>
-        <CardTitle>Transaction Volume</CardTitle>
-        <CardDescription>Daily transactions for the past week</CardDescription>
+      <CardHeader className="pb-3 sm:pb-6">
+        <CardTitle className="text-lg sm:text-xl">Transaction Volume</CardTitle>
+        <CardDescription className="text-sm">Daily transactions for the past week</CardDescription>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
+      <CardContent className="p-3 sm:p-6 pt-0">
+        <ResponsiveContainer width="100%" height={250}>
+          <BarChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-            <XAxis dataKey="name" stroke="#6B7280" />
-            <YAxis stroke="#6B7280" />
-            <Tooltip />
-            <Bar dataKey="transactions" fill="#457EAC" radius={[4, 4, 0, 0]} />
+            <XAxis 
+              dataKey="name" 
+              stroke="#6B7280" 
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis 
+              stroke="#6B7280" 
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+            />
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: 'white',
+                border: '1px solid #E5E7EB',
+                borderRadius: '8px',
+                fontSize: '12px'
+              }}
+            />
+            <Bar 
+              dataKey="transactions" 
+              fill="#457EAC" 
+              radius={[4, 4, 0, 0]} 
+              maxBarSize={40}
+            />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

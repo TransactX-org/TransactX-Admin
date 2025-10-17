@@ -83,34 +83,38 @@ export function UsersTable() {
   return (
     <>
       <Card className="border-2">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>All Users</CardTitle>
+        <CardHeader className="pb-3 sm:pb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <CardTitle className="text-lg sm:text-xl">All Users</CardTitle>
             {selectedRows.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">{selectedRows.length} selected</span>
-                <Button variant="outline" size="sm">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <span className="text-xs sm:text-sm text-muted-foreground">{selectedRows.length} selected</span>
+                <Button variant="outline" size="sm" className="w-full sm:w-auto">
                   Bulk Actions
                 </Button>
               </div>
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6 pt-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox checked={selectedRows.length === mockUsers.length} onCheckedChange={toggleAllRows} />
+                  <TableHead className="w-6 sm:w-12">
+                    <Checkbox 
+                      checked={selectedRows.length === mockUsers.length} 
+                      onCheckedChange={toggleAllRows}
+                      className="h-3 w-3 sm:h-4 sm:w-4"
+                    />
                   </TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Transactions</TableHead>
-                  <TableHead>Join Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-xs sm:text-sm">User</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Email</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Role</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Transactions</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Join Date</TableHead>
+                  <TableHead className="text-right text-xs sm:text-sm">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -120,25 +124,26 @@ export function UsersTable() {
                       <Checkbox
                         checked={selectedRows.includes(user.id)}
                         onCheckedChange={() => toggleRowSelection(user.id)}
+                        className="h-3 w-3 sm:h-4 sm:w-4"
                       />
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
                           <AvatarImage src={`/placeholder-32px.png?height=32&width=32`} />
-                          <AvatarFallback>
+                          <AvatarFallback className="text-xs sm:text-sm">
                             {user.name
                               .split(" ")
                               .map((n) => n[0])
                               .join("")}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="font-medium">{user.name}</span>
+                        <span className="font-medium text-xs sm:text-sm truncate">{user.name}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs sm:text-sm truncate">{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{user.role}</Badge>
+                      <Badge variant="outline" className="text-xs">{user.role}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -149,34 +154,35 @@ export function UsersTable() {
                               ? "destructive"
                               : "secondary"
                         }
+                        className="text-xs"
                       >
                         {user.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-medium">{user.transactions}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{user.joinDate}</TableCell>
+                    <TableCell className="font-medium text-xs sm:text-sm">{user.transactions}</TableCell>
+                    <TableCell className="text-xs sm:text-sm text-muted-foreground">{user.joinDate}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
+                          <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-8 sm:w-8">
+                            <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => setSelectedUser(user.id)}>
-                            <Eye className="h-4 w-4 mr-2" />
+                            <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            <Edit className="h-4 w-4 mr-2" />
+                            <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                             Edit User
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            <Ban className="h-4 w-4 mr-2" />
+                            <Ban className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                             Suspend
                           </DropdownMenuItem>
                           <DropdownMenuItem className="text-destructive">
-                            <Trash2 className="h-4 w-4 mr-2" />
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                             Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -189,22 +195,22 @@ export function UsersTable() {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between mt-4">
-            <p className="text-sm text-muted-foreground">Showing 1 to {mockUsers.length} of 156 users</p>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled>
+          <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3 sm:gap-4">
+            <p className="text-xs sm:text-sm text-muted-foreground">Showing 1 to {mockUsers.length} of 156 users</p>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Button variant="outline" size="sm" disabled className="text-xs sm:text-sm">
                 Previous
               </Button>
-              <Button variant="outline" size="sm" className="tx-bg-primary text-white bg-transparent">
+              <Button variant="outline" size="sm" className="tx-bg-primary text-white bg-transparent text-xs sm:text-sm">
                 1
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">
                 2
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">
                 3
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">
                 Next
               </Button>
             </div>

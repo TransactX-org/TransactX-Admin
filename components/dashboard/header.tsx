@@ -96,7 +96,7 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-muted/50 transition-all duration-200">
                 <Avatar className="h-10 w-10 border-2 border-border hover:border-tx-primary/50 transition-all duration-200">
-                  <AvatarFallback className="tx-bg-primary text-white font-semibold">AU</AvatarFallback>
+                  <AvatarFallback className="tx-bg-primary text-white font-semibold">JD</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
@@ -104,8 +104,8 @@ export function Header() {
               align="end" 
               className="w-56 border-border shadow-lg animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2"
             >
-              <DropdownMenuLabel className="font-semibold">Admin User</DropdownMenuLabel>
-              <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">admin@transactx.com</DropdownMenuLabel>
+              <DropdownMenuLabel className="font-semibold">John Doe</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">john.doe@transactx.com</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
