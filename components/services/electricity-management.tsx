@@ -54,7 +54,7 @@ export function ElectricityManagement() {
 
       {/* Stats Cards */}
       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="border border-border/50">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Total Payments</CardDescription>
             <CardTitle className="text-xl sm:text-2xl">3,789</CardTitle>
@@ -63,7 +63,7 @@ export function ElectricityManagement() {
             <p className="text-xs text-muted-foreground">+22% from last month</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border border-border/50">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Total Revenue</CardDescription>
             <CardTitle className="text-xl sm:text-2xl">₦5.2M</CardTitle>
@@ -72,7 +72,7 @@ export function ElectricityManagement() {
             <p className="text-xs text-muted-foreground">+19% from last month</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border border-border/50">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Success Rate</CardDescription>
             <CardTitle className="text-xl sm:text-2xl">97.8%</CardTitle>
@@ -81,7 +81,7 @@ export function ElectricityManagement() {
             <p className="text-xs text-muted-foreground">+3% from last month</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border border-border/50">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Providers</CardDescription>
             <CardTitle className="text-xl sm:text-2xl">12</CardTitle>
@@ -93,7 +93,7 @@ export function ElectricityManagement() {
       </div>
 
       {/* Filters and Table */}
-      <Card>
+      <Card className="border border-border/50">
         <CardHeader className="pb-3 sm:pb-6">
           <CardTitle className="text-lg sm:text-xl">Electricity Payments</CardTitle>
           <CardDescription className="text-sm">View and manage all electricity bill payment transactions</CardDescription>
@@ -129,7 +129,7 @@ export function ElectricityManagement() {
             </Button>
           </div>
 
-          <div className="border rounded-lg overflow-x-auto">
+          <div className="border border-border/30 rounded-lg overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>

@@ -40,7 +40,7 @@ export function ReportsCharts() {
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
       {/* Revenue Chart */}
-      <Card className="border-2">
+      <Card className="border border-border/50">
         <CardHeader className="pb-3 sm:pb-6">
           <CardTitle className="text-lg sm:text-xl">Revenue Overview</CardTitle>
           <CardDescription className="text-sm">Monthly revenue and transaction trends</CardDescription>
@@ -75,7 +75,7 @@ export function ReportsCharts() {
       </Card>
 
       {/* Transaction Types */}
-      <Card className="border-2">
+      <Card className="border border-border/50">
         <CardHeader className="pb-3 sm:pb-6">
           <CardTitle className="text-lg sm:text-xl">Transaction Types</CardTitle>
           <CardDescription className="text-sm">Distribution by transaction type</CardDescription>
@@ -104,7 +104,7 @@ export function ReportsCharts() {
       </Card>
 
       {/* User Growth */}
-      <Card className="border-2 xl:col-span-2">
+      <Card className="border border-border/50 xl:col-span-2">
         <CardHeader className="pb-3 sm:pb-6">
           <CardTitle className="text-lg sm:text-xl">User Growth</CardTitle>
           <CardDescription className="text-sm">Total active users over time</CardDescription>

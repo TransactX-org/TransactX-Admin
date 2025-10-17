@@ -16,7 +16,7 @@ export function AppearanceSettings() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-2">
+      <Card className="border border-border/50">
         <CardHeader>
           <CardTitle>Theme</CardTitle>
           <CardDescription>Choose your preferred theme</CardDescription>
@@ -57,7 +57,7 @@ export function AppearanceSettings() {
         </CardContent>
       </Card>
 
-      <Card className="border-2 sleek-card">
+      <Card className="border border-border/50 sleek-card">
         <CardHeader>
           <CardTitle>Display</CardTitle>
           <CardDescription>Customize how content is displayed</CardDescription>

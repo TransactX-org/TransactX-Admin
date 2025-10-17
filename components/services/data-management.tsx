@@ -60,7 +60,7 @@ export function DataManagement() {
 
       {/* Stats Cards */}
       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="sleek-card">
+        <Card className="border border-border/50 sleek-card">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Total Purchases</CardDescription>
             <CardTitle className="text-xl sm:text-2xl">2,456</CardTitle>
@@ -69,7 +69,7 @@ export function DataManagement() {
             <p className="text-xs text-muted-foreground">+18% from last month</p>
           </CardContent>
         </Card>
-        <Card className="sleek-card">
+        <Card className="border border-border/50 sleek-card">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Total Revenue</CardDescription>
             <CardTitle className="text-xl sm:text-2xl">₦3.8M</CardTitle>
@@ -78,7 +78,7 @@ export function DataManagement() {
             <p className="text-xs text-muted-foreground">+15% from last month</p>
           </CardContent>
         </Card>
-        <Card className="sleek-card">
+        <Card className="border border-border/50 sleek-card">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Success Rate</CardDescription>
             <CardTitle className="text-xl sm:text-2xl">99.2%</CardTitle>
@@ -87,7 +87,7 @@ export function DataManagement() {
             <p className="text-xs text-muted-foreground">+1% from last month</p>
           </CardContent>
         </Card>
-        <Card className="sleek-card">
+        <Card className="border border-border/50 sleek-card">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Active Plans</CardDescription>
             <CardTitle className="text-xl sm:text-2xl">45</CardTitle>
@@ -99,7 +99,7 @@ export function DataManagement() {
       </div>
 
       {/* Filters and Table */}
-      <Card className="sleek-card">
+      <Card className="border border-border/50 sleek-card">
         <CardHeader className="pb-3 sm:pb-6">
           <CardTitle className="text-lg sm:text-xl">Data Purchases</CardTitle>
           <CardDescription className="text-sm">View and manage all data bundle transactions</CardDescription>
@@ -135,7 +135,7 @@ export function DataManagement() {
             </Button>
           </div>
 
-          <div className="border rounded-lg sleek-table overflow-x-auto">
+          <div className="border border-border/30 rounded-lg sleek-table overflow-x-auto">
             <Table className="sleek-table">
               <TableHeader>
                 <TableRow>

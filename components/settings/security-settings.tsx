@@ -11,7 +11,7 @@ export function SecuritySettings() {
   return (
     <div className="space-y-6">
       {/* Change Password */}
-      <Card className="border-2">
+      <Card className="border border-border/50">
         <CardHeader>
           <CardTitle>Change Password</CardTitle>
           <CardDescription>Update your password to keep your account secure</CardDescription>
@@ -34,7 +34,7 @@ export function SecuritySettings() {
       </Card>
 
       {/* Two-Factor Authentication */}
-      <Card className="border-2">
+      <Card className="border border-border/50">
         <CardHeader>
           <CardTitle>Two-Factor Authentication</CardTitle>
           <CardDescription>Add an extra layer of security to your account</CardDescription>
@@ -64,13 +64,13 @@ export function SecuritySettings() {
       </Card>
 
       {/* Active Sessions */}
-      <Card className="border-2">
+      <Card className="border border-border/50">
         <CardHeader>
           <CardTitle>Active Sessions</CardTitle>
           <CardDescription>Manage your active sessions across devices</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="flex items-center justify-between p-4 border border-border/30 rounded-lg">
             <div>
               <p className="font-medium">Windows PC - Chrome</p>
               <p className="text-sm text-muted-foreground">Lagos, Nigeria • Active now</p>
@@ -79,7 +79,7 @@ export function SecuritySettings() {
               Revoke
             </Button>
           </div>
-          <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="flex items-center justify-between p-4 border border-border/30 rounded-lg">
             <div>
               <p className="font-medium">iPhone - Safari</p>
               <p className="text-sm text-muted-foreground">Lagos, Nigeria • 2 hours ago</p>

@@ -82,7 +82,7 @@ export function UserDetailsModal({ userId, onClose }: UserDetailsModalProps) {
             </TabsList>
 
             <TabsContent value="info" className="space-y-4">
-              <Card className="border-2">
+              <Card className="border border-border/50">
                 <CardContent className="p-6 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-center gap-3">
@@ -137,7 +137,7 @@ export function UserDetailsModal({ userId, onClose }: UserDetailsModalProps) {
 
             <TabsContent value="transactions" className="space-y-4">
               {user.recentTransactions.map((transaction) => (
-                <Card key={transaction.id} className="border-2">
+                <Card key={transaction.id} className="border border-border/50">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
                       <p className="font-medium">{transaction.type}</p>
@@ -151,7 +151,7 @@ export function UserDetailsModal({ userId, onClose }: UserDetailsModalProps) {
 
             <TabsContent value="activity" className="space-y-4">
               {user.activityLog.map((log, index) => (
-                <Card key={index} className="border-2">
+                <Card key={index} className="border border-border/50">
                   <CardContent className="p-4 flex items-center gap-3">
                     <Activity className="h-5 w-5 text-muted-foreground" />
                     <div className="flex-1">

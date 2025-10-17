@@ -66,7 +66,7 @@ export function AirtimeManagement() {
 
       {/* Stats Cards */}
       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="border border-border/50">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Total Purchases</CardDescription>
             <CardTitle className="text-xl sm:text-2xl">1,234</CardTitle>
@@ -75,7 +75,7 @@ export function AirtimeManagement() {
             <p className="text-xs text-muted-foreground">+12% from last month</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border border-border/50">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Total Revenue</CardDescription>
             <CardTitle className="text-xl sm:text-2xl">₦2.4M</CardTitle>
@@ -84,7 +84,7 @@ export function AirtimeManagement() {
             <p className="text-xs text-muted-foreground">+8% from last month</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border border-border/50">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Success Rate</CardDescription>
             <CardTitle className="text-xl sm:text-2xl">98.5%</CardTitle>
@@ -93,7 +93,7 @@ export function AirtimeManagement() {
             <p className="text-xs text-muted-foreground">+2% from last month</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border border-border/50">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Pending</CardDescription>
             <CardTitle className="text-xl sm:text-2xl">23</CardTitle>
@@ -105,7 +105,7 @@ export function AirtimeManagement() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="border border-border/50">
         <CardHeader className="pb-3 sm:pb-6">
           <CardTitle className="text-lg sm:text-xl">Airtime Purchases</CardTitle>
           <CardDescription className="text-sm">View and manage all airtime purchase transactions</CardDescription>
@@ -153,7 +153,7 @@ export function AirtimeManagement() {
           </div>
 
           {/* Table */}
-          <div className="border rounded-lg overflow-x-auto">
+          <div className="border border-border/30 rounded-lg overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>

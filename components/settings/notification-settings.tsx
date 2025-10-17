@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 export function NotificationSettings() {
   return (
     <div className="space-y-6">
-      <Card className="border-2">
+      <Card className="border border-border/50">
         <CardHeader>
           <CardTitle>Email Notifications</CardTitle>
           <CardDescription>Manage your email notification preferences</CardDescription>
@@ -44,7 +44,7 @@ export function NotificationSettings() {
         </CardContent>
       </Card>
 
-      <Card className="border-2">
+      <Card className="border border-border/50">
         <CardHeader>
           <CardTitle>Push Notifications</CardTitle>
           <CardDescription>Manage your push notification preferences</CardDescription>
