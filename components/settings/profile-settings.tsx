@@ -11,7 +11,7 @@ import { Camera } from "lucide-react"
 export function ProfileSettings() {
   return (
     <div className="space-y-6">
-      <Card className="border-2">
+      <Card className="border border-border/50">
         <CardHeader>
           <CardTitle>Profile Information</CardTitle>
           <CardDescription>Update your personal information and profile picture</CardDescription>

@@ -45,7 +45,7 @@ export function StatsCards() {
         return (
           <Card
             key={index}
-            className="border-2 hover:shadow-lg transition-all hover-lift animate-fade-in sleek-card sleek-transition"
+            className="border border-border/50 hover:border-border hover:shadow-lg transition-all hover-lift animate-fade-in sleek-card sleek-transition"
             style={{ animationDelay: `${index * 100}ms` }}
           >
             <CardContent className="p-4 sm:p-6">

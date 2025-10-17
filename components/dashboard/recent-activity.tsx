@@ -53,7 +53,7 @@ const activities = [
 
 export function RecentActivity() {
   return (
-    <Card className="border-2 sleek-card">
+    <Card className="border border-border/50 sleek-card">
       <CardHeader className="pb-3 sm:pb-6">
         <CardTitle className="text-lg sm:text-xl">Recent Activity</CardTitle>
         <CardDescription className="text-sm">Latest transactions from your users</CardDescription>

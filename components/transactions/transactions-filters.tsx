@@ -13,7 +13,7 @@ export function TransactionsFilters() {
   const [searchQuery, setSearchQuery] = useState("")
 
   return (
-    <Card className="border-2 sleek-card">
+    <Card className="border border-border/50 sleek-card">
       <CardContent className="p-4 sm:p-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Search */}

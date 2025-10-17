@@ -82,7 +82,7 @@ export function UsersTable() {
 
   return (
     <>
-      <Card className="border-2">
+      <Card className="border border-border/50">
         <CardHeader className="pb-3 sm:pb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
             <CardTitle className="text-lg sm:text-xl">All Users</CardTitle>
@@ -98,7 +98,7 @@ export function UsersTable() {
         </CardHeader>
         <CardContent className="p-4 sm:p-6 pt-0">
           <div className="overflow-x-auto">
-            <Table>
+            <Table className="border border-border/30">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-6 sm:w-12">

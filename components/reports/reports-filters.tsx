@@ -9,7 +9,7 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 
 export function ReportsFilters() {
   return (
-    <Card className="border-2">
+    <Card className="border border-border/50">
       <CardContent className="p-4 sm:p-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Date Range */}

@@ -15,7 +15,7 @@ const data = [
 
 export function TransactionVolumeChart() {
   return (
-    <Card className="border-2">
+    <Card className="border border-border/50">
       <CardHeader className="pb-3 sm:pb-6">
         <CardTitle className="text-lg sm:text-xl">Transaction Volume</CardTitle>
         <CardDescription className="text-sm">Daily transactions for the past week</CardDescription>

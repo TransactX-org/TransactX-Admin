@@ -38,7 +38,7 @@ export function ReportsOverview() {
       {stats.map((stat) => {
         const Icon = stat.icon
         return (
-          <Card key={stat.title} className="border-2 hover:shadow-lg transition-shadow">
+          <Card key={stat.title} className="border border-border/50 hover:border-border hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
               <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
               <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />

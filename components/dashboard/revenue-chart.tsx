@@ -15,7 +15,7 @@ const data = [
 
 export function RevenueChart() {
   return (
-    <Card className="border-2">
+    <Card className="border border-border/50">
       <CardHeader className="pb-3 sm:pb-6">
         <CardTitle className="text-lg sm:text-xl">Revenue Overview</CardTitle>
         <CardDescription className="text-sm">Monthly revenue for the past 7 months</CardDescription>
