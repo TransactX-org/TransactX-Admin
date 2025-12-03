@@ -1,26 +1,30 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
 import { Eye, EyeOff, Loader2, CheckCircle, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { useResetPassword } from "@/lib/api/hooks/use-auth"
 
 export function ResetPasswordForm() {
-  const router = useRouter()
-  const { toast } = useToast()
+  const searchParams = useSearchParams()
+  const token = searchParams.get("token") || ""
+  const email = searchParams.get("email") || ""
+
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({})
+
+  const resetPasswordMutation = useResetPassword()
+  const isLoading = resetPasswordMutation.isPending
 
   const validateForm = () => {
     const newErrors: { password?: string; confirmPassword?: string } = {}
@@ -48,17 +52,24 @@ export function ResetPasswordForm() {
 
     if (!validateForm()) return
 
-    setIsLoading(true)
+    if (!token || !email) {
+      setErrors({ password: "Invalid reset link. Please request a new one." })
+      return
+    }
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
-      setIsSuccess(true)
-      toast({
-        title: "Password updated",
-        description: "Your password has been successfully updated",
-      })
-    }, 1500)
+    resetPasswordMutation.mutate(
+      {
+        token,
+        email,
+        password,
+        password_confirmation: confirmPassword,
+      },
+      {
+        onSuccess: () => {
+          setIsSuccess(true)
+        },
+      }
+    )
   }
 
   if (isSuccess) {

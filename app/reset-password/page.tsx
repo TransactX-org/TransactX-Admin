@@ -1,4 +1,9 @@
+import { Suspense } from "react"
 import { ResetPasswordForm } from "@/components/auth/reset-password-form"
+
+function ResetPasswordFormWrapper() {
+  return <ResetPasswordForm />
+}
 
 export default function ResetPasswordPage() {
   return (
@@ -80,7 +85,9 @@ export default function ResetPasswordPage() {
             <img className="h-10 sm:h-12 w-auto mx-auto mb-3 sm:mb-4" src="/transactx.svg" alt="TransactX Logo" />
           </div>
           
-          <ResetPasswordForm />
+          <Suspense fallback={<div className="text-center py-8">Loading...</div>}>
+            <ResetPasswordFormWrapper />
+          </Suspense>
           
           {/* Footer */}
           <div className="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-gray-500">
