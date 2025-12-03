@@ -7,43 +7,61 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Search, Download, Plus } from "lucide-react"
-
-const mockDataPurchases = [
-  {
-    id: "DT001",
-    user: "Alice Brown",
-    phone: "08011223344",
-    network: "MTN",
-    plan: "1GB Daily",
-    amount: "₦300",
-    status: "Successful",
-    date: "2025-10-03 15:20",
-  },
-  {
-    id: "DT002",
-    user: "Bob Wilson",
-    phone: "08099887766",
-    network: "Airtel",
-    plan: "5GB Monthly",
-    amount: "₦1,500",
-    status: "Successful",
-    date: "2025-10-03 14:10",
-  },
-  {
-    id: "DT003",
-    user: "Carol Davis",
-    phone: "08122334455",
-    network: "Glo",
-    plan: "10GB Monthly",
-    amount: "₦2,500",
-    status: "Pending",
-    date: "2025-10-03 13:30",
-  },
-]
+import { Search, Download, Plus, Loader2 } from "lucide-react"
+import { useDataStats, useDataTransactions, useDataProviders } from "@/lib/api/hooks/use-data"
+import { format } from "date-fns"
 
 export function DataManagement() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [selectedNetwork, setSelectedNetwork] = useState("all")
+  const perPage = 15
+
+  const { data: statsData, isLoading: statsLoading } = useDataStats()
+  const { data: transactionsData, isLoading: transactionsLoading, error } = useDataTransactions(currentPage, perPage)
+  const { data: providersData } = useDataProviders()
+
+  const stats = statsData?.data
+  const transactions = transactionsData?.data?.data || []
+  const pagination = transactionsData?.data || null
+  const providers = providersData?.data || []
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "MMM dd, yyyy 'at' HH:mm")
+    } catch {
+      return dateString
+    }
+  }
+
+  const formatCurrency = (amount: number) => {
+    return `₦${amount.toLocaleString()}`
+  }
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case "SUCCESSFUL":
+        return "default"
+      case "PENDING":
+        return "secondary"
+      case "FAILED":
+        return "destructive"
+      default:
+        return "outline"
+    }
+  }
+
+  // Filter transactions
+  const filteredTransactions = transactions.filter((transaction) => {
+    const matchesSearch =
+      transaction.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      transaction.phoneNumber.includes(searchQuery) ||
+      transaction.transactionId.toLowerCase().includes(searchQuery.toLowerCase())
+
+    const matchesNetwork = selectedNetwork === "all" || transaction.network.toLowerCase() === selectedNetwork.toLowerCase()
+
+    return matchesSearch && matchesNetwork
+  })
 
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
@@ -63,34 +81,46 @@ export function DataManagement() {
         <Card className="border border-border/50 sleek-card">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Total Purchases</CardDescription>
-            <CardTitle className="text-xl sm:text-2xl">2,456</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">
+              {statsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : stats?.totalPurchases.toLocaleString() || "0"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
-            <p className="text-xs text-muted-foreground">+18% from last month</p>
+            <p className="text-xs text-muted-foreground">All time purchases</p>
           </CardContent>
         </Card>
         <Card className="border border-border/50 sleek-card">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Total Revenue</CardDescription>
-            <CardTitle className="text-xl sm:text-2xl">₦3.8M</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">
+              {statsLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                `₦${stats?.totalRevenue.toLocaleString() || "0"}`
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
-            <p className="text-xs text-muted-foreground">+15% from last month</p>
+            <p className="text-xs text-muted-foreground">Total revenue generated</p>
           </CardContent>
         </Card>
         <Card className="border border-border/50 sleek-card">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Success Rate</CardDescription>
-            <CardTitle className="text-xl sm:text-2xl">99.2%</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">
+              {statsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : `${stats?.successRate.toFixed(2) || "0"}%`}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
-            <p className="text-xs text-muted-foreground">+1% from last month</p>
+            <p className="text-xs text-muted-foreground">Transaction success rate</p>
           </CardContent>
         </Card>
         <Card className="border border-border/50 sleek-card">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Active Plans</CardDescription>
-            <CardTitle className="text-xl sm:text-2xl">45</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">
+              {statsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : stats?.activePlans.toLocaleString() || "0"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
             <p className="text-xs text-muted-foreground">Across all networks</p>
@@ -117,16 +147,17 @@ export function DataManagement() {
                 />
               </div>
             </div>
-            <Select defaultValue="all">
+            <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
               <SelectTrigger className="w-full sm:w-[180px] sleek-input">
                 <SelectValue placeholder="Network" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Networks</SelectItem>
-                <SelectItem value="mtn">MTN</SelectItem>
-                <SelectItem value="airtel">Airtel</SelectItem>
-                <SelectItem value="glo">Glo</SelectItem>
-                <SelectItem value="9mobile">9mobile</SelectItem>
+                {providers.map((provider) => (
+                  <SelectItem key={provider.id} value={provider.code.toLowerCase()}>
+                    {provider.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Button variant="outline" className="sleek-focus w-full sm:w-auto">
@@ -151,39 +182,106 @@ export function DataManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockDataPurchases.map((purchase) => (
-                  <TableRow key={purchase.id} className="sleek-transition">
-                    <TableCell className="font-medium text-xs sm:text-sm">{purchase.id}</TableCell>
-                    <TableCell className="text-xs sm:text-sm">{purchase.user}</TableCell>
-                    <TableCell className="text-xs sm:text-sm">{purchase.phone}</TableCell>
-                    <TableCell className="text-xs sm:text-sm">{purchase.network}</TableCell>
-                    <TableCell className="text-xs sm:text-sm">{purchase.plan}</TableCell>
-                    <TableCell className="font-semibold text-xs sm:text-sm">{purchase.amount}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          purchase.status === "Successful"
-                            ? "default"
-                            : purchase.status === "Pending"
-                              ? "secondary"
-                              : "destructive"
-                        }
-                        className={`text-xs ${purchase.status === "Successful" ? "bg-green-500 hover:bg-green-600" : ""}`}
-                      >
-                        {purchase.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs sm:text-sm text-muted-foreground">{purchase.date}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" className="sleek-focus text-xs sm:text-sm">
-                        View
-                      </Button>
+                {transactionsLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8">
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-sm text-muted-foreground">Loading transactions...</span>
+                      </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8">
+                      <span className="text-sm text-destructive">Failed to load transactions. Please try again.</span>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredTransactions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8">
+                      <span className="text-sm text-muted-foreground">No transactions found</span>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredTransactions.map((transaction) => (
+                    <TableRow key={transaction.transactionId} className="sleek-transition">
+                      <TableCell className="font-medium text-xs sm:text-sm font-mono">
+                        {transaction.transactionId.slice(-8)}
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm">{transaction.user}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{transaction.phoneNumber}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{transaction.network}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{transaction.plan}</TableCell>
+                      <TableCell className="font-semibold text-xs sm:text-sm">{formatCurrency(transaction.amount)}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={getStatusBadgeVariant(transaction.status || "SUCCESSFUL")}
+                          className="text-xs"
+                        >
+                          {transaction.status || "SUCCESSFUL"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm text-muted-foreground">{formatDate(transaction.date)}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" className="sleek-focus text-xs sm:text-sm">
+                          View
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          {pagination && (
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3 sm:gap-4">
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Showing {pagination.from} to {pagination.to} of {pagination.total} transactions
+              </p>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!pagination.prev_page_url || transactionsLoading}
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  className="text-xs sm:text-sm"
+                >
+                  Previous
+                </Button>
+                {pagination.links
+                  .filter((link) => link.label !== "&laquo; Previous" && link.label !== "Next &raquo;")
+                  .map((link) => {
+                    const pageNum = link.label
+                    if (pageNum === "...") return null
+                    const isActive = link.active
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => link.url && setCurrentPage(parseInt(pageNum))}
+                        className={`text-xs sm:text-sm ${isActive ? "tx-bg-primary text-white bg-transparent" : ""}`}
+                        disabled={isActive || transactionsLoading}
+                      >
+                        {pageNum}
+                      </Button>
+                    )
+                  })}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!pagination.next_page_url || transactionsLoading}
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  className="text-xs sm:text-sm"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
