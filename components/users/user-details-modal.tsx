@@ -7,7 +7,9 @@ import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
-import { Mail, Phone, MapPin, Calendar, Activity } from "lucide-react"
+import { Mail, Phone, MapPin, Calendar, Activity, Loader2 } from "lucide-react"
+import { useUser } from "@/lib/api/hooks/use-users"
+import { format } from "date-fns"
 
 interface UserDetailsModalProps {
   userId: string | null
@@ -15,31 +17,31 @@ interface UserDetailsModalProps {
 }
 
 export function UserDetailsModal({ userId, onClose }: UserDetailsModalProps) {
+  const { data, isLoading, error } = useUser(userId)
+  const user = data?.data?.user
+
   if (!userId) return null
 
-  // Mock user details
-  const user = {
-    id: userId,
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+234 801 234 5678",
-    address: "123 Main Street, Lagos, Nigeria",
-    role: "User",
-    status: "active",
-    joinDate: "2025-01-15",
-    lastActive: "2025-10-04 14:30",
-    totalTransactions: 45,
-    totalSpent: "₦125,000",
-    recentTransactions: [
-      { id: "TXN001", amount: "₦5,000", type: "Payment", date: "2025-10-04" },
-      { id: "TXN002", amount: "₦12,500", type: "Transfer", date: "2025-10-03" },
-      { id: "TXN003", amount: "₦8,000", type: "Withdrawal", date: "2025-10-02" },
-    ],
-    activityLog: [
-      { action: "Login", time: "2025-10-04 14:30", ip: "192.168.1.1" },
-      { action: "Transaction", time: "2025-10-04 14:25", ip: "192.168.1.1" },
-      { action: "Profile Update", time: "2025-10-03 10:15", ip: "192.168.1.1" },
-    ],
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case "ACTIVE":
+        return "default"
+      case "SUSPENDED":
+      case "INACTIVE":
+        return "destructive"
+      case "NEW":
+        return "secondary"
+      default:
+        return "outline"
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "MMM dd, yyyy 'at' HH:mm")
+    } catch {
+      return dateString
+    }
   }
 
   return (
@@ -50,133 +52,190 @@ export function UserDetailsModal({ userId, onClose }: UserDetailsModalProps) {
           <DialogDescription>Complete information about this user</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* User Header */}
-          <div className="flex items-start gap-4">
-            <Avatar className="h-20 w-20 bg-tx-primary/10">
-              <AvatarFallback className="tx-bg-primary text-white text-2xl font-semibold">
-                {user.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold">{user.name}</h3>
-              <p className="text-muted-foreground">{user.email}</p>
-              <div className="flex gap-2 mt-2">
-                <Badge variant="outline">{user.role}</Badge>
-                <Badge variant={user.status === "active" ? "default" : "destructive"}>{user.status}</Badge>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <p className="text-destructive">Failed to load user details. Please try again.</p>
+          </div>
+        ) : !user ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">User not found</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* User Header */}
+            <div className="flex items-start gap-4">
+              <Avatar className="h-20 w-20 bg-tx-primary/10">
+                <AvatarImage src={user.avatar || undefined} />
+                <AvatarFallback className="tx-bg-primary text-white text-2xl font-semibold">
+                  {user.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold">{user.name}</h3>
+                <p className="text-muted-foreground">{user.email}</p>
+                <div className="flex gap-2 mt-2">
+                  <Badge variant="outline">{user.user_type}</Badge>
+                  <Badge variant={getStatusBadgeVariant(user.status)}>{user.status}</Badge>
+                </div>
               </div>
             </div>
-          </div>
 
-          <Separator />
+            <Separator />
 
-          {/* Tabs */}
-          <Tabs defaultValue="info" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="info">Information</TabsTrigger>
-              <TabsTrigger value="transactions">Transactions</TabsTrigger>
-              <TabsTrigger value="activity">Activity</TabsTrigger>
-            </TabsList>
+            {/* Tabs */}
+            <Tabs defaultValue="info" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="info">Information</TabsTrigger>
+                <TabsTrigger value="wallet">Wallet</TabsTrigger>
+                <TabsTrigger value="subscription">Subscription</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="info" className="space-y-4">
-              <Card className="border border-border/50">
-                <CardContent className="p-6 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center gap-3">
-                      <Mail className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Email</p>
-                        <p className="font-medium">{user.email}</p>
+              <TabsContent value="info" className="space-y-4">
+                <Card className="border border-border/50">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center gap-3">
+                        <Mail className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Email</p>
+                          <p className="font-medium">{user.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Phone className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Phone</p>
+                          <p className="font-medium">{user.phone_number || "N/A"}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Country</p>
+                          <p className="font-medium">{user.country}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Calendar className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Join Date</p>
+                          <p className="font-medium">{formatDate(user.created_at)}</p>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Phone className="h-5 w-5 text-muted-foreground" />
+
+                    <Separator />
+
+                    <div className="grid grid-cols-3 gap-4 text-center">
                       <div>
-                        <p className="text-sm text-muted-foreground">Phone</p>
-                        <p className="font-medium">{user.phone}</p>
+                        <p className="text-2xl font-bold">{user.total_transactions || 0}</p>
+                        <p className="text-sm text-muted-foreground">Transactions</p>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <MapPin className="h-5 w-5 text-muted-foreground" />
                       <div>
-                        <p className="text-sm text-muted-foreground">Address</p>
-                        <p className="font-medium">{user.address}</p>
+                        <p className="text-2xl font-bold">{user.linked_accounts_count || 0}</p>
+                        <p className="text-sm text-muted-foreground">Linked Accounts</p>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Calendar className="h-5 w-5 text-muted-foreground" />
                       <div>
-                        <p className="text-sm text-muted-foreground">Join Date</p>
-                        <p className="font-medium">{user.joinDate}</p>
+                        <p className="text-2xl font-bold">{user.referrals_count || 0}</p>
+                        <p className="text-sm text-muted-foreground">Referrals</p>
                       </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                      <p className="text-2xl font-bold">{user.totalTransactions}</p>
-                      <p className="text-sm text-muted-foreground">Transactions</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{user.totalSpent}</p>
-                      <p className="text-sm text-muted-foreground">Total Spent</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">4.8</p>
-                      <p className="text-sm text-muted-foreground">Rating</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="transactions" className="space-y-4">
-              {user.recentTransactions.map((transaction) => (
-                <Card key={transaction.id} className="border border-border/50">
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{transaction.type}</p>
-                      <p className="text-sm text-muted-foreground">{transaction.date}</p>
-                    </div>
-                    <p className="font-bold">{transaction.amount}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </TabsContent>
-
-            <TabsContent value="activity" className="space-y-4">
-              {user.activityLog.map((log, index) => (
-                <Card key={index} className="border border-border/50">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <Activity className="h-5 w-5 text-muted-foreground" />
-                    <div className="flex-1">
-                      <p className="font-medium">{log.action}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {log.time} • IP: {log.ip}
-                      </p>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </TabsContent>
-          </Tabs>
+              </TabsContent>
 
-          {/* Actions */}
-          <div className="flex gap-2">
-            <Button className="flex-1 tx-bg-primary hover:opacity-90">Edit User</Button>
-            <Button variant="outline" className="flex-1 bg-transparent">
-              Suspend Account
-            </Button>
-            <Button variant="destructive" className="flex-1">
-              Delete User
-            </Button>
+              <TabsContent value="wallet" className="space-y-4">
+                <Card className="border border-border/50">
+                  <CardContent className="p-6 space-y-4">
+                    {user.has_wallet ? (
+                      <>
+                        <div className="text-center">
+                          <p className="text-sm text-muted-foreground">Wallet Balance</p>
+                          <p className="text-3xl font-bold">₦{user.wallet_balance?.toLocaleString() || "0.00"}</p>
+                        </div>
+                        <Separator />
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Has Transaction PIN</p>
+                            <p className="font-medium">{user.has_transaction_pin ? "Yes" : "No"}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Has Panic PIN</p>
+                            <p className="font-medium">{user.has_panic_pin ? "Yes" : "No"}</p>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-muted-foreground">User does not have a wallet</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="subscription" className="space-y-4">
+                {user.subscription ? (
+                  <Card className="border border-border/50">
+                    <CardContent className="p-6 space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Status</p>
+                          <Badge variant={user.subscription.status === "ACTIVE" ? "default" : "secondary"}>
+                            {user.subscription.status}
+                          </Badge>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Billing</p>
+                          <p className="font-medium">{user.subscription.billing}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Start Date</p>
+                          <p className="font-medium">{formatDate(user.subscription.start_date)}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">End Date</p>
+                          <p className="font-medium">{formatDate(user.subscription.end_date)}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Auto Renew</p>
+                          <p className="font-medium">{user.subscription.is_auto_renew ? "Yes" : "No"}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Method</p>
+                          <p className="font-medium">{user.subscription.method}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground">User does not have an active subscription</p>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+
+            {/* Actions */}
+            <div className="flex gap-2">
+              <Button className="flex-1 tx-bg-primary hover:opacity-90">Edit User</Button>
+              <Button variant="outline" className="flex-1 bg-transparent">
+                Suspend Account
+              </Button>
+              <Button variant="destructive" className="flex-1">
+                Delete User
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   )
