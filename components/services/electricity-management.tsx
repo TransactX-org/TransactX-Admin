@@ -7,43 +7,65 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Search, Download } from "lucide-react"
-
-const mockElectricityPayments = [
-  {
-    id: "EL001",
-    user: "David Lee",
-    meterNumber: "04512345678",
-    provider: "EKEDC",
-    amount: "₦5,000",
-    units: "45.5 kWh",
-    status: "Successful",
-    date: "2025-10-03 16:45",
-  },
-  {
-    id: "EL002",
-    user: "Emma Taylor",
-    meterNumber: "04598765432",
-    provider: "IKEDC",
-    amount: "₦10,000",
-    units: "91.0 kWh",
-    status: "Successful",
-    date: "2025-10-03 15:30",
-  },
-  {
-    id: "EL003",
-    user: "Frank Miller",
-    meterNumber: "04523456789",
-    provider: "AEDC",
-    amount: "₦3,000",
-    units: "27.3 kWh",
-    status: "Pending",
-    date: "2025-10-03 14:20",
-  },
-]
+import { Search, Download, Loader2 } from "lucide-react"
+import { useElectricityStats, useElectricityTransactions } from "@/lib/api/hooks/use-electricity"
+import { format } from "date-fns"
 
 export function ElectricityManagement() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [selectedProvider, setSelectedProvider] = useState("all")
+  const perPage = 15
+
+  const { data: statsData, isLoading: statsLoading } = useElectricityStats()
+  const { data: transactionsData, isLoading: transactionsLoading, error } = useElectricityTransactions(currentPage, perPage)
+
+  const stats = statsData?.data
+  const transactions = transactionsData?.data?.data || []
+  const pagination = transactionsData?.data || null
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "MMM dd, yyyy 'at' HH:mm")
+    } catch {
+      return dateString
+    }
+  }
+
+  const formatCurrency = (amount: number) => {
+    return `₦${amount.toLocaleString()}`
+  }
+
+  const formatUnits = (units: string | number) => {
+    if (typeof units === "string") return units
+    return `${units} kWh`
+  }
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status.toUpperCase()) {
+      case "SUCCESSFUL":
+        return "default"
+      case "PENDING":
+        return "secondary"
+      case "FAILED":
+        return "destructive"
+      default:
+        return "outline"
+    }
+  }
+
+  // Filter transactions
+  const filteredTransactions = transactions.filter((transaction) => {
+    const matchesSearch =
+      transaction.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      transaction.meterNumber.includes(searchQuery) ||
+      transaction.transactionId.toLowerCase().includes(searchQuery.toLowerCase())
+
+    const matchesProvider =
+      selectedProvider === "all" || transaction.provider.toLowerCase().includes(selectedProvider.toLowerCase())
+
+    return matchesSearch && matchesProvider
+  })
 
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
@@ -57,34 +79,46 @@ export function ElectricityManagement() {
         <Card className="border border-border/50">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Total Payments</CardDescription>
-            <CardTitle className="text-xl sm:text-2xl">3,789</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">
+              {statsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : stats?.totalPayments.toLocaleString() || "0"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
-            <p className="text-xs text-muted-foreground">+22% from last month</p>
+            <p className="text-xs text-muted-foreground">All time payments</p>
           </CardContent>
         </Card>
         <Card className="border border-border/50">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Total Revenue</CardDescription>
-            <CardTitle className="text-xl sm:text-2xl">₦5.2M</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">
+              {statsLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                `₦${stats?.totalRevenue.toLocaleString() || "0"}`
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
-            <p className="text-xs text-muted-foreground">+19% from last month</p>
+            <p className="text-xs text-muted-foreground">Total revenue generated</p>
           </CardContent>
         </Card>
         <Card className="border border-border/50">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Success Rate</CardDescription>
-            <CardTitle className="text-xl sm:text-2xl">97.8%</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">
+              {statsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : `${stats?.successRate.toFixed(2) || "0"}%`}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
-            <p className="text-xs text-muted-foreground">+3% from last month</p>
+            <p className="text-xs text-muted-foreground">Transaction success rate</p>
           </CardContent>
         </Card>
         <Card className="border border-border/50">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Providers</CardDescription>
-            <CardTitle className="text-xl sm:text-2xl">12</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">
+              {statsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : stats?.providers.toLocaleString() || "0"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
             <p className="text-xs text-muted-foreground">Active providers</p>
@@ -111,16 +145,18 @@ export function ElectricityManagement() {
                 />
               </div>
             </div>
-            <Select defaultValue="all">
+            <Select value={selectedProvider} onValueChange={setSelectedProvider}>
               <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Provider" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Providers</SelectItem>
-                <SelectItem value="ekedc">EKEDC</SelectItem>
-                <SelectItem value="ikedc">IKEDC</SelectItem>
-                <SelectItem value="aedc">AEDC</SelectItem>
-                <SelectItem value="phed">PHED</SelectItem>
+                {/* Extract unique providers from transactions */}
+                {Array.from(new Set(transactions.map((t) => t.provider))).map((provider) => (
+                  <SelectItem key={provider} value={provider.toLowerCase()}>
+                    {provider}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Button variant="outline" className="w-full sm:w-auto">
@@ -145,39 +181,103 @@ export function ElectricityManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockElectricityPayments.map((payment) => (
-                  <TableRow key={payment.id}>
-                    <TableCell className="font-medium text-xs sm:text-sm">{payment.id}</TableCell>
-                    <TableCell className="text-xs sm:text-sm">{payment.user}</TableCell>
-                    <TableCell className="text-xs sm:text-sm">{payment.meterNumber}</TableCell>
-                    <TableCell className="text-xs sm:text-sm">{payment.provider}</TableCell>
-                    <TableCell className="font-semibold text-xs sm:text-sm">{payment.amount}</TableCell>
-                    <TableCell className="text-xs sm:text-sm">{payment.units}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          payment.status === "Successful"
-                            ? "default"
-                            : payment.status === "Pending"
-                              ? "secondary"
-                              : "destructive"
-                        }
-                        className={`text-xs ${payment.status === "Successful" ? "bg-green-500 hover:bg-green-600" : ""}`}
-                      >
-                        {payment.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs sm:text-sm text-muted-foreground">{payment.date}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" className="text-xs sm:text-sm">
-                        View
-                      </Button>
+                {transactionsLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8">
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-sm text-muted-foreground">Loading transactions...</span>
+                      </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8">
+                      <span className="text-sm text-destructive">Failed to load transactions. Please try again.</span>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredTransactions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8">
+                      <span className="text-sm text-muted-foreground">No transactions found</span>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredTransactions.map((transaction) => (
+                    <TableRow key={transaction.transactionId}>
+                      <TableCell className="font-medium text-xs sm:text-sm font-mono">
+                        {transaction.transactionId.slice(-8)}
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm">{transaction.user}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{transaction.meterNumber}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{transaction.provider}</TableCell>
+                      <TableCell className="font-semibold text-xs sm:text-sm">{formatCurrency(transaction.amount)}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{formatUnits(transaction.units)}</TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadgeVariant(transaction.status)} className="text-xs">
+                          {transaction.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm text-muted-foreground">{formatDate(transaction.date)}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" className="text-xs sm:text-sm">
+                          View
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          {pagination && (
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3 sm:gap-4">
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Showing {pagination.from} to {pagination.to} of {pagination.total} transactions
+              </p>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!pagination.prev_page_url || transactionsLoading}
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  className="text-xs sm:text-sm"
+                >
+                  Previous
+                </Button>
+                {pagination.links
+                  .filter((link) => link.label !== "&laquo; Previous" && link.label !== "Next &raquo;")
+                  .map((link) => {
+                    const pageNum = link.label
+                    if (pageNum === "...") return null
+                    const isActive = link.active
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => link.url && setCurrentPage(parseInt(pageNum))}
+                        className={`text-xs sm:text-sm ${isActive ? "tx-bg-primary text-white bg-transparent" : ""}`}
+                        disabled={isActive || transactionsLoading}
+                      >
+                        {pageNum}
+                      </Button>
+                    )
+                  })}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!pagination.next_page_url || transactionsLoading}
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  className="text-xs sm:text-sm"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
