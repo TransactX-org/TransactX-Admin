@@ -3,24 +3,23 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { useLogin } from "@/lib/api/hooks/use-auth"
 
 export function LoginForm() {
-  const router = useRouter()
-  const { toast } = useToast()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+
+  const loginMutation = useLogin()
+  const isLoading = loginMutation.isPending
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {}
@@ -46,17 +45,11 @@ export function LoginForm() {
 
     if (!validateForm()) return
 
-    setIsLoading(true)
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
-      toast({
-        title: "Login successful",
-        description: "Welcome back to TransactX Admin",
-      })
-      router.push("/dashboard")
-    }, 1500)
+    loginMutation.mutate({
+      email,
+      password,
+      remember_me: rememberMe,
+    })
   }
 
   return (

@@ -2,22 +2,21 @@
 
 import type React from "react"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
 import { Loader2, ArrowLeft, Mail } from "lucide-react"
 import Link from "next/link"
+import { useForgotPassword } from "@/lib/api/hooks/use-auth"
 
 export function ForgotPasswordForm() {
-  const router = useRouter()
-  const { toast } = useToast()
   const [email, setEmail] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [errors, setErrors] = useState<{ email?: string }>({})
+
+  const forgotPasswordMutation = useForgotPassword()
+  const isLoading = forgotPasswordMutation.isPending
 
   const validateForm = () => {
     const newErrors: { email?: string } = {}
@@ -37,17 +36,14 @@ export function ForgotPasswordForm() {
 
     if (!validateForm()) return
 
-    setIsLoading(true)
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
-      setIsSubmitted(true)
-      toast({
-        title: "Reset link sent",
-        description: "Check your email for password reset instructions",
-      })
-    }, 1500)
+    forgotPasswordMutation.mutate(
+      { email },
+      {
+        onSuccess: () => {
+          setIsSubmitted(true)
+        },
+      }
+    )
   }
 
   if (isSubmitted) {
