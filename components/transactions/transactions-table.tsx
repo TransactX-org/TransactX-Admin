@@ -7,88 +7,53 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Eye, Edit, Trash2, ArrowUpDown } from "lucide-react"
+import { MoreHorizontal, Eye, Edit, Trash2, ArrowUpDown, Loader2 } from "lucide-react"
 import { TransactionDetailsModal } from "./transaction-details-modal"
-
-const mockTransactions = [
-  {
-    id: "TXN001234",
-    user: "John Doe",
-    amount: "₦5,000",
-    type: "Payment",
-    status: "success",
-    date: "2025-10-04 14:30",
-  },
-  {
-    id: "TXN001235",
-    user: "Jane Smith",
-    amount: "₦12,500",
-    type: "Transfer",
-    status: "success",
-    date: "2025-10-04 13:15",
-  },
-  {
-    id: "TXN001236",
-    user: "Mike Johnson",
-    amount: "₦8,000",
-    type: "Withdrawal",
-    status: "pending",
-    date: "2025-10-04 12:45",
-  },
-  {
-    id: "TXN001237",
-    user: "Sarah Williams",
-    amount: "₦3,200",
-    type: "Payment",
-    status: "success",
-    date: "2025-10-04 11:20",
-  },
-  {
-    id: "TXN001238",
-    user: "David Brown",
-    amount: "₦15,000",
-    type: "Transfer",
-    status: "failed",
-    date: "2025-10-04 10:05",
-  },
-  {
-    id: "TXN001239",
-    user: "Emily Davis",
-    amount: "₦6,750",
-    type: "Payment",
-    status: "success",
-    date: "2025-10-04 09:30",
-  },
-  {
-    id: "TXN001240",
-    user: "Chris Wilson",
-    amount: "₦20,000",
-    type: "Withdrawal",
-    status: "pending",
-    date: "2025-10-04 08:15",
-  },
-  {
-    id: "TXN001241",
-    user: "Lisa Anderson",
-    amount: "₦4,500",
-    type: "Payment",
-    status: "success",
-    date: "2025-10-03 16:45",
-  },
-]
+import { useTransactions } from "@/lib/api/hooks/use-transactions"
+import { format } from "date-fns"
 
 export function TransactionsTable() {
   const [selectedRows, setSelectedRows] = useState<string[]>([])
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
+  const perPage = 15
+
+  const { data, isLoading, error } = useTransactions(currentPage, perPage)
+  const transactions = data?.data?.data || []
+  const pagination = data?.data || null
 
   const toggleRowSelection = (id: string) => {
     setSelectedRows((prev) => (prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]))
   }
 
   const toggleAllRows = () => {
-    setSelectedRows((prev) => (prev.length === mockTransactions.length ? [] : mockTransactions.map((t) => t.id)))
+    setSelectedRows((prev) => (prev.length === transactions.length ? [] : transactions.map((t) => t.id)))
+  }
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "MMM dd, yyyy 'at' HH:mm")
+    } catch {
+      return dateString
+    }
+  }
+
+  const formatCurrency = (amount: number) => {
+    return `₦${amount.toLocaleString()}`
+  }
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status.toUpperCase()) {
+      case "SUCCESSFUL":
+      case "SUCCESS":
+        return "default"
+      case "PENDING":
+        return "secondary"
+      case "FAILED":
+        return "destructive"
+      default:
+        return "outline"
+    }
   }
 
   return (
@@ -114,7 +79,7 @@ export function TransactionsTable() {
                 <TableRow>
                   <TableHead className="w-6 sm:w-12">
                     <Checkbox
-                      checked={selectedRows.length === mockTransactions.length}
+                      checked={selectedRows.length === transactions.length && transactions.length > 0}
                       onCheckedChange={toggleAllRows}
                       className="h-3 w-3 sm:h-4 sm:w-4"
                     />
@@ -144,84 +109,126 @@ export function TransactionsTable() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockTransactions.map((transaction) => (
-                  <TableRow key={transaction.id} className="hover:bg-accent transition-colors cursor-pointer sleek-transition">
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedRows.includes(transaction.id)}
-                        onCheckedChange={() => toggleRowSelection(transaction.id)}
-                        className="h-3 w-3 sm:h-4 sm:w-4"
-                      />
-                    </TableCell>
-                    <TableCell className="font-mono text-xs sm:text-sm">{transaction.id}</TableCell>
-                    <TableCell className="font-medium text-xs sm:text-sm">{transaction.user}</TableCell>
-                    <TableCell className="font-semibold text-xs sm:text-sm">{transaction.amount}</TableCell>
-                    <TableCell className="text-xs sm:text-sm">{transaction.type}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          transaction.status === "success"
-                            ? "default"
-                            : transaction.status === "pending"
-                              ? "secondary"
-                              : "destructive"
-                        }
-                        className="text-xs"
-                      >
-                        {transaction.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs sm:text-sm text-muted-foreground">{transaction.date}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-8 sm:w-8">
-                            <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setSelectedTransaction(transaction.id)}>
-                            <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-sm text-muted-foreground">Loading transactions...</span>
+                      </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <span className="text-sm text-destructive">Failed to load transactions. Please try again.</span>
+                    </TableCell>
+                  </TableRow>
+                ) : transactions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <span className="text-sm text-muted-foreground">No transactions found</span>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  transactions.map((transaction) => (
+                    <TableRow key={transaction.id} className="hover:bg-accent transition-colors cursor-pointer sleek-transition">
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedRows.includes(transaction.id)}
+                          onCheckedChange={() => toggleRowSelection(transaction.id)}
+                          className="h-3 w-3 sm:h-4 sm:w-4"
+                        />
+                      </TableCell>
+                      <TableCell className="font-mono text-xs sm:text-sm">
+                        {transaction.transactionId || transaction.id}
+                      </TableCell>
+                      <TableCell className="font-medium text-xs sm:text-sm">{transaction.user}</TableCell>
+                      <TableCell className="font-semibold text-xs sm:text-sm">{formatCurrency(transaction.amount)}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{transaction.type}</TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadgeVariant(transaction.status)} className="text-xs">
+                          {transaction.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm text-muted-foreground">{formatDate(transaction.date)}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-8 sm:w-8">
+                              <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setSelectedTransaction(transaction.id)}>
+                              <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive">
+                              <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
 
           {/* Pagination */}
-          <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3 sm:gap-4">
-            <p className="text-xs sm:text-sm text-muted-foreground">Showing 1 to {mockTransactions.length} of 234 transactions</p>
-            <div className="flex items-center gap-1 sm:gap-2">
-              <Button variant="outline" size="sm" disabled className="text-xs sm:text-sm">
-                Previous
-              </Button>
-              <Button variant="outline" size="sm" className="tx-bg-primary text-white bg-transparent text-xs sm:text-sm">
-                1
-              </Button>
-              <Button variant="outline" size="sm" className="text-xs sm:text-sm">
-                2
-              </Button>
-              <Button variant="outline" size="sm" className="text-xs sm:text-sm">
-                3
-              </Button>
-              <Button variant="outline" size="sm" className="text-xs sm:text-sm">
-                Next
-              </Button>
+          {pagination && (
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3 sm:gap-4">
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Showing {pagination.from} to {pagination.to} of {pagination.total} transactions
+              </p>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!pagination.prev_page_url || isLoading}
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  className="text-xs sm:text-sm"
+                >
+                  Previous
+                </Button>
+                {pagination.links
+                  .filter((link) => link.label !== "&laquo; Previous" && link.label !== "Next &raquo;")
+                  .map((link) => {
+                    const pageNum = link.label
+                    if (pageNum === "...") return null
+                    const isActive = link.active
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => link.url && setCurrentPage(parseInt(pageNum))}
+                        className={`text-xs sm:text-sm ${isActive ? "tx-bg-primary text-white bg-transparent" : ""}`}
+                        disabled={isActive || isLoading}
+                      >
+                        {pageNum}
+                      </Button>
+                    )
+                  })}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!pagination.next_page_url || isLoading}
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  className="text-xs sm:text-sm"
+                >
+                  Next
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
