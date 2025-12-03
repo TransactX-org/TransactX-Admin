@@ -47,14 +47,14 @@ export function ReportsOverview() {
               <div className="text-xl sm:text-2xl lg:text-3xl font-bold">{stat.value}</div>
               <div className="flex flex-col sm:flex-row sm:items-center gap-1 mt-2">
                 <div className="flex items-center gap-1">
-                  {stat.trend === "up" ? (
+                {stat.trend === "up" ? (
                     <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
-                  ) : (
+                ) : (
                     <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-600" />
-                  )}
+                )}
                   <span className={`text-xs sm:text-sm font-medium ${stat.trend === "up" ? "text-green-600" : "text-red-600"}`}>
-                    {stat.change}
-                  </span>
+                  {stat.change}
+                </span>
                 </div>
                 <span className="text-xs sm:text-sm text-muted-foreground">from last month</span>
               </div>
