@@ -1,5 +1,6 @@
 import { UsersTable } from "@/components/users/users-table"
 import { UsersFilters } from "@/components/users/users-filters"
+import { UserStats } from "@/components/users/user-stats"
 import { Button } from "@/components/ui/button"
 import { UserPlus } from "lucide-react"
 
@@ -17,6 +18,7 @@ export default function UsersPage() {
         </Button>
       </div>
 
+      <UserStats />
       <UsersFilters />
       <UsersTable />
     </div>

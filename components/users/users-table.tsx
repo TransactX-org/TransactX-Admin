@@ -8,76 +8,57 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Eye, Edit, Ban, Trash2 } from "lucide-react"
+import { MoreHorizontal, Eye, Edit, Ban, Trash2, Loader2 } from "lucide-react"
 import { UserDetailsModal } from "./user-details-modal"
-
-const mockUsers = [
-  {
-    id: "USR001",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    role: "User",
-    status: "active",
-    joinDate: "2025-01-15",
-    transactions: 45,
-  },
-  {
-    id: "USR002",
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    role: "Admin",
-    status: "active",
-    joinDate: "2024-12-20",
-    transactions: 128,
-  },
-  {
-    id: "USR003",
-    name: "Mike Johnson",
-    email: "mike.j@example.com",
-    role: "User",
-    status: "active",
-    joinDate: "2025-02-10",
-    transactions: 23,
-  },
-  {
-    id: "USR004",
-    name: "Sarah Williams",
-    email: "sarah.w@example.com",
-    role: "Moderator",
-    status: "active",
-    joinDate: "2025-03-05",
-    transactions: 67,
-  },
-  {
-    id: "USR005",
-    name: "David Brown",
-    email: "david.b@example.com",
-    role: "User",
-    status: "suspended",
-    joinDate: "2024-11-30",
-    transactions: 12,
-  },
-  {
-    id: "USR006",
-    name: "Emily Davis",
-    email: "emily.d@example.com",
-    role: "User",
-    status: "active",
-    joinDate: "2025-04-12",
-    transactions: 89,
-  },
-]
+import { useUsers, useDeleteUser } from "@/lib/api/hooks/use-users"
+import { format } from "date-fns"
 
 export function UsersTable() {
   const [selectedRows, setSelectedRows] = useState<string[]>([])
   const [selectedUser, setSelectedUser] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const perPage = 15
+
+  const { data, isLoading, error } = useUsers(currentPage, perPage)
+  const deleteUserMutation = useDeleteUser()
+
+  const users = data?.data?.data || []
+  const pagination = data?.data || null
 
   const toggleRowSelection = (id: string) => {
     setSelectedRows((prev) => (prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]))
   }
 
   const toggleAllRows = () => {
-    setSelectedRows((prev) => (prev.length === mockUsers.length ? [] : mockUsers.map((u) => u.id)))
+    setSelectedRows((prev) => (prev.length === users.length ? [] : users.map((u) => u.id)))
+  }
+
+  const handleDeleteUser = async (id: string) => {
+    if (confirm("Are you sure you want to delete this user?")) {
+      await deleteUserMutation.mutateAsync(id)
+    }
+  }
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case "ACTIVE":
+        return "default"
+      case "SUSPENDED":
+      case "INACTIVE":
+        return "destructive"
+      case "NEW":
+        return "secondary"
+      default:
+        return "outline"
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "MMM dd, yyyy")
+    } catch {
+      return dateString
+    }
   }
 
   return (
@@ -118,103 +99,148 @@ export function UsersTable() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockUsers.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-accent transition-colors cursor-pointer">
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedRows.includes(user.id)}
-                        onCheckedChange={() => toggleRowSelection(user.id)}
-                        className="h-3 w-3 sm:h-4 sm:w-4"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
-                          <AvatarImage src={`/placeholder-32px.png?height=32&width=32`} />
-                          <AvatarFallback className="text-xs sm:text-sm">
-                            {user.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium text-xs sm:text-sm truncate">{user.name}</span>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-sm text-muted-foreground">Loading users...</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-xs sm:text-sm truncate">{user.email}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-xs">{user.role}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          user.status === "active"
-                            ? "default"
-                            : user.status === "suspended"
-                              ? "destructive"
-                              : "secondary"
-                        }
-                        className="text-xs"
-                      >
-                        {user.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-medium text-xs sm:text-sm">{user.transactions}</TableCell>
-                    <TableCell className="text-xs sm:text-sm text-muted-foreground">{user.joinDate}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-8 sm:w-8">
-                            <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setSelectedUser(user.id)}>
-                            <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                            Edit User
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Ban className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                            Suspend
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                  </TableRow>
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <span className="text-sm text-destructive">Failed to load users. Please try again.</span>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : users.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <span className="text-sm text-muted-foreground">No users found</span>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  users.map((user) => (
+                    <TableRow key={user.id} className="hover:bg-accent transition-colors cursor-pointer">
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedRows.includes(user.id)}
+                          onCheckedChange={() => toggleRowSelection(user.id)}
+                          className="h-3 w-3 sm:h-4 sm:w-4"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
+                            <AvatarImage src={user.avatar || undefined} />
+                            <AvatarFallback className="text-xs sm:text-sm">
+                              {user.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium text-xs sm:text-sm truncate">{user.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-xs sm:text-sm truncate">{user.email}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">{user.user_type}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadgeVariant(user.status)} className="text-xs">
+                          {user.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium text-xs sm:text-sm">{user.total_transactions || 0}</TableCell>
+                      <TableCell className="text-xs sm:text-sm text-muted-foreground">{formatDate(user.created_at)}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-8 sm:w-8">
+                              <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setSelectedUser(user.id)}>
+                              <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                              Edit User
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Ban className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                              Suspend
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => handleDeleteUser(user.id)}
+                              disabled={deleteUserMutation.isPending}
+                            >
+                              <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
 
           {/* Pagination */}
-          <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3 sm:gap-4">
-            <p className="text-xs sm:text-sm text-muted-foreground">Showing 1 to {mockUsers.length} of 156 users</p>
-            <div className="flex items-center gap-1 sm:gap-2">
-              <Button variant="outline" size="sm" disabled className="text-xs sm:text-sm">
-                Previous
-              </Button>
-              <Button variant="outline" size="sm" className="tx-bg-primary text-white bg-transparent text-xs sm:text-sm">
-                1
-              </Button>
-              <Button variant="outline" size="sm" className="text-xs sm:text-sm">
-                2
-              </Button>
-              <Button variant="outline" size="sm" className="text-xs sm:text-sm">
-                3
-              </Button>
-              <Button variant="outline" size="sm" className="text-xs sm:text-sm">
-                Next
-              </Button>
+          {pagination && (
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3 sm:gap-4">
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Showing {pagination.from} to {pagination.to} of {pagination.total} users
+              </p>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!pagination.prev_page_url || isLoading}
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  className="text-xs sm:text-sm"
+                >
+                  Previous
+                </Button>
+                {pagination.links
+                  .filter((link) => link.label !== "&laquo; Previous" && link.label !== "Next &raquo;")
+                  .map((link) => {
+                    const pageNum = link.label
+                    if (pageNum === "...") return null
+                    const isActive = link.active
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => link.url && setCurrentPage(parseInt(pageNum))}
+                        className={`text-xs sm:text-sm ${isActive ? "tx-bg-primary text-white bg-transparent" : ""}`}
+                        disabled={isActive || isLoading}
+                      >
+                        {pageNum}
+                      </Button>
+                    )
+                  })}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!pagination.next_page_url || isLoading}
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  className="text-xs sm:text-sm"
+                >
+                  Next
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
