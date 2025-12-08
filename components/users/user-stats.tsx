@@ -10,12 +10,12 @@ export function UserStats() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-        {[1, 2, 3, 4].map((i) => (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3 sm:gap-4">
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
           <Card key={i} className="border border-border/50">
-            <CardContent className="p-4 sm:p-6">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               </div>
             </CardContent>
           </Card>
@@ -33,7 +33,7 @@ export function UserStats() {
       title: "Total Users",
       value: stats.total_users,
       icon: Users,
-      description: "All registered users",
+      description: "All registered",
     },
     {
       title: "Active Users",
@@ -42,35 +42,57 @@ export function UserStats() {
       description: "Currently active",
     },
     {
-      title: "Suspended Users",
+      title: "Suspended",
       value: stats.suspended_users,
       icon: UserX,
       description: "Suspended accounts",
     },
     {
-      title: "Users with Wallet",
+      title: "Verified",
+      value: stats.verified_users,
+      icon: UserCheck,
+      description: "Email verified",
+    },
+    {
+      title: "KYC Verified",
+      value: stats.kyc_verified_users,
+      icon: UserCheck,
+      description: "KYC completed",
+    },
+    {
+      title: "With Wallet",
       value: stats.users_with_wallet,
       icon: Wallet,
-      description: "Have active wallets",
+      description: "Have wallets",
+    },
+    {
+      title: "Today",
+      value: stats.users_created_today,
+      icon: Users,
+      description: "Created today",
+    },
+    {
+      title: "This Month",
+      value: stats.users_created_this_month,
+      icon: Users,
+      description: "Created this month",
     },
   ]
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3 sm:gap-4">
       {statCards.map((stat, index) => {
         const Icon = stat.icon
         return (
-          <Card key={index} className="border border-border/50 hover:border-border hover:shadow-lg transition-all">
-            <CardHeader className="pb-2 p-4 sm:p-6">
-              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0 p-4 sm:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{stat.value}</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">{stat.description}</p>
+          <Card key={index} className="border border-border/50 hover:border-border hover:shadow-md transition-all">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium text-muted-foreground">{stat.title}</p>
+                  <Icon className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <Icon className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground" />
+                <p className="text-xl sm:text-2xl font-bold">{stat.value}</p>
+                <p className="text-xs text-muted-foreground">{stat.description}</p>
               </div>
             </CardContent>
           </Card>

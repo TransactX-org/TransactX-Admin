@@ -7,43 +7,46 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Search, Download } from "lucide-react"
-
-const mockTvSubscriptions = [
-  {
-    id: "TV001",
-    user: "Grace Adams",
-    smartcardNumber: "1234567890",
-    provider: "DSTV",
-    package: "Compact Plus",
-    amount: "₦12,500",
-    status: "Successful",
-    date: "2025-10-03 17:00",
-  },
-  {
-    id: "TV002",
-    user: "Henry Clark",
-    smartcardNumber: "0987654321",
-    provider: "GOtv",
-    package: "Max",
-    amount: "₦4,850",
-    status: "Successful",
-    date: "2025-10-03 16:15",
-  },
-  {
-    id: "TV003",
-    user: "Ivy Martinez",
-    smartcardNumber: "5678901234",
-    provider: "Startimes",
-    package: "Classic",
-    amount: "₦2,600",
-    status: "Pending",
-    date: "2025-10-03 15:40",
-  },
-]
+import { Search, Download, Loader2 } from "lucide-react"
+import { useTVStats, useTVTransactions, useTVProviders } from "@/lib/api/hooks/use-tv"
+import { format } from "date-fns"
 
 export function TvManagement() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [selectedProvider, setSelectedProvider] = useState("all")
+  const perPage = 15
+
+  const { data: statsData, isLoading: statsLoading } = useTVStats()
+  const { data: transactionsData, isLoading: transactionsLoading } = useTVTransactions(currentPage, perPage)
+  const { data: providersData } = useTVProviders()
+
+  const stats = statsData?.data
+  const transactions = transactionsData?.data?.data || []
+  const pagination = transactionsData?.data
+  const providers = providersData?.data || []
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "yyyy-MM-dd HH:mm")
+    } catch {
+      return dateString
+    }
+  }
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status.toUpperCase()) {
+      case "SUCCESSFUL":
+      case "SUCCESS":
+        return "default"
+      case "PENDING":
+        return "secondary"
+      case "FAILED":
+        return "destructive"
+      default:
+        return "outline"
+    }
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
@@ -57,7 +60,9 @@ export function TvManagement() {
         <Card className="border border-border/50">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Total Subscriptions</CardDescription>
-            <CardTitle className="text-xl sm:text-2xl">987</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">
+              {statsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats?.totalSubscriptions || 0}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
             <p className="text-xs text-muted-foreground">+10% from last month</p>
@@ -66,7 +71,9 @@ export function TvManagement() {
         <Card className="border border-border/50">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Total Revenue</CardDescription>
-            <CardTitle className="text-xl sm:text-2xl">₦1.9M</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">
+              {statsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : `₦${(stats?.totalRevenue || 0).toLocaleString()}`}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
             <p className="text-xs text-muted-foreground">+7% from last month</p>
@@ -75,7 +82,9 @@ export function TvManagement() {
         <Card className="border border-border/50">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Success Rate</CardDescription>
-            <CardTitle className="text-xl sm:text-2xl">99.5%</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">
+              {statsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : `${stats?.successRate || 0}%`}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
             <p className="text-xs text-muted-foreground">Excellent performance</p>
@@ -84,7 +93,9 @@ export function TvManagement() {
         <Card className="border border-border/50">
           <CardHeader className="pb-3 p-4 sm:p-6">
             <CardDescription className="text-xs sm:text-sm">Active Providers</CardDescription>
-            <CardTitle className="text-xl sm:text-2xl">5</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">
+              {statsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats?.providers || providers.length}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
             <p className="text-xs text-muted-foreground">All major providers</p>
@@ -111,16 +122,17 @@ export function TvManagement() {
                 />
               </div>
             </div>
-            <Select defaultValue="all">
+            <Select value={selectedProvider} onValueChange={setSelectedProvider}>
               <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Provider" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Providers</SelectItem>
-                <SelectItem value="dstv">DSTV</SelectItem>
-                <SelectItem value="gotv">GOtv</SelectItem>
-                <SelectItem value="startimes">Startimes</SelectItem>
-                <SelectItem value="showmax">Showmax</SelectItem>
+                {providers.map((provider) => (
+                  <SelectItem key={provider.id} value={provider.code.toLowerCase()}>
+                    {provider.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Button variant="outline" className="w-full sm:w-auto">
@@ -145,39 +157,95 @@ export function TvManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockTvSubscriptions.map((subscription) => (
-                  <TableRow key={subscription.id}>
-                    <TableCell className="font-medium text-xs sm:text-sm">{subscription.id}</TableCell>
-                    <TableCell className="text-xs sm:text-sm">{subscription.user}</TableCell>
-                    <TableCell className="text-xs sm:text-sm">{subscription.smartcardNumber}</TableCell>
-                    <TableCell className="text-xs sm:text-sm">{subscription.provider}</TableCell>
-                    <TableCell className="text-xs sm:text-sm">{subscription.package}</TableCell>
-                    <TableCell className="font-semibold text-xs sm:text-sm">{subscription.amount}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          subscription.status === "Successful"
-                            ? "default"
-                            : subscription.status === "Pending"
-                              ? "secondary"
-                              : "destructive"
-                        }
-                        className={`text-xs ${subscription.status === "Successful" ? "bg-green-500 hover:bg-green-600" : ""}`}
-                      >
-                        {subscription.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs sm:text-sm text-muted-foreground">{subscription.date}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" className="text-xs sm:text-sm">
-                        View
-                      </Button>
+                {transactionsLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : transactions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                      No transactions found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  transactions.map((transaction) => (
+                    <TableRow key={transaction.transactionId}>
+                      <TableCell className="font-medium text-xs sm:text-sm">{transaction.transactionId}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{transaction.user}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{transaction.smartcardNumber || transaction.smartCardNumber}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{transaction.provider}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{transaction.package}</TableCell>
+                      <TableCell className="font-semibold text-xs sm:text-sm">₦{transaction.amount?.toLocaleString()}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={getStatusBadgeVariant(transaction.status)}
+                          className={`text-xs ${transaction.status.toUpperCase() === "SUCCESSFUL" ? "bg-green-500 hover:bg-green-600" : ""}`}
+                        >
+                          {transaction.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm text-muted-foreground">{formatDate(transaction.date)}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" className="text-xs sm:text-sm">
+                          View
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          {pagination && (
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3 sm:gap-4">
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Showing {pagination.from} to {pagination.to} of {pagination.total} transactions
+              </p>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!pagination.prev_page_url || transactionsLoading}
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  className="text-xs sm:text-sm"
+                >
+                  Previous
+                </Button>
+                {pagination.links
+                  .filter((link) => link.label !== "&laquo; Previous" && link.label !== "Next &raquo;")
+                  .map((link) => {
+                    const pageNum = link.label
+                    if (pageNum === "...") return null
+                    const isActive = link.active
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => link.url && setCurrentPage(parseInt(pageNum))}
+                        className={`text-xs sm:text-sm ${isActive ? "tx-bg-primary text-white bg-transparent" : ""}`}
+                        disabled={isActive || transactionsLoading}
+                      >
+                        {pageNum}
+                      </Button>
+                    )
+                  })}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!pagination.next_page_url || transactionsLoading}
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  className="text-xs sm:text-sm"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

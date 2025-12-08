@@ -9,13 +9,12 @@ export interface LoginPayload {
 }
 
 export interface LoginResponse {
+  id?: string
+  name: string
+  email: string
+  role: string
+  is_super_admin?: boolean
   token: string
-  user: {
-    id: string
-    name: string
-    email: string
-    role: string
-  }
 }
 
 export interface ForgotPasswordPayload {

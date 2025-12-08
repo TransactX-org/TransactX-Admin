@@ -12,9 +12,25 @@ export const useLogin = () => {
 
   return useMutation({
     mutationFn: (payload: LoginPayload) => login(payload),
-    onSuccess: (data) => {
-      const token = data.data.token
-      const user = data.data.user
+    onSuccess: (response) => {
+      // Check if the response indicates success
+      if (!response.success) {
+        toast({
+          title: "Login failed",
+          description: response.message || "Invalid email or password",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const token = response.data.token
+      const user = {
+        id: response.data.id || "",
+        name: response.data.name,
+        email: response.data.email,
+        role: response.data.role,
+        is_super_admin: response.data.is_super_admin,
+      }
 
       // Store token and user
       if (typeof window !== "undefined") {
