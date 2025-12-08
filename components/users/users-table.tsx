@@ -9,13 +9,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Eye, Edit, Ban, Trash2, Loader2 } from "lucide-react"
-import { UserDetailsModal } from "./user-details-modal"
 import { useUsers, useDeleteUser } from "@/lib/api/hooks/use-users"
 import { format } from "date-fns"
+import { useRouter } from "next/navigation"
 
 export function UsersTable() {
+  const router = useRouter()
   const [selectedRows, setSelectedRows] = useState<string[]>([])
-  const [selectedUser, setSelectedUser] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const perPage = 15
 
@@ -84,7 +84,7 @@ export function UsersTable() {
                 <TableRow>
                   <TableHead className="w-6 sm:w-12">
                     <Checkbox 
-                      checked={selectedRows.length === mockUsers.length} 
+                      checked={users.length > 0 && selectedRows.length === users.length} 
                       onCheckedChange={toggleAllRows}
                       className="h-3 w-3 sm:h-4 sm:w-4"
                     />
@@ -164,7 +164,7 @@ export function UsersTable() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setSelectedUser(user.id)}>
+                            <DropdownMenuItem onClick={() => router.push(`/dashboard/users/${user.id}`)}>
                               <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                               View Details
                             </DropdownMenuItem>
@@ -243,8 +243,6 @@ export function UsersTable() {
           )}
         </CardContent>
       </Card>
-
-      <UserDetailsModal userId={selectedUser} onClose={() => setSelectedUser(null)} />
     </>
   )
 }

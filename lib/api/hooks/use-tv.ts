@@ -1,10 +1,13 @@
 import { useQuery } from "@tanstack/react-query"
-import { getTVProviders } from "../services/tv.service"
+import { getTVProviders, getTVStats, getTVTransactions, getTVTransaction } from "../services/tv.service"
 
 // Query keys
 export const tvKeys = {
   all: ["tv"] as const,
   providers: () => [...tvKeys.all, "providers"] as const,
+  stats: () => [...tvKeys.all, "stats"] as const,
+  transactions: () => [...tvKeys.all, "transactions"] as const,
+  transaction: (id: string) => [...tvKeys.all, "transaction", id] as const,
 }
 
 // Get TV providers
@@ -13,6 +16,34 @@ export const useTVProviders = () => {
     queryKey: tvKeys.providers(),
     queryFn: getTVProviders,
     staleTime: 1000 * 60 * 30, // 30 minutes
+  })
+}
+
+// Get TV stats
+export const useTVStats = () => {
+  return useQuery({
+    queryKey: tvKeys.stats(),
+    queryFn: getTVStats,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  })
+}
+
+// Get TV transactions
+export const useTVTransactions = (page: number = 1, perPage: number = 15) => {
+  return useQuery({
+    queryKey: [...tvKeys.transactions(), { page, perPage }],
+    queryFn: () => getTVTransactions(page, perPage),
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  })
+}
+
+// Get single TV transaction
+export const useTVTransaction = (id: string | null) => {
+  return useQuery({
+    queryKey: tvKeys.transaction(id || ""),
+    queryFn: () => getTVTransaction(id!),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   })
 }
 

@@ -78,3 +78,48 @@ export const deleteUser = async (id: string): Promise<ApiResponse<{ message: str
   return response.data
 }
 
+// Get user transactions
+export const getUserTransactions = async (id: string, page: number = 1, perPage: number = 15): Promise<ApiResponse<any>> => {
+  const response = await apiClient.get<ApiResponse<any>>(`/admin/user-management/${id}/transactions`, {
+    params: {
+      page,
+      per_page: perPage,
+    },
+  })
+  return response.data
+}
+
+// Get user virtual bank accounts
+export const getUserVirtualBankAccounts = async (id: string, page: number = 1, perPage: number = 15): Promise<ApiResponse<any>> => {
+  const response = await apiClient.get<ApiResponse<any>>(`/admin/user-management/${id}/virtual-bank-accounts`, {
+    params: {
+      page,
+      per_page: perPage,
+    },
+  })
+  return response.data
+}
+
+// Get user linked accounts
+export const getUserLinkedAccounts = async (id: string, page: number = 1, perPage: number = 15): Promise<ApiResponse<any>> => {
+  const response = await apiClient.get<ApiResponse<any>>(`/admin/user-management/${id}/linked-accounts`, {
+    params: {
+      page,
+      per_page: perPage,
+    },
+  })
+  return response.data
+}
+
+// Get user wallet
+export const getUserWallet = async (id: string): Promise<ApiResponse<any>> => {
+  const response = await apiClient.get<ApiResponse<any>>(`/admin/user-management/${id}/wallet`)
+  return response.data
+}
+
+// Get user subscription
+export const getUserSubscription = async (id: string): Promise<ApiResponse<any>> => {
+  const response = await apiClient.get<ApiResponse<any>>(`/admin/user-management/${id}/subscription`)
+  return response.data
+}
+

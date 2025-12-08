@@ -1,5 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { getUsers, getUserStats, getUserById, createUser, updateUser, deleteUser } from "../services/user.service"
+import { 
+  getUsers, 
+  getUserStats, 
+  getUserById, 
+  createUser, 
+  updateUser, 
+  deleteUser,
+  getUserTransactions,
+  getUserVirtualBankAccounts,
+  getUserLinkedAccounts,
+  getUserWallet,
+  getUserSubscription
+} from "../services/user.service"
 import type { CreateUserPayload } from "../types"
 import { useToast } from "@/hooks/use-toast"
 
@@ -11,6 +23,11 @@ export const userKeys = {
   details: () => [...userKeys.all, "detail"] as const,
   detail: (id: string) => [...userKeys.details(), id] as const,
   stats: () => [...userKeys.all, "stats"] as const,
+  transactions: (id: string) => [...userKeys.detail(id), "transactions"] as const,
+  virtualBankAccounts: (id: string) => [...userKeys.detail(id), "virtual-bank-accounts"] as const,
+  linkedAccounts: (id: string) => [...userKeys.detail(id), "linked-accounts"] as const,
+  wallet: (id: string) => [...userKeys.detail(id), "wallet"] as const,
+  subscription: (id: string) => [...userKeys.detail(id), "subscription"] as const,
 }
 
 // Get all users
@@ -114,6 +131,56 @@ export const useDeleteUser = () => {
         variant: "destructive",
       })
     },
+  })
+}
+
+// Get user transactions
+export const useUserTransactions = (id: string | null, page: number = 1, perPage: number = 15) => {
+  return useQuery({
+    queryKey: [...userKeys.transactions(id || ""), { page, perPage }],
+    queryFn: () => getUserTransactions(id!, page, perPage),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  })
+}
+
+// Get user virtual bank accounts
+export const useUserVirtualBankAccounts = (id: string | null, page: number = 1, perPage: number = 15) => {
+  return useQuery({
+    queryKey: [...userKeys.virtualBankAccounts(id || ""), { page, perPage }],
+    queryFn: () => getUserVirtualBankAccounts(id!, page, perPage),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  })
+}
+
+// Get user linked accounts
+export const useUserLinkedAccounts = (id: string | null, page: number = 1, perPage: number = 15) => {
+  return useQuery({
+    queryKey: [...userKeys.linkedAccounts(id || ""), { page, perPage }],
+    queryFn: () => getUserLinkedAccounts(id!, page, perPage),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  })
+}
+
+// Get user wallet
+export const useUserWallet = (id: string | null) => {
+  return useQuery({
+    queryKey: userKeys.wallet(id || ""),
+    queryFn: () => getUserWallet(id!),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  })
+}
+
+// Get user subscription
+export const useUserSubscription = (id: string | null) => {
+  return useQuery({
+    queryKey: userKeys.subscription(id || ""),
+    queryFn: () => getUserSubscription(id!),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   })
 }
 

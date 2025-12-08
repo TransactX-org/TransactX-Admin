@@ -31,7 +31,19 @@ apiClient.interceptors.request.use(
 
 // Response interceptor - Handle errors globally
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Check if the API returned success: false in the response body
+    if (response.data && response.data.success === false) {
+      // Treat this as an error even though HTTP status is 200
+      return Promise.reject({
+        response: {
+          data: response.data,
+          status: response.status,
+        },
+      })
+    }
+    return response
+  },
   (error: AxiosError) => {
     // Handle common errors
     if (error.response) {
@@ -39,9 +51,10 @@ apiClient.interceptors.response.use(
 
       switch (status) {
         case 401:
-          // Unauthorized - clear token and redirect to login
-          if (typeof window !== "undefined") {
+          // Unauthorized - clear token and redirect to login only if not on login page
+          if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
             localStorage.removeItem("auth_token")
+            localStorage.removeItem("user")
             window.location.href = "/login"
           }
           break

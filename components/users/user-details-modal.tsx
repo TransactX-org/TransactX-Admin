@@ -45,8 +45,8 @@ export function UserDetailsModal({ userId, onClose }: UserDetailsModalProps) {
   }
 
   return (
-    <Dialog open={!!userId} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={!!userId} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>User Details</DialogTitle>
           <DialogDescription>Complete information about this user</DialogDescription>
@@ -78,12 +78,15 @@ export function UserDetailsModal({ userId, onClose }: UserDetailsModalProps) {
                     .toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <h3 className="text-2xl font-bold">{user.name}</h3>
-                <p className="text-muted-foreground">{user.email}</p>
-                <div className="flex gap-2 mt-2">
+                <p className="text-muted-foreground break-all">{user.email}</p>
+                <div className="flex flex-wrap gap-2 mt-2">
                   <Badge variant="outline">{user.user_type}</Badge>
+                  <Badge variant="outline">{user.account_type}</Badge>
                   <Badge variant={getStatusBadgeVariant(user.status)}>{user.status}</Badge>
+                  {user.is_active && <Badge variant="default" className="bg-green-500">Active</Badge>}
+                  {user.email_verified_at && <Badge variant="secondary">Email Verified</Badge>}
                 </div>
               </div>
             </div>
@@ -102,32 +105,49 @@ export function UserDetailsModal({ userId, onClose }: UserDetailsModalProps) {
                 <Card className="border border-border/50">
                   <CardContent className="p-6 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="flex items-center gap-3">
-                        <Mail className="h-5 w-5 text-muted-foreground" />
-                        <div>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Mail className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
                           <p className="text-sm text-muted-foreground">Email</p>
-                          <p className="font-medium">{user.email}</p>
+                          <p className="font-medium break-all">{user.email}</p>
+                          {user.email_verified_at && (
+                            <Badge variant="secondary" className="text-xs mt-1">Verified</Badge>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Phone className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm text-muted-foreground">Phone</p>
-                          <p className="font-medium">{user.phone_number || "N/A"}</p>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Phone className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-muted-foreground">Username</p>
+                          <p className="font-medium">{user.username || "N/A"}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <MapPin className="h-5 w-5 text-muted-foreground" />
-                        <div>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <MapPin className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
                           <p className="text-sm text-muted-foreground">Country</p>
                           <p className="font-medium">{user.country}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Calendar className="h-5 w-5 text-muted-foreground" />
-                        <div>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Calendar className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
                           <p className="text-sm text-muted-foreground">Join Date</p>
                           <p className="font-medium">{formatDate(user.created_at)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Activity className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-muted-foreground">Referral Code</p>
+                          <p className="font-medium">{user.referral_code || "N/A"}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Phone className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-muted-foreground">Last Device</p>
+                          <p className="font-medium">{user.last_logged_in_device || "N/A"}</p>
                         </div>
                       </div>
                     </div>
@@ -155,21 +175,26 @@ export function UserDetailsModal({ userId, onClose }: UserDetailsModalProps) {
               <TabsContent value="wallet" className="space-y-4">
                 <Card className="border border-border/50">
                   <CardContent className="p-6 space-y-4">
-                    {user.has_wallet ? (
+                    {user.wallet ? (
                       <>
                         <div className="text-center">
                           <p className="text-sm text-muted-foreground">Wallet Balance</p>
-                          <p className="text-3xl font-bold">₦{user.wallet_balance?.toLocaleString() || "0.00"}</p>
+                          <p className="text-3xl font-bold">₦{user.wallet.balance?.toLocaleString() || "0.00"}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{user.wallet.currency || "NGN"}</p>
                         </div>
                         <Separator />
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <p className="text-sm text-muted-foreground">Has Transaction PIN</p>
-                            <p className="font-medium">{user.has_transaction_pin ? "Yes" : "No"}</p>
+                            <Badge variant={user.has_transaction_pin ? "default" : "secondary"}>
+                              {user.has_transaction_pin ? "Yes" : "No"}
+                            </Badge>
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">Has Panic PIN</p>
-                            <p className="font-medium">{user.has_panic_pin ? "Yes" : "No"}</p>
+                            <Badge variant={user.has_panic_pin ? "default" : "secondary"}>
+                              {user.has_panic_pin ? "Yes" : "No"}
+                            </Badge>
                           </div>
                         </div>
                       </>
