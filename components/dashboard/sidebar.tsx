@@ -73,16 +73,18 @@ export function Sidebar() {
         isCollapsed ? "justify-center p-4" : "gap-3 p-6"
       )}>
         <img className={cn(
-          "w-auto transition-all duration-300",
-          isCollapsed ? "h-8" : "h-10"
-        )} src="/transactx.svg" alt="TransactX Logo" />
+          "transition-all duration-300",
+          isCollapsed ? "h-10 w-10" : "h-10 w-auto"
+        )} src={isCollapsed ? "/transactx-icon.svg" : "/transactx.svg"} alt="TransactX Logo" />
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => {
           const Icon = item.icon
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+          const isActive = item.href === "/dashboard"
+            ? pathname === "/dashboard"
+            : pathname === item.href || pathname.startsWith(item.href + "/")
 
           return (
             <div key={item.href}>
@@ -97,7 +99,7 @@ export function Sidebar() {
               >
                 <Icon className={cn(
                   "transition-all duration-300",
-                  isCollapsed ? "h-5 w-5" : "h-5 w-5"
+                  isCollapsed ? "h-7 w-7" : "h-5 w-5"
                 )} />
                 {!isCollapsed && <span>{item.label}</span>}
               </Link>
@@ -133,8 +135,8 @@ export function Sidebar() {
 
       {/* Logout */}
       <div className="p-4 border-t border-border">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className={cn(
             "w-full text-muted-foreground hover:text-foreground",
             isCollapsed ? "justify-center px-3" : "justify-start"
@@ -143,7 +145,7 @@ export function Sidebar() {
         >
           <LogOut className={cn(
             "transition-all duration-300",
-            isCollapsed ? "h-5 w-5" : "h-5 w-5"
+            isCollapsed ? "h-7 w-7" : "h-5 w-5"
           )} />
           {!isCollapsed && <span className="ml-3">Logout</span>}
         </Button>

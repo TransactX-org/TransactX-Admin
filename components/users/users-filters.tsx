@@ -14,9 +14,9 @@ export function UsersFilters() {
   return (
     <Card className="border border-border/50">
       <CardContent className="p-4 sm:p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="flex flex-wrap items-end gap-4">
           {/* Search */}
-          <div className="space-y-2">
+          <div className="space-y-2 min-w-[200px] flex-1">
             <Label className="text-sm">Search</Label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -30,7 +30,7 @@ export function UsersFilters() {
           </div>
 
           {/* Status Filter */}
-          <div className="space-y-2">
+          <div className="space-y-2 min-w-[150px]">
             <Label className="text-sm">Status</Label>
             <Select defaultValue="all">
               <SelectTrigger>
@@ -46,7 +46,7 @@ export function UsersFilters() {
           </div>
 
           {/* Role Filter */}
-          <div className="space-y-2">
+          <div className="space-y-2 min-w-[150px]">
             <Label className="text-sm">Role</Label>
             <Select defaultValue="all">
               <SelectTrigger>
@@ -62,7 +62,7 @@ export function UsersFilters() {
           </div>
 
           {/* Sort By */}
-          <div className="space-y-2">
+          <div className="space-y-2 min-w-[150px]">
             <Label className="text-sm">Sort By</Label>
             <Select defaultValue="recent">
               <SelectTrigger>
