@@ -30,7 +30,7 @@ export function UsersFilters() {
           </div>
 
           {/* Status Filter */}
-          <div className="space-y-2 min-w-[150px]">
+          <div className="space-y-2 w-[calc(50%-8px)] sm:w-auto sm:min-w-[150px]">
             <Label className="text-sm">Status</Label>
             <Select defaultValue="all">
               <SelectTrigger>
@@ -46,7 +46,7 @@ export function UsersFilters() {
           </div>
 
           {/* Role Filter */}
-          <div className="space-y-2 min-w-[150px]">
+          <div className="space-y-2 w-[calc(50%-8px)] sm:w-auto sm:min-w-[150px]">
             <Label className="text-sm">Role</Label>
             <Select defaultValue="all">
               <SelectTrigger>
@@ -62,7 +62,7 @@ export function UsersFilters() {
           </div>
 
           {/* Sort By */}
-          <div className="space-y-2 min-w-[150px]">
+          <div className="space-y-2 w-[calc(50%-8px)] sm:w-auto sm:min-w-[150px]">
             <Label className="text-sm">Sort By</Label>
             <Select defaultValue="recent">
               <SelectTrigger>
