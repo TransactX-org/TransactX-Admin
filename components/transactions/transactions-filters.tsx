@@ -15,9 +15,9 @@ export function TransactionsFilters() {
   return (
     <Card className="border border-border/50 sleek-card">
       <CardContent className="p-4 sm:p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="flex flex-wrap items-end gap-4">
           {/* Search */}
-          <div className="space-y-2">
+          <div className="space-y-2 w-full sm:flex-1 min-w-[200px]">
             <Label className="text-sm">Search</Label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -31,7 +31,7 @@ export function TransactionsFilters() {
           </div>
 
           {/* Status Filter */}
-          <div className="space-y-2">
+          <div className="space-y-2 w-[calc(50%-8px)] sm:w-auto sm:min-w-[150px]">
             <Label className="text-sm">Status</Label>
             <Select defaultValue="all">
               <SelectTrigger>
@@ -47,7 +47,7 @@ export function TransactionsFilters() {
           </div>
 
           {/* Type Filter */}
-          <div className="space-y-2">
+          <div className="space-y-2 w-[calc(50%-8px)] sm:w-auto sm:min-w-[150px]">
             <Label className="text-sm">Type</Label>
             <Select defaultValue="all">
               <SelectTrigger>
@@ -63,7 +63,7 @@ export function TransactionsFilters() {
           </div>
 
           {/* Date Range */}
-          <div className="space-y-2">
+          <div className="space-y-2 w-full sm:w-auto">
             <Label className="text-sm">Date Range</Label>
             <DatePickerWithRange />
           </div>

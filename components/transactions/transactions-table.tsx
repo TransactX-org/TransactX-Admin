@@ -210,7 +210,7 @@ export function TransactionsTable() {
                         variant="outline"
                         size="sm"
                         onClick={() => link.url && setCurrentPage(parseInt(pageNum))}
-                        className={`text-xs sm:text-sm ${isActive ? "tx-bg-primary text-white bg-transparent" : ""}`}
+                        className={`text-xs sm:text-sm hidden sm:flex ${isActive ? "tx-bg-primary text-white bg-transparent" : ""}`}
                         disabled={isActive || isLoading}
                       >
                         {pageNum}
