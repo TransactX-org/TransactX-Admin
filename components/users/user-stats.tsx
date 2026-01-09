@@ -10,15 +10,9 @@ export function UserStats() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3 sm:gap-4">
         {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-          <Card key={i} className="border border-border/50">
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
+          <Card key={i} className="border-border/40 bg-card/10 backdrop-blur-sm rounded-3xl h-32 animate-pulse" />
         ))}
       </div>
     )
@@ -80,19 +74,22 @@ export function UserStats() {
   ]
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3 sm:gap-4">
       {statCards.map((stat, index) => {
         const Icon = stat.icon
         return (
-          <Card key={index} className="border border-border/50 hover:border-border hover:shadow-md transition-all">
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex flex-col gap-2">
+          <Card key={index} className="border-border/40 bg-card/30 backdrop-blur-sm rounded-3xl group hover:border-primary/30 transition-all duration-300">
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium text-muted-foreground">{stat.title}</p>
-                  <Icon className="h-4 w-4 text-muted-foreground" />
+                  <div className="p-2 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                    <Icon className="h-4 w-4" />
+                  </div>
                 </div>
-                <p className="text-xl sm:text-2xl font-bold">{stat.value}</p>
-                <p className="text-xs text-muted-foreground">{stat.description}</p>
+                <div>
+                  <p className="text-2xl sm:text-3xl font-black tracking-tighter">{stat.value.toLocaleString()}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 mt-1 line-clamp-1">{stat.title}</p>
+                </div>
               </div>
             </CardContent>
           </Card>
