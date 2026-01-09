@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { 
-  getUsers, 
-  getUserStats, 
-  getUserById, 
-  createUser, 
-  updateUser, 
+import {
+  getUsers,
+  getUserStats,
+  getUserById,
+  createUser,
+  updateUser,
   deleteUser,
   getUserTransactions,
   getUserVirtualBankAccounts,
@@ -31,10 +31,26 @@ export const userKeys = {
 }
 
 // Get all users
-export const useUsers = (page: number = 1, perPage: number = 15) => {
+export const useUsers = (
+  page: number = 1,
+  perPage: number = 15,
+  filters?: {
+    search?: string
+    status?: string
+    kyc_status?: string
+    kyb_status?: string
+    user_type?: string
+    account_type?: string
+    is_active?: string | number | boolean
+    country?: string
+    email_verified?: string | number | boolean
+    start_date?: string
+    end_date?: string
+  }
+) => {
   return useQuery({
-    queryKey: userKeys.list({ page, perPage }),
-    queryFn: () => getUsers(page, perPage),
+    queryKey: userKeys.list({ page, perPage, ...filters }),
+    queryFn: () => getUsers(page, perPage, filters),
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
 }
