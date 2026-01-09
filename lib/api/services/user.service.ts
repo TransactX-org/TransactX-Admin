@@ -6,6 +6,12 @@ import type {
     UserStats,
     CreateUserPayload,
     CreateUserResponse,
+    Beneficiary,
+    LinkedBankAccount,
+    UserSubscription,
+    UserTransaction,
+    VirtualBankAccount,
+    Wallet,
 } from "../types"
 
 // Get all users with pagination and filters
@@ -96,8 +102,8 @@ export const deleteUser = async (id: string): Promise<ApiResponse<{ message: str
 }
 
 // Get user transactions
-export const getUserTransactions = async (id: string, page: number = 1, perPage: number = 15): Promise<ApiResponse<any>> => {
-    const response = await apiClient.get<ApiResponse<any>>(`/admin/user-management/${id}/transactions`, {
+export const getUserTransactions = async (id: string, page: number = 1, perPage: number = 15): Promise<ApiResponse<PaginatedResponse<UserTransaction>>> => {
+    const response = await apiClient.get<ApiResponse<PaginatedResponse<UserTransaction>>>(`/admin/user-management/${id}/transactions`, {
         params: {
             page,
             per_page: perPage,
@@ -107,8 +113,8 @@ export const getUserTransactions = async (id: string, page: number = 1, perPage:
 }
 
 // Get user virtual bank accounts
-export const getUserVirtualBankAccounts = async (id: string, page: number = 1, perPage: number = 15): Promise<ApiResponse<any>> => {
-    const response = await apiClient.get<ApiResponse<any>>(`/admin/user-management/${id}/virtual-bank-accounts`, {
+export const getUserVirtualBankAccounts = async (id: string, page: number = 1, perPage: number = 15): Promise<ApiResponse<PaginatedResponse<VirtualBankAccount>>> => {
+    const response = await apiClient.get<ApiResponse<PaginatedResponse<VirtualBankAccount>>>(`/admin/user-management/${id}/virtual-bank-accounts`, {
         params: {
             page,
             per_page: perPage,
@@ -129,13 +135,52 @@ export const getUserLinkedAccounts = async (id: string, page: number = 1, perPag
 }
 
 // Get user wallet
-export const getUserWallet = async (id: string): Promise<ApiResponse<any>> => {
-    const response = await apiClient.get<ApiResponse<any>>(`/admin/user-management/${id}/wallet`)
+export const getUserWallet = async (id: string): Promise<ApiResponse<{ wallet: Wallet }>> => {
+    const response = await apiClient.get<ApiResponse<{ wallet: Wallet }>>(`/admin/user-management/${id}/wallets`)
     return response.data
 }
 
-// Get user subscription
-export const getUserSubscription = async (id: string): Promise<ApiResponse<any>> => {
-    const response = await apiClient.get<ApiResponse<any>>(`/admin/user-management/${id}/subscription`)
+// Get user subscriptions
+export const getUserSubscriptions = async (id: string, page: number = 1, perPage: number = 15): Promise<ApiResponse<PaginatedResponse<UserSubscription>>> => {
+    const response = await apiClient.get<ApiResponse<PaginatedResponse<UserSubscription>>>(`/admin/user-management/${id}/subscriptions`, {
+        params: {
+            page,
+            per_page: perPage,
+        },
+    })
+    return response.data
+}
+
+// Get user beneficiaries
+export const getUserBeneficiaries = async (id: string, page: number = 1, perPage: number = 15): Promise<ApiResponse<PaginatedResponse<Beneficiary>>> => {
+    const response = await apiClient.get<ApiResponse<PaginatedResponse<Beneficiary>>>(`/admin/user-management/${id}/beneficiaries`, {
+        params: {
+            page,
+            per_page: perPage,
+        },
+    })
+    return response.data
+}
+
+// Get user linked bank accounts
+export const getUserLinkedBankAccounts = async (id: string, page: number = 1, perPage: number = 15): Promise<ApiResponse<PaginatedResponse<LinkedBankAccount>>> => {
+    const response = await apiClient.get<ApiResponse<PaginatedResponse<LinkedBankAccount>>>(`/admin/user-management/${id}/linked-bank-accounts`, {
+        params: {
+            page,
+            per_page: perPage,
+        },
+    })
+    return response.data
+}
+
+// Suspend user
+export const suspendUser = async (id: string): Promise<ApiResponse<any>> => {
+    const response = await apiClient.post<ApiResponse<any>>(`/admin/user-management/${id}/suspend`)
+    return response.data
+}
+
+// Activate user
+export const activateUser = async (id: string): Promise<ApiResponse<any>> => {
+    const response = await apiClient.post<ApiResponse<any>>(`/admin/user-management/${id}/activate`)
     return response.data
 }

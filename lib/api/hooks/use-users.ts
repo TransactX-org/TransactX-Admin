@@ -10,7 +10,11 @@ import {
   getUserVirtualBankAccounts,
   getUserLinkedAccounts,
   getUserWallet,
-  getUserSubscription
+  getUserSubscriptions,
+  getUserBeneficiaries,
+  getUserLinkedBankAccounts,
+  suspendUser,
+  activateUser
 } from "../services/user.service"
 import type { CreateUserPayload } from "../types"
 import { useToast } from "@/hooks/use-toast"
@@ -27,7 +31,9 @@ export const userKeys = {
   virtualBankAccounts: (id: string) => [...userKeys.detail(id), "virtual-bank-accounts"] as const,
   linkedAccounts: (id: string) => [...userKeys.detail(id), "linked-accounts"] as const,
   wallet: (id: string) => [...userKeys.detail(id), "wallet"] as const,
-  subscription: (id: string) => [...userKeys.detail(id), "subscription"] as const,
+  subscriptions: (id: string) => [...userKeys.detail(id), "subscriptions"] as const,
+  beneficiaries: (id: string) => [...userKeys.detail(id), "beneficiaries"] as const,
+  linkedBankAccounts: (id: string) => [...userKeys.detail(id), "linked-bank-accounts"] as const,
 }
 
 // Get all users
@@ -190,13 +196,82 @@ export const useUserWallet = (id: string | null) => {
   })
 }
 
-// Get user subscription
-export const useUserSubscription = (id: string | null) => {
+// Get user subscriptions
+export const useUserSubscriptions = (id: string | null, page: number = 1, perPage: number = 15) => {
   return useQuery({
-    queryKey: userKeys.subscription(id || ""),
-    queryFn: () => getUserSubscription(id!),
+    queryKey: [...userKeys.subscriptions(id || ""), { page, perPage }],
+    queryFn: () => getUserSubscriptions(id!, page, perPage),
     enabled: !!id,
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
 }
 
+// Get user beneficiaries
+export const useUserBeneficiaries = (id: string | null, page: number = 1, perPage: number = 15) => {
+  return useQuery({
+    queryKey: [...userKeys.beneficiaries(id || ""), { page, perPage }],
+    queryFn: () => getUserBeneficiaries(id!, page, perPage),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  })
+}
+
+// Get user linked bank accounts
+export const useUserLinkedBankAccounts = (id: string | null, page: number = 1, perPage: number = 15) => {
+  return useQuery({
+    queryKey: [...userKeys.linkedBankAccounts(id || ""), { page, perPage }],
+    queryFn: () => getUserLinkedBankAccounts(id!, page, perPage),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  })
+}
+
+// Suspend user mutation
+export const useSuspendUser = () => {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: (id: string) => suspendUser(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(id) })
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() })
+      toast({
+        title: "Success",
+        description: "User suspended successfully",
+      })
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to suspend user",
+        variant: "destructive",
+      })
+    },
+  })
+}
+
+// Activate user mutation
+export const useActivateUser = () => {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: (id: string) => activateUser(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(id) })
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() })
+      toast({
+        title: "Success",
+        description: "User activated successfully",
+      })
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to activate user",
+        variant: "destructive",
+      })
+    },
+  })
+}
