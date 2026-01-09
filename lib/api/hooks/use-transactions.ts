@@ -1,6 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { getTransactions, getTransactionStats, getTransactionById } from "../services/transaction.service"
-import { useToast } from "@/hooks/use-toast"
+import { useQuery } from "@tanstack/react-query"
+import {
+  getTransactions,
+  getTransactionStatistics,
+  getTransactionReports,
+  getTransactionById
+} from "../services/transaction.service"
 
 // Query keys
 export const transactionKeys = {
@@ -9,7 +13,8 @@ export const transactionKeys = {
   list: (filters: Record<string, any>) => [...transactionKeys.lists(), { filters }] as const,
   details: () => [...transactionKeys.all, "detail"] as const,
   detail: (id: string) => [...transactionKeys.details(), id] as const,
-  stats: () => [...transactionKeys.all, "stats"] as const,
+  statistics: (filters: Record<string, any>) => [...transactionKeys.all, "statistics", { filters }] as const,
+  reports: (filters: Record<string, any>) => [...transactionKeys.all, "reports", { filters }] as const,
 }
 
 // Get all transactions
@@ -20,8 +25,8 @@ export const useTransactions = (
     status?: string
     type?: string
     search?: string
-    date_from?: string
-    date_to?: string
+    start_date?: string
+    end_date?: string
   }
 ) => {
   return useQuery({
@@ -31,11 +36,20 @@ export const useTransactions = (
   })
 }
 
-// Get transaction stats
-export const useTransactionStats = () => {
+// Get transaction statistics
+export const useTransactionStatistics = (year?: number, month?: number) => {
   return useQuery({
-    queryKey: transactionKeys.stats(),
-    queryFn: getTransactionStats,
+    queryKey: transactionKeys.statistics({ year, month }),
+    queryFn: () => getTransactionStatistics(year, month),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  })
+}
+
+// Get transaction reports
+export const useTransactionReports = (year?: number, start_date?: string, end_date?: string) => {
+  return useQuery({
+    queryKey: transactionKeys.reports({ year, start_date, end_date }),
+    queryFn: () => getTransactionReports(year, start_date, end_date),
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
 }
