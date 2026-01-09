@@ -1,73 +1,99 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent } from "@/components/ui/card"
-import { Download, RefreshCw, Calendar } from "lucide-react"
+import { Download, RefreshCw, Calendar, Filter } from "lucide-react"
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { DateRange } from "react-day-picker"
+import { format } from "date-fns"
 
-export function ReportsFilters() {
+interface ReportsFiltersProps {
+  filters: {
+    year: number
+    month: number
+    start_date: string
+    end_date: string
+  }
+  onFilterChange: (newFilters: Partial<ReportsFiltersProps["filters"]>) => void
+}
+
+export function ReportsFilters({ filters, onFilterChange }: ReportsFiltersProps) {
+  const currentYear = new Date().getFullYear()
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - i)
+
+  const dateRange: DateRange | undefined = filters.start_date ? {
+    from: new Date(filters.start_date),
+    to: filters.end_date ? new Date(filters.end_date) : undefined
+  } : undefined
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    onFilterChange({
+      start_date: range?.from ? format(range.from, "yyyy-MM-dd") : "",
+      end_date: range?.to ? format(range.to, "yyyy-MM-dd") : "",
+    })
+  }
+
   return (
-    <Card className="border border-border/50">
-      <CardContent className="p-4 sm:p-6">
-        <div className="flex flex-wrap items-end gap-4">
-          {/* Date Range */}
-          <div className="space-y-2 w-full sm:w-auto">
-            <Label className="text-sm">Date Range</Label>
-            <DatePickerWithRange />
-          </div>
-
-          {/* Report Type */}
-          <div className="space-y-2 w-[calc(50%-8px)] sm:w-auto sm:min-w-[150px]">
-            <Label className="text-sm">Report Type</Label>
-            <Select defaultValue="all">
-              <SelectTrigger>
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Reports</SelectItem>
-                <SelectItem value="transactions">Transactions</SelectItem>
-                <SelectItem value="users">Users</SelectItem>
-                <SelectItem value="revenue">Revenue</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Time Period */}
-          <div className="space-y-2 w-[calc(50%-8px)] sm:w-auto sm:min-w-[150px]">
-            <Label className="text-sm">Time Period</Label>
-            <Select defaultValue="month">
-              <SelectTrigger>
-                <SelectValue placeholder="Select period" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-                <SelectItem value="quarter">This Quarter</SelectItem>
-                <SelectItem value="year">This Year</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+    <div className="bg-card/30 rounded-2xl border border-border/40 p-4 sm:p-5 backdrop-blur-sm shadow-none">
+      <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+        {/* Date Range */}
+        <div className="flex-1 min-w-0">
+          <DatePickerWithRange date={dateRange} onChange={handleDateRangeChange} />
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row flex-wrap gap-2 mt-4">
-          <Button variant="outline" size="sm" className="w-full sm:w-auto">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh Data
-          </Button>
-          <Button variant="outline" size="sm" className="tx-text-primary bg-transparent w-full sm:w-auto">
-            <Download className="h-4 w-4 mr-2" />
-            Export Report
-          </Button>
-          <Button variant="outline" size="sm" className="w-full sm:w-auto">
-            <Calendar className="h-4 w-4 mr-2" />
-            Schedule Report
-          </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Year Selection */}
+          <Select
+            value={filters.year.toString()}
+            onValueChange={(v) => onFilterChange({ year: parseInt(v) })}
+          >
+            <SelectTrigger className="h-11 w-full lg:w-[120px] bg-background/50 border-border/40 rounded-xl px-4 hover:bg-background transition-colors font-black text-[10px] uppercase tracking-widest">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Year" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-border/40 bg-card/95 backdrop-blur-md">
+              {years.map(year => (
+                <SelectItem key={year} value={year.toString()} className="text-[10px] font-black uppercase tracking-widest">
+                  {year}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Month Selection */}
+          <Select
+            value={filters.month.toString()}
+            onValueChange={(v) => onFilterChange({ month: parseInt(v) })}
+          >
+            <SelectTrigger className="h-11 w-full lg:w-[150px] bg-background/50 border-border/40 rounded-xl px-4 hover:bg-background transition-colors font-black text-[10px] uppercase tracking-widest">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Month" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-border/40 bg-card/95 backdrop-blur-md">
+              {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                <SelectItem key={month} value={month.toString()} className="text-[10px] font-black uppercase tracking-widest">
+                  {format(new Date(2000, month - 1), "MMMM")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2 w-full lg:w-auto ml-auto">
+            <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 border-border/40 bg-background/50 rounded-xl hover:bg-primary/5 hover:text-primary transition-colors">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" className="h-11 flex-1 lg:flex-none border-border/40 bg-background/50 rounded-xl px-4 font-black text-[10px] uppercase tracking-widest hover:bg-primary/5 hover:text-primary transition-colors">
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
