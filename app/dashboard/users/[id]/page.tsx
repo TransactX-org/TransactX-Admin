@@ -15,9 +15,12 @@ import {
   useDeleteUser,
   useUserTransactions,
   useUserVirtualBankAccounts,
-  useUserLinkedAccounts,
+  useUserLinkedBankAccounts,
+  useUserBeneficiaries,
   useUserWallet,
-  useUserSubscription
+  useUserSubscriptions,
+  useSuspendUser,
+  useActivateUser
 } from "@/lib/api/hooks/use-users"
 import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
@@ -36,9 +39,15 @@ export default function UserDetailsPage() {
   // Fetch additional data
   const { data: transactionsData, isLoading: transactionsLoading } = useUserTransactions(userId, 1, 10)
   const { data: virtualAccountsData, isLoading: virtualAccountsLoading } = useUserVirtualBankAccounts(userId, 1, 10)
-  const { data: linkedAccountsData, isLoading: linkedAccountsLoading } = useUserLinkedAccounts(userId, 1, 10)
+  const { data: linkedBankAccountsData, isLoading: linkedBankAccountsLoading } = useUserLinkedBankAccounts(userId, 1, 10)
+  const { data: beneficiariesData, isLoading: beneficiariesLoading } = useUserBeneficiaries(userId, 1, 10)
   const { data: walletData, isLoading: walletLoading } = useUserWallet(userId)
-  const { data: subscriptionData, isLoading: subscriptionLoading } = useUserSubscription(userId)
+  const { data: subscriptionsData, isLoading: subscriptionsLoading } = useUserSubscriptions(userId, 1, 10)
+  const suspendUserMutation = useSuspendUser()
+  const activateUserMutation = useActivateUser()
+
+  const isSuspended = user?.status === "SUSPENDED"
+  const isActionPending = suspendUserMutation.isPending || activateUserMutation.isPending
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -121,18 +130,49 @@ export default function UserDetailsPage() {
               <Edit className="h-4 w-4 mr-2 text-muted-foreground" />
               Edit Profile
             </Button>
-            <Button variant="outline" size="sm" className="h-9 rounded-xl border-border/40 hover:bg-muted/50">
-              <Ban className="h-4 w-4 mr-2 text-muted-foreground" />
-              Suspend
-            </Button>
+            {isSuspended ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 rounded-xl border-border/40 hover:bg-emerald-50 text-emerald-600 hover:text-emerald-700 hover:border-emerald-200"
+                onClick={() => activateUserMutation.mutate(userId)}
+                disabled={isActionPending}
+              >
+                {activateUserMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <ShieldCheck className="h-4 w-4 mr-2" />
+                )}
+                Activate User
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 rounded-xl border-border/40 hover:bg-amber-50 text-amber-600 hover:text-amber-700 hover:border-amber-200"
+                onClick={() => suspendUserMutation.mutate(userId)}
+                disabled={isActionPending}
+              >
+                {suspendUserMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Ban className="h-4 w-4 mr-2" />
+                )}
+                Suspend User
+              </Button>
+            )}
             <Button
               variant="destructive"
               size="sm"
               className="h-9 rounded-xl px-4"
               onClick={handleDeleteUser}
-              disabled={deleteUserMutation.isPending}
+              disabled={deleteUserMutation.isPending || isActionPending}
             >
-              <Trash2 className="h-4 w-4 mr-2" />
+              {deleteUserMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-2" />
+              )}
               Delete User
             </Button>
           </div>
@@ -151,10 +191,25 @@ export default function UserDetailsPage() {
                   <Edit className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">Edit Details</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="rounded-xl py-3 gap-3">
-                  <Ban className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">Suspend Access</span>
-                </DropdownMenuItem>
+                {isSuspended ? (
+                  <DropdownMenuItem
+                    className="rounded-xl py-3 gap-3 text-emerald-600 focus:text-emerald-700"
+                    onClick={() => activateUserMutation.mutate(userId)}
+                    disabled={isActionPending}
+                  >
+                    {activateUserMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                    <span className="font-medium">Activate Account</span>
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    className="rounded-xl py-3 gap-3 text-amber-600 focus:text-amber-700"
+                    onClick={() => suspendUserMutation.mutate(userId)}
+                    disabled={isActionPending}
+                  >
+                    {suspendUserMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+                    <span className="font-medium">Suspend Access</span>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator className="my-1 bg-border/40" />
                 <DropdownMenuItem
                   className="rounded-xl py-3 gap-3 text-destructive focus:text-destructive focus:bg-destructive/5"
@@ -226,12 +281,13 @@ export default function UserDetailsPage() {
       {/* Tabs */}
       <Tabs defaultValue="info" className="w-full">
         <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:px-0 sm:pb-0 scrollbar-hide">
-          <TabsList className="flex items-center gap-1.5 w-fit sm:w-full min-w-full sm:grid sm:grid-cols-5 p-1 bg-muted/30 rounded-2xl border border-border/40">
+          <TabsList className="flex items-center gap-1.5 w-fit sm:w-full min-w-full sm:grid sm:grid-cols-6 p-1 bg-muted/30 rounded-2xl border border-border/40">
             <TabsTrigger value="info" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all">Info</TabsTrigger>
             <TabsTrigger value="wallet" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all">Wallet</TabsTrigger>
             <TabsTrigger value="subscription" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all">Sub</TabsTrigger>
+            <TabsTrigger value="beneficiaries" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all">Saved</TabsTrigger>
             <TabsTrigger value="transactions" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all">History</TabsTrigger>
-            <TabsTrigger value="accounts" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all">Banks</TabsTrigger>
+            <TabsTrigger value="accounts" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all text-center">Banks</TabsTrigger>
           </TabsList>
         </div>
 
@@ -308,6 +364,21 @@ export default function UserDetailsPage() {
                         {user.has_transaction_pin ? "PIN SECURED" : "PIN NOT SET"}
                       </Badge>
                     </div>
+
+                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Account Number</p>
+                        <p className="text-xl font-black tracking-widest">{walletData?.data?.wallet?.account_number || "---"}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Bank Name</p>
+                        <p className="text-xl font-black truncate">{walletData?.data?.wallet?.bank_name || "---"}</p>
+                      </div>
+                      <div className="col-span-1 sm:col-span-2 space-y-1">
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Account Name</p>
+                        <p className="text-sm font-bold opacity-90">{walletData?.data?.wallet?.account_name || "---"}</p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -335,54 +406,90 @@ export default function UserDetailsPage() {
         <TabsContent value="subscription" className="space-y-4 mt-6">
           <Card className="border-border/40 bg-card/30 backdrop-blur-sm rounded-3xl">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-black uppercase tracking-widest text-muted-foreground/70">Subscription Plan</CardTitle>
+              <CardTitle className="text-lg font-black uppercase tracking-widest text-muted-foreground/70">Subscriptions History</CardTitle>
             </CardHeader>
-            <CardContent className="p-6">
-              {subscriptionLoading ? (
+            <CardContent className="p-0">
+              {subscriptionsLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
-              ) : subscriptionData?.data?.subscription || user.subscription ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {(() => {
-                    const sub = subscriptionData?.data?.subscription || user.subscription
-                    return (
-                      <>
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Status</p>
-                          <Badge variant={sub.status === "ACTIVE" ? "default" : "secondary"} className="font-bold">
-                            {sub.status}
-                          </Badge>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Billing Cycle</p>
-                          <p className="text-base font-bold">{sub.billing}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Payment Method</p>
-                          <p className="text-base font-bold truncate">{sub.method}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Period Start</p>
-                          <p className="text-base font-bold">{formatDate(sub.start_date)}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Next renewal</p>
-                          <p className="text-base font-bold text-tx-primary">{formatDate(sub.end_date)}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Auto-Renew</p>
-                          <p className="text-base font-bold">{sub.is_auto_renew ? "ENABLED" : "OFF"}</p>
-                        </div>
-                      </>
-                    )
-                  })()}
+              ) : subscriptionsData?.data?.data && subscriptionsData.data.data.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader className="bg-muted/30">
+                      <TableRow className="border-none">
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Model</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Billing</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Status</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Start Date</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">End Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {subscriptionsData.data.data.map((sub: any) => (
+                        <TableRow key={sub.id} className="border-b-border/40 hover:bg-muted/20">
+                          <TableCell className="font-bold text-xs uppercase tracking-tight">{sub.model_name}</TableCell>
+                          <TableCell className="text-xs font-bold">{sub.billing}</TableCell>
+                          <TableCell>
+                            <Badge variant={sub.status === "ACTIVE" || sub.status === "SUCCESSFUL" ? "default" : "secondary"} className="text-[10px] font-bold">
+                              {sub.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-[10px] font-bold text-muted-foreground">{sub.start_date}</TableCell>
+                          <TableCell className="text-[10px] font-bold text-tx-primary">{sub.end_date}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               ) : (
-                <div className="text-center py-12 border border-dashed border-border/40 rounded-2xl">
-                  <p className="text-sm text-muted-foreground font-medium">No active subscription</p>
+                <div className="text-center py-12 border border-dashed border-border/40 rounded-2xl m-6">
+                  <p className="text-sm text-muted-foreground font-medium">No subscription found</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="beneficiaries" className="space-y-4 mt-6">
+          <Card className="border-border/40 bg-card/30 backdrop-blur-sm rounded-3xl overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-black uppercase tracking-widest text-muted-foreground/70">Saved Beneficiaries</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {beneficiariesLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : (() => {
+                const beneficiaries = beneficiariesData?.data?.data || (Array.isArray(beneficiariesData?.data) ? beneficiariesData.data : [])
+                return beneficiaries.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-6">
+                    {beneficiaries.map((beneficiary: any) => (
+                      <div key={beneficiary.id} className="p-5 rounded-2xl border border-border/40 bg-muted/10 group hover:bg-muted/20 transition-all flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                          {beneficiary.service === "airtime" || beneficiary.service === "data" ? (
+                            <Phone className="h-5 w-5" />
+                          ) : (
+                            <CreditCard className="h-5 w-5" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">{beneficiary.service}</p>
+                          <p className="text-sm font-black truncate">{beneficiary.account_name || beneficiary.phone_number}</p>
+                          <p className="text-[10px] font-bold text-muted-foreground truncate italic opacity-70">
+                            {beneficiary.bank_name || beneficiary.network} {beneficiary.account_number}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-sm text-muted-foreground font-medium">No beneficiaries found</p>
+                  </div>
+                )
+              })()}
             </CardContent>
           </Card>
         </TabsContent>
@@ -397,44 +504,47 @@ export default function UserDetailsPage() {
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
-              ) : transactionsData?.data?.data && transactionsData.data.data.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader className="bg-muted/30">
-                      <TableRow className="border-none">
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Reference</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Type</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Amount</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Status</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Date</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {transactionsData.data.data.map((transaction: any) => (
-                        <TableRow key={transaction.id || transaction.reference} className="border-b-border/40 hover:bg-muted/20">
-                          <TableCell className="font-mono text-[10px] font-bold py-4">#{transaction.reference?.slice(0, 8)}...</TableCell>
-                          <TableCell>
-                            <span className="text-[10px] font-bold px-2 py-1 rounded bg-muted border border-border/40 uppercase">
-                              {transaction.type}
-                            </span>
-                          </TableCell>
-                          <TableCell className="font-bold">₦{transaction.amount?.toLocaleString()}</TableCell>
-                          <TableCell>
-                            <Badge variant={transaction.status === "SUCCESS" ? "default" : "secondary"} className="text-[10px] font-bold">
-                              {transaction.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-[10px] font-bold text-muted-foreground">{formatDate(transaction.created_at || transaction.date)}</TableCell>
+              ) : (() => {
+                const transactions = transactionsData?.data?.data || (Array.isArray(transactionsData?.data) ? transactionsData.data : [])
+                return transactions.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader className="bg-muted/30">
+                        <TableRow className="border-none">
+                          <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Reference</TableHead>
+                          <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Type</TableHead>
+                          <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Amount</TableHead>
+                          <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Status</TableHead>
+                          <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Date</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-sm text-muted-foreground font-medium">No transaction history found</p>
-                </div>
-              )}
+                      </TableHeader>
+                      <TableBody>
+                        {transactions.map((transaction: any) => (
+                          <TableRow key={transaction.id || transaction.reference} className="border-b-border/40 hover:bg-muted/20">
+                            <TableCell className="font-mono text-[10px] font-bold py-4">#{transaction.reference?.slice(0, 8)}...</TableCell>
+                            <TableCell>
+                              <span className="text-[10px] font-bold px-2 py-1 rounded bg-muted border border-border/40 uppercase">
+                                {transaction.type}
+                              </span>
+                            </TableCell>
+                            <TableCell className="font-bold">₦{transaction.amount?.toLocaleString()}</TableCell>
+                            <TableCell>
+                              <Badge variant={transaction.status === "SUCCESS" || transaction.status === "SUCCESSFUL" ? "default" : "secondary"} className="text-[10px] font-bold">
+                                {transaction.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-[10px] font-bold text-muted-foreground">{formatDate(transaction.created_at || transaction.date)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-sm text-muted-foreground font-medium">No transaction history found</p>
+                  </div>
+                )
+              })()}
             </CardContent>
           </Card>
         </TabsContent>
@@ -454,68 +564,89 @@ export default function UserDetailsPage() {
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
-                ) : virtualAccountsData?.data?.data && virtualAccountsData.data.data.length > 0 ? (
-                  <div className="space-y-4">
-                    {virtualAccountsData.data.data.map((account: any, index: number) => (
-                      <div key={account.id || index} className="p-5 rounded-2xl border border-border/40 bg-muted/10 group hover:bg-muted/20 transition-all">
-                        <div className="flex items-center justify-between mb-4">
-                          <p className="text-sm font-black uppercase tracking-tight">{account.bank_name}</p>
-                          <Badge variant="outline" className="text-[10px] font-bold border-border/40 bg-background/50">
-                            {account.status}
-                          </Badge>
+                ) : (() => {
+                  const data = virtualAccountsData?.data
+                  const accounts = data?.data || (Array.isArray(data) ? data : (data && typeof data === 'object' && data.account_number ? [data] : []))
+
+                  return accounts.length > 0 ? (
+                    <div className="space-y-4">
+                      {accounts.map((account: any, index: number) => (
+                        <div key={account.id || index} className="p-5 rounded-2xl border border-border/40 bg-muted/10 group hover:bg-muted/20 transition-all">
+                          <div className="flex items-center justify-between mb-4">
+                            <p className="text-sm font-black uppercase tracking-tight">{account.bank_name}</p>
+                            <Badge variant="outline" className="text-[10px] font-bold border-border/40 bg-background/50">
+                              {account.status || "ACTIVE"}
+                            </Badge>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Account Number</p>
+                            <p className="font-mono font-black text-xl tracking-tighter tx-text-primary">{account.account_number}</p>
+                          </div>
+                          <p className="text-[10px] font-bold text-muted-foreground mt-3 uppercase tracking-tighter opacity-80">{account.account_name}</p>
                         </div>
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Account Number</p>
-                          <p className="font-mono font-black text-xl tracking-tighter tx-text-primary">{account.account_number}</p>
-                        </div>
-                        <p className="text-[10px] font-bold text-muted-foreground mt-3 uppercase tracking-tighter opacity-80">{account.account_name}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 border border-dashed border-border/40 rounded-2xl">
-                    <p className="text-sm text-muted-foreground font-medium">No virtual accounts</p>
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 border border-dashed border-border/40 rounded-2xl">
+                      <p className="text-sm text-muted-foreground font-medium">No virtual accounts</p>
+                    </div>
+                  )
+                })()}
               </CardContent>
             </Card>
 
-            {/* Linked Accounts */}
+            {/* Linked Bank Accounts */}
             <Card className="border-border/40 bg-card/30 backdrop-blur-sm rounded-3xl overflow-hidden">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-lg font-black uppercase tracking-widest text-muted-foreground/70">
                   <LinkIcon className="h-5 w-5 opacity-60" />
-                  Linked Accounts
+                  Linked Bank Accounts
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                {linkedAccountsLoading ? (
+                {linkedBankAccountsLoading ? (
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
-                ) : linkedAccountsData?.data?.data && linkedAccountsData.data.data.length > 0 ? (
-                  <div className="space-y-4">
-                    {linkedAccountsData.data.data.map((account: any, index: number) => (
-                      <div key={account.id || index} className="p-5 rounded-2xl border border-border/40 bg-muted/10 group hover:bg-muted/20 transition-all">
-                        <div className="flex items-center justify-between mb-4">
-                          <p className="text-sm font-black uppercase tracking-tight">{account.bank_name}</p>
-                          <Badge variant="outline" className="text-[10px] font-bold border-border/40 bg-background/50">
-                            {account.status}
-                          </Badge>
+                ) : (() => {
+                  const data = linkedBankAccountsData?.data
+                  const accounts = data?.data || (Array.isArray(data) ? data : [])
+
+                  return accounts.length > 0 ? (
+                    <div className="space-y-4">
+                      {accounts.map((account: any, index: number) => (
+                        <div key={account.id || index} className="p-5 rounded-2xl border border-border/40 bg-muted/10 group hover:bg-muted/20 transition-all">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-black uppercase tracking-tight">{account.bank_name}</p>
+                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-primary/10 text-primary uppercase">{account.provider}</span>
+                            </div>
+                            <Badge variant="outline" className="text-[10px] font-bold border-border/40 bg-background/50">
+                              {account.status}
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Account Number</p>
+                              <p className="font-mono font-black text-xl tracking-tighter text-foreground">{account.account_number}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Balance</p>
+                              <p className="font-black text-xl tracking-tighter text-emerald-500">
+                                {new Intl.NumberFormat('en-NG', { style: 'currency', currency: account.currency || 'NGN' }).format(account.balance)}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="text-[10px] font-bold text-muted-foreground mt-3 uppercase tracking-tighter opacity-80">{account.account_name}</p>
                         </div>
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Account Number</p>
-                          <p className="font-mono font-black text-xl tracking-tighter text-foreground">{account.account_number}</p>
-                        </div>
-                        <p className="text-[10px] font-bold text-muted-foreground mt-3 uppercase tracking-tighter opacity-80">{account.account_name}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 border border-dashed border-border/40 rounded-2xl">
-                    <p className="text-sm text-muted-foreground font-medium">No linked accounts</p>
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 border border-dashed border-border/40 rounded-2xl">
+                      <p className="text-sm text-muted-foreground font-medium">No linked bank accounts found</p>
+                    </div>
+                  )
+                })()}
               </CardContent>
             </Card>
           </div>

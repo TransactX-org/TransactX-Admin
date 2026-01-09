@@ -100,11 +100,85 @@ export interface Subscription {
   metadata: any | null
 }
 
+export interface UserSubscription {
+  id: string
+  model_name: string
+  billing: string
+  status: string
+  start_date: string
+  end_date: string
+  is_auto_renew: boolean
+  payments_count: number
+  created_at: string
+}
+
 export interface Wallet {
   id: string
   user_id: string
   balance: number
   currency: string
+  account_number: string
+  account_name: string
+  bank_name: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Beneficiary {
+  id: string
+  service: string
+  account_number: string | null
+  account_name: string | null
+  bank_name: string | null
+  bank_code: string | null
+  phone_number: string | null
+  network: string | null
+  created_at: string
+}
+
+export interface LinkedBankAccount {
+  id: string
+  account_number: string
+  account_name: string
+  bank_name: string
+  bank_code: string
+  type: string
+  status: string
+  provider: string
+  currency: string
+  country: string
+  balance: number
+  created_at: string
+}
+
+export interface VirtualBankAccount {
+  id: string
+  account_number: string
+  account_name: string
+  bank_name: string
+  bank_code: string
+  currency: string
+  provider: string
+  country: string
+  created_at: string
+}
+
+export interface UserTransaction {
+  id: string
+  user_id: string
+  wallet_id: string
+  wallet_transaction_id: string | null
+  principal_transaction_id: string | null
+  type: string
+  description: string
+  narration: string | null
+  amount: number
+  currency: string
+  payload: any | null
+  reference: string
+  external_transaction_reference: string | null
+  status: string
+  is_withdrawn: number | boolean
   created_at: string
   updated_at: string
 }
