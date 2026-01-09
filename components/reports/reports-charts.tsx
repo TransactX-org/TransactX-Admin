@@ -1,102 +1,76 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend } from "recharts"
+import { Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, Cell, PieChart, Pie } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { TransactionReports } from "@/lib/api/types"
+import { Loader2 } from "lucide-react"
 
-const revenueData = [
-  { month: "Jan", revenue: 45000, transactions: 120 },
-  { month: "Feb", revenue: 52000, transactions: 145 },
-  { month: "Mar", revenue: 48000, transactions: 132 },
-  { month: "Apr", revenue: 61000, transactions: 168 },
-  { month: "May", revenue: 55000, transactions: 151 },
-  { month: "Jun", revenue: 67000, transactions: 189 },
-  { month: "Jul", revenue: 72000, transactions: 203 },
-  { month: "Aug", revenue: 68000, transactions: 195 },
-  { month: "Sep", revenue: 75000, transactions: 215 },
-  { month: "Oct", revenue: 82000, transactions: 234 },
-]
+interface ReportsChartsProps {
+  data?: TransactionReports["charts"]
+  isLoading: boolean
+}
 
-const transactionTypeData = [
-  { type: "Payment", count: 450, percentage: 45 },
-  { type: "Transfer", count: 320, percentage: 32 },
-  { type: "Withdrawal", count: 230, percentage: 23 },
-]
+export function ReportsCharts({ data, isLoading }: ReportsChartsProps) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        {[1, 2, 3].map(i => (
+          <Card key={i} className="h-[400px] border-border/40 bg-card/10 animate-pulse rounded-3xl" />
+        ))}
+      </div>
+    )
+  }
 
-const userGrowthData = [
-  { month: "Jan", users: 120 },
-  { month: "Feb", users: 145 },
-  { month: "Mar", users: 178 },
-  { month: "Apr", users: 210 },
-  { month: "May", users: 245 },
-  { month: "Jun", users: 289 },
-  { month: "Jul", users: 334 },
-  { month: "Aug", users: 387 },
-  { month: "Sep", users: 445 },
-  { month: "Oct", users: 512 },
-]
-
-export function ReportsCharts() {
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
-      {/* Revenue Chart */}
-      <Card className="border border-border/50">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 w-full max-w-full overflow-hidden">
+      {/* Revenue & Volume Chart */}
+      <Card className="border-border/40 bg-card/30 backdrop-blur-sm rounded-3xl overflow-hidden min-w-0 shadow-none">
         <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="text-lg sm:text-xl">Revenue Overview</CardTitle>
-          <CardDescription className="text-sm">Monthly revenue and transaction trends</CardDescription>
+          <CardTitle className="text-lg font-black uppercase tracking-widest text-muted-foreground/70">Performance Trend</CardTitle>
+          <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">Monthly revenue and volume metrics</CardDescription>
         </CardHeader>
-        <CardContent className="p-3 sm:p-6 pt-0">
+        <CardContent className="p-4 sm:p-6 pt-0 overflow-hidden w-full">
           <ChartContainer
             config={{
-              revenue: {
-                label: "Revenue",
-                color: "hsl(var(--chart-1))",
-              },
-              transactions: {
-                label: "Transactions",
-                color: "hsl(var(--chart-2))",
-              },
+              revenue: { label: "Revenue", color: "oklch(0.6 0.2 150)" },
+              total: { label: "Volume", color: "oklch(0.6 0.2 20)" },
             }}
-            className="h-[250px] sm:h-[300px]"
+            className="h-[280px] sm:h-[350px]"
           >
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={revenueData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" fontSize={12} />
-                <YAxis fontSize={12} />
+              <LineChart data={data?.revenue_overview.map((item, i) => ({ ...item, total: data.transaction_volume[i]?.total }))} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="oklch(0.95 0 0 / 0.1)" />
+                <XAxis dataKey="month" fontSize={10} fontWeight={700} axisLine={false} tickLine={false} tick={{ fill: "oklch(0.556 0 0 / 0.5)" }} />
+                <YAxis fontSize={10} fontWeight={700} axisLine={false} tickLine={false} tick={{ fill: "oklch(0.556 0 0 / 0.5)" }} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Legend />
-                <Line type="monotone" dataKey="revenue" stroke="var(--color-revenue)" strokeWidth={2} />
-                <Line type="monotone" dataKey="transactions" stroke="var(--color-transactions)" strokeWidth={2} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '20px' }} />
+                <Line type="monotone" dataKey="revenue" stroke="var(--color-revenue)" strokeWidth={3} dot={{ r: 4, fill: "var(--color-revenue)", strokeWidth: 0 }} activeDot={{ r: 6, strokeWidth: 0 }} />
+                <Line type="monotone" dataKey="total" stroke="var(--color-total)" strokeWidth={3} dot={{ r: 4, fill: "var(--color-total)", strokeWidth: 0 }} activeDot={{ r: 6, strokeWidth: 0 }} />
               </LineChart>
             </ResponsiveContainer>
           </ChartContainer>
         </CardContent>
       </Card>
 
-      {/* Transaction Types */}
-      <Card className="border border-border/50">
+      {/* Transaction Breakdown */}
+      <Card className="border-border/40 bg-card/30 backdrop-blur-sm rounded-3xl overflow-hidden min-w-0 shadow-none">
         <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="text-lg sm:text-xl">Transaction Types</CardTitle>
-          <CardDescription className="text-sm">Distribution by transaction type</CardDescription>
+          <CardTitle className="text-lg font-black uppercase tracking-widest text-muted-foreground/70">Segment Distribution</CardTitle>
+          <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">Transaction distribution by category</CardDescription>
         </CardHeader>
-        <CardContent className="p-3 sm:p-6 pt-0">
+        <CardContent className="p-4 sm:p-6 pt-0 overflow-hidden w-full">
           <ChartContainer
-            config={{
-              count: {
-                label: "Count",
-                color: "hsl(var(--chart-1))",
-              },
-            }}
-            className="h-[250px] sm:h-[300px]"
+            config={{ count: { label: "Transactions", color: "oklch(0.5 0.2 260)" } }}
+            className="h-[280px] sm:h-[350px]"
           >
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={transactionTypeData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="type" fontSize={12} />
-                <YAxis fontSize={12} />
+              <BarChart data={data?.transaction_breakdown} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="oklch(0.95 0 0 / 0.1)" />
+                <XAxis dataKey="type" fontSize={9} fontWeight={700} axisLine={false} tickLine={false} tick={{ fill: "oklch(0.556 0 0 / 0.5)" }} />
+                <YAxis fontSize={10} fontWeight={700} axisLine={false} tickLine={false} tick={{ fill: "oklch(0.556 0 0 / 0.5)" }} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="count" fill="var(--color-count)" radius={[8, 8, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="count" fill="var(--color-count)" radius={[8, 8, 8, 8]} maxBarSize={40} background={{ fill: "oklch(0.95 0 0 / 0.05)", radius: 8 }} />
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
@@ -104,28 +78,23 @@ export function ReportsCharts() {
       </Card>
 
       {/* User Growth */}
-      <Card className="border border-border/50 xl:col-span-2">
+      <Card className="border-border/40 bg-card/30 backdrop-blur-sm rounded-3xl overflow-hidden lg:col-span-2 min-w-0 shadow-none">
         <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="text-lg sm:text-xl">User Growth</CardTitle>
-          <CardDescription className="text-sm">Total active users over time</CardDescription>
+          <CardTitle className="text-lg font-black uppercase tracking-widest text-muted-foreground/70">Growth Velocity</CardTitle>
+          <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">New users onboarded monthly</CardDescription>
         </CardHeader>
-        <CardContent className="p-3 sm:p-6 pt-0">
+        <CardContent className="p-4 sm:p-6 pt-0 overflow-hidden w-full">
           <ChartContainer
-            config={{
-              users: {
-                label: "Users",
-                color: "hsl(var(--chart-3))",
-              },
-            }}
-            className="h-[250px] sm:h-[300px]"
+            config={{ count: { label: "New Users", color: "oklch(0.6 0.2 300)" } }}
+            className="h-[280px] sm:h-[350px]"
           >
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={userGrowthData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" fontSize={12} />
-                <YAxis fontSize={12} />
+              <BarChart data={data?.user_growth} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="oklch(0.95 0 0 / 0.1)" />
+                <XAxis dataKey="month" fontSize={10} fontWeight={700} axisLine={false} tickLine={false} tick={{ fill: "oklch(0.556 0 0 / 0.5)" }} />
+                <YAxis fontSize={10} fontWeight={700} axisLine={false} tickLine={false} tick={{ fill: "oklch(0.556 0 0 / 0.5)" }} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="users" fill="var(--color-users)" radius={[8, 8, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="count" fill="var(--color-count)" radius={[8, 8, 8, 8]} maxBarSize={50} background={{ fill: "oklch(0.95 0 0 / 0.05)", radius: 8 }} />
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
