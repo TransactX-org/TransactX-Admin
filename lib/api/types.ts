@@ -352,3 +352,141 @@ export interface Notification {
   updated_at: string
 }
 
+// Admin Management Types
+export interface Admin {
+  id: string
+  name: string
+  avatar: string | null
+  email: string
+  email_verified_at: string | null
+  permissions: string[] | string
+  is_super_admin: boolean
+  first_name: string
+  last_name: string
+  role: AdminRole
+  created_at?: string
+  updated_at?: string
+  deleted_at: string | null
+}
+
+export interface AdminRole {
+  id: string
+  name: string
+  description: string
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminStats {
+  total_admins: number
+  super_admins: number
+  regular_admins: number
+  admins_by_role: {
+    role_name: string
+    count: number
+  }[]
+}
+
+export interface CreateAdminPayload {
+  first_name: string
+  last_name: string
+  email: string
+  password?: string
+  role_id: string
+  permissions: string[]
+}
+
+export interface UpdateAdminRolePayload {
+  role_id: string
+  permissions: string[]
+}
+// Transaction Types
+export interface TransactionSummary {
+  transactionId: string
+  user: string
+  amount: number
+  type: string
+  status: string
+  date: string
+}
+
+export interface TransactionDetail {
+  reference: string
+  external_reference: string | null
+  type: string
+  is_fee: boolean
+  status: string
+  description: string
+  narration: string | null
+  amount: number
+  currency: string
+  fee: number
+  total_debited: number
+  date: string
+  date_human: string
+  user_ip: string | null
+  sender: {
+    name: string
+    email: string
+    username: string
+    account_number: string
+    bank_name: string
+  }
+  recipient: {
+    requested_from_name?: string
+    requested_from_username?: string
+    requested_from_email?: string
+    status?: string
+    type?: string | null
+  } | null
+  service: any | null
+  payload: any | null
+}
+
+export interface TransactionStatistics {
+  summary: {
+    total_revenue: number
+    successful_transactions: number
+    active_users: number
+    pending_transactions: number
+  }
+  charts: {
+    revenue_overview: {
+      month: string
+      revenue: number
+    }[]
+    transaction_volume: {
+      day: number
+      total: number
+    }[]
+  }
+}
+
+export interface TransactionReports {
+  summary: {
+    total_revenue: number
+    successful_transactions: number
+    total_transactions: number
+    success_rate: number
+    active_users: number
+  }
+  charts: {
+    user_growth: {
+      month: string
+      count: number
+    }[]
+    transaction_breakdown: {
+      type: string
+      count: number
+      percentage: number
+    }[]
+    revenue_overview: {
+      month: string
+      revenue: number
+    }[]
+    transaction_volume: {
+      month: string
+      total: number
+    }[]
+  }
+}
