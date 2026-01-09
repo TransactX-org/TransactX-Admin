@@ -62,7 +62,7 @@ export function Header() {
       <div className="flex h-16 items-center justify-between px-4 lg:px-6">
         <div className="flex items-center gap-4">
           <MobileNav />
-          
+
           {/* Sidebar Toggle - Desktop Only */}
           <Button
             variant="ghost"
@@ -72,9 +72,9 @@ export function Header() {
           >
             <PanelLeft className="h-5 w-5" />
           </Button>
-          
+
           {/* Search */}
-          <div className="max-w-xl">
+          <div className="hidden md:block max-w-xl">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -155,8 +155,8 @@ export function Header() {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              align="end" 
+            <DropdownMenuContent
+              align="end"
               className="w-56 border-border shadow-lg animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2"
             >
               <DropdownMenuLabel className="font-semibold">{user?.name || "Admin User"}</DropdownMenuLabel>
