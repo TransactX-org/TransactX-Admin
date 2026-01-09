@@ -16,6 +16,7 @@ import {
   Zap,
   Tv,
   Gift,
+  Shield,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -34,6 +35,11 @@ export const navItems = [
     label: "Users",
     href: "/dashboard/users",
     icon: Users,
+  },
+  {
+    label: "Admins",
+    href: "/dashboard/admins",
+    icon: Shield,
   },
   {
     label: "Services",
