@@ -1,90 +1,156 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent } from "@/components/ui/card"
-import { Search, Filter, Download, RefreshCw } from "lucide-react"
+import { Search, Filter, Download, RefreshCw, X } from "lucide-react"
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { DateRange } from "react-day-picker"
+import { format } from "date-fns"
 
-export function TransactionsFilters() {
-  const [searchQuery, setSearchQuery] = useState("")
+interface TransactionsFiltersProps {
+  filters: {
+    search: string
+    status: string
+    type: string
+    start_date: string
+    end_date: string
+  }
+  onFilterChange: (newFilters: Partial<TransactionsFiltersProps["filters"]>) => void
+}
+
+const TRANSACTION_TYPES = [
+  "SEND_MONEY",
+  "REQUEST_MONEY",
+  "FUND_WALLET",
+  "AIRTIME",
+  "DATA",
+  "CABLETV",
+  "UTILITY",
+  "TRANSACTION_SYNC",
+  "SUBSCRIPTION",
+]
+
+const TRANSACTION_STATUSES = [
+  "SUCCESSFUL",
+  "FAILED",
+  "PENDING",
+  "PROCESSING",
+  "REVERSED",
+]
+
+export function TransactionsFilters({ filters, onFilterChange }: TransactionsFiltersProps) {
+  const [localSearch, setLocalSearch] = useState(filters.search)
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearch !== filters.search) {
+        onFilterChange({ search: localSearch })
+      }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [localSearch, onFilterChange, filters.search])
+
+  const dateRange: DateRange | undefined = filters.start_date ? {
+    from: new Date(filters.start_date),
+    to: filters.end_date ? new Date(filters.end_date) : undefined
+  } : undefined
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    onFilterChange({
+      start_date: range?.from ? format(range.from, "yyyy-MM-dd") : "",
+      end_date: range?.to ? format(range.to, "yyyy-MM-dd") : "",
+    })
+  }
+
+  const clearFilters = () => {
+    setLocalSearch("")
+    onFilterChange({
+      search: "",
+      status: "all",
+      type: "all",
+      start_date: "",
+      end_date: "",
+    })
+  }
 
   return (
-    <Card className="border border-border/50 sleek-card">
-      <CardContent className="p-4 sm:p-6">
-        <div className="flex flex-wrap items-end gap-4">
+    <div className="bg-card/30 rounded-2xl border border-border/40 p-4 sm:p-5 mb-6">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           {/* Search */}
-          <div className="space-y-2 w-full sm:flex-1 min-w-[200px]">
-            <Label className="text-sm">Search</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="flex-1 min-w-[240px]">
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:tx-text-primary transition-colors" />
               <Input
-                placeholder="Transaction ID, user..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 sleek-input sleek-focus"
+                placeholder="Search ID, sender, or ref..."
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
+                className="pl-10 h-10 bg-background/50 border-border/40 rounded-xl sleek-focus font-medium"
               />
             </div>
           </div>
 
-          {/* Status Filter */}
-          <div className="space-y-2 w-[calc(50%-8px)] sm:w-auto sm:min-w-[150px]">
-            <Label className="text-sm">Status</Label>
-            <Select defaultValue="all">
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <Select
+              value={filters.status || "all"}
+              onValueChange={(value) => onFilterChange({ status: value })}
+            >
+              <SelectTrigger className="h-10 bg-background/50 border-border/40 rounded-xl sm:w-[150px] font-bold text-[10px] uppercase tracking-widest">
+                <Filter className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="success">Success</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
+              <SelectContent className="rounded-xl border-border/40 bg-card/95 backdrop-blur-md">
+                <SelectItem value="all" className="text-[10px] font-bold uppercase tracking-widest">All Status</SelectItem>
+                {TRAN_STATUSES_MAPPING}
               </SelectContent>
             </Select>
-          </div>
 
-          {/* Type Filter */}
-          <div className="space-y-2 w-[calc(50%-8px)] sm:w-auto sm:min-w-[150px]">
-            <Label className="text-sm">Type</Label>
-            <Select defaultValue="all">
-              <SelectTrigger>
-                <SelectValue placeholder="Select type" />
+            <Select
+              value={filters.type || "all"}
+              onValueChange={(value) => onFilterChange({ type: value })}
+            >
+              <SelectTrigger className="h-10 bg-background/50 border-border/40 rounded-xl sm:w-[150px] font-bold text-[10px] uppercase tracking-widest">
+                <SelectValue placeholder="Type" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="payment">Payment</SelectItem>
-                <SelectItem value="transfer">Transfer</SelectItem>
-                <SelectItem value="withdrawal">Withdrawal</SelectItem>
+              <SelectContent className="rounded-xl border-border/40 bg-card/95 backdrop-blur-md">
+                <SelectItem value="all" className="text-[10px] font-bold uppercase tracking-widest">All Types</SelectItem>
+                {TRAN_TYPES_MAPPING}
               </SelectContent>
             </Select>
+            <DatePickerWithRange date={dateRange} onChange={handleDateRangeChange} />
           </div>
 
-          {/* Date Range */}
-          <div className="space-y-2 w-full sm:w-auto">
-            <Label className="text-sm">Date Range</Label>
-            <DatePickerWithRange />
+          <div className="flex items-center gap-2 w-full lg:w-auto ml-auto">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={clearFilters}
+              className="h-10 w-10 border border-border/40 rounded-xl bg-background/50 text-muted-foreground hover:text-foreground"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" className="h-10 rounded-xl border-border/40 bg-background/50 flex-1 sm:flex-none font-bold text-[10px] uppercase tracking-widest">
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
           </div>
         </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row flex-wrap gap-2 mt-4">
-          <Button variant="outline" size="sm" className="w-full sm:w-auto">
-            <Filter className="h-4 w-4 mr-2" />
-            More Filters
-          </Button>
-          <Button variant="outline" size="sm" className="w-full sm:w-auto">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-          <Button variant="outline" size="sm" className="tx-text-primary bg-transparent w-full sm:w-auto">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
+
+const TRAN_STATUSES_MAPPING = TRANSACTION_STATUSES.map(status => (
+  <SelectItem key={status} value={status} className="text-[10px] font-bold uppercase tracking-widest">
+    {status.replace("_", " ")}
+  </SelectItem>
+))
+
+const TRAN_TYPES_MAPPING = TRANSACTION_TYPES.map(type => (
+  <SelectItem key={type} value={type} className="text-[10px] font-bold uppercase tracking-widest">
+    {type.replace("_", " ")}
+  </SelectItem>
+))
