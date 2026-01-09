@@ -1,18 +1,12 @@
 import apiClient from "../client"
-import type { ApiResponse, PaginatedResponse } from "../types"
-
-// Transaction Types
-export interface Transaction {
-  id: string
-  transactionId: string
-  user: string
-  type: string
-  amount: number
-  status: string
-  date: string
-  description?: string
-  reference?: string
-}
+import type {
+  ApiResponse,
+  PaginatedResponse,
+  TransactionSummary,
+  TransactionDetail,
+  TransactionStatistics,
+  TransactionReports
+} from "../types"
 
 // Get all transactions
 export const getTransactions = async (
@@ -22,11 +16,11 @@ export const getTransactions = async (
     status?: string
     type?: string
     search?: string
-    date_from?: string
-    date_to?: string
+    start_date?: string
+    end_date?: string
   }
-): Promise<ApiResponse<PaginatedResponse<Transaction>>> => {
-  const response = await apiClient.get<ApiResponse<PaginatedResponse<Transaction>>>("/admin/transactions", {
+): Promise<ApiResponse<PaginatedResponse<TransactionSummary>>> => {
+  const response = await apiClient.get<ApiResponse<PaginatedResponse<TransactionSummary>>>("/admin/transactions", {
     params: {
       page,
       per_page: perPage,
@@ -36,27 +30,32 @@ export const getTransactions = async (
   return response.data
 }
 
-// Get transaction stats
-export const getTransactionStats = async (): Promise<ApiResponse<{
-  total: number
-  successful: number
-  pending: number
-  failed: number
-  total_amount: number
-}>> => {
-  const response = await apiClient.get<ApiResponse<{
-    total: number
-    successful: number
-    pending: number
-    failed: number
-    total_amount: number
-  }>>("/admin/transactions/stats")
+// Get single transaction
+export const getTransactionById = async (id: string): Promise<ApiResponse<TransactionDetail>> => {
+  const response = await apiClient.get<ApiResponse<TransactionDetail>>(`/admin/transactions/${id}`)
   return response.data
 }
 
-// Get single transaction
-export const getTransactionById = async (id: string): Promise<ApiResponse<Transaction>> => {
-  const response = await apiClient.get<ApiResponse<Transaction>>(`/admin/transactions/${id}`)
+// Get transaction statistics
+export const getTransactionStatistics = async (
+  year?: number,
+  month?: number
+): Promise<ApiResponse<TransactionStatistics>> => {
+  const response = await apiClient.get<ApiResponse<TransactionStatistics>>("/admin/transactions/statistics", {
+    params: { year, month }
+  })
+  return response.data
+}
+
+// Get transaction reports
+export const getTransactionReports = async (
+  year?: number,
+  start_date?: string,
+  end_date?: string
+): Promise<ApiResponse<TransactionReports>> => {
+  const response = await apiClient.get<ApiResponse<TransactionReports>>("/admin/transactions/reports", {
+    params: { year, start_date, end_date }
+  })
   return response.data
 }
 
