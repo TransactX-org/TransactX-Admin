@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import { UsersTable } from "@/components/users/users-table"
 import { UsersFilters } from "@/components/users/users-filters"
 import { UserStats } from "@/components/users/user-stats"
@@ -5,6 +8,24 @@ import { Button } from "@/components/ui/button"
 import { UserPlus } from "lucide-react"
 
 export default function UsersPage() {
+  const [filters, setFilters] = useState({
+    search: "",
+    status: "",
+    kyc_status: "",
+    kyb_status: "",
+    user_type: "",
+    account_type: "",
+    is_active: "",
+    country: "",
+    email_verified: "",
+    start_date: "",
+    end_date: "",
+  })
+
+  const handleFilterChange = (newFilters: Partial<typeof filters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }))
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6 animate-fade-in p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
@@ -19,8 +40,13 @@ export default function UsersPage() {
       </div>
 
       <UserStats />
-      <UsersFilters />
-      <UsersTable />
+      <UsersFilters
+        filters={filters}
+        onFilterChange={handleFilterChange}
+      />
+      <UsersTable
+        filters={filters}
+      />
     </div>
   )
 }
