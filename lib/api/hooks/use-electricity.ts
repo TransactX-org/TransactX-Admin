@@ -20,10 +20,20 @@ export const useElectricityStats = () => {
 }
 
 // Get electricity transactions
-export const useElectricityTransactions = (page: number = 1, perPage: number = 15) => {
+export const useElectricityTransactions = (
+  page: number = 1,
+  perPage: number = 15,
+  filters?: {
+    search?: string
+    provider?: string
+    status?: string
+    start_date?: string
+    end_date?: string
+  }
+) => {
   return useQuery({
-    queryKey: electricityKeys.list({ page, perPage }),
-    queryFn: () => getElectricityTransactions(page, perPage),
+    queryKey: electricityKeys.list({ page, perPage, ...filters }),
+    queryFn: () => getElectricityTransactions(page, perPage, filters),
     staleTime: 1000 * 60 * 2, // 2 minutes
   })
 }

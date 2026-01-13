@@ -7,6 +7,7 @@ export const tvKeys = {
   providers: () => [...tvKeys.all, "providers"] as const,
   stats: () => [...tvKeys.all, "stats"] as const,
   transactions: () => [...tvKeys.all, "transactions"] as const,
+  list: (filters: Record<string, any>) => [...tvKeys.transactions(), { filters }] as const,
   transaction: (id: string) => [...tvKeys.all, "transaction", id] as const,
 }
 
@@ -29,10 +30,20 @@ export const useTVStats = () => {
 }
 
 // Get TV transactions
-export const useTVTransactions = (page: number = 1, perPage: number = 15) => {
+export const useTVTransactions = (
+  page: number = 1,
+  perPage: number = 15,
+  filters?: {
+    search?: string
+    provider?: string
+    status?: string
+    start_date?: string
+    end_date?: string
+  }
+) => {
   return useQuery({
-    queryKey: [...tvKeys.transactions(), { page, perPage }],
-    queryFn: () => getTVTransactions(page, perPage),
+    queryKey: tvKeys.list({ page, perPage, ...filters }),
+    queryFn: () => getTVTransactions(page, perPage, filters),
     staleTime: 1000 * 60 * 2, // 2 minutes
   })
 }
