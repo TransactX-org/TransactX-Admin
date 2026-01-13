@@ -7,18 +7,36 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Search, Download, Loader2 } from "lucide-react"
+import { Search, Download, Loader2, Plus, X } from "lucide-react"
+import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { DateRange } from "react-day-picker"
 import { useTVStats, useTVTransactions, useTVProviders } from "@/lib/api/hooks/use-tv"
 import { format } from "date-fns"
+import { PaginationSelector } from "@/components/ui/pagination-selector"
+import { AddTvProviderDialog } from "./add-tv-provider-dialog"
+import { exportToCSV } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
 
 export function TvManagement() {
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedProvider, setSelectedProvider] = useState("all")
-  const perPage = 15
+  const [perPage, setPerPage] = useState(15)
+  const [openAddProviderDialog, setOpenAddProviderDialog] = useState(false)
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const { toast } = useToast()
 
   const { data: statsData, isLoading: statsLoading } = useTVStats()
-  const { data: transactionsData, isLoading: transactionsLoading } = useTVTransactions(currentPage, perPage)
+  const { data: transactionsData, isLoading: transactionsLoading } = useTVTransactions(
+    currentPage,
+    perPage,
+    {
+      search: searchQuery || undefined,
+      provider: selectedProvider === "all" ? undefined : selectedProvider,
+      start_date: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined,
+      end_date: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined,
+    }
+  )
   const { data: providersData } = useTVProviders()
 
   const stats = statsData?.data
@@ -50,10 +68,21 @@ export function TvManagement() {
 
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-      <div>
-        <h1 className="text-xl sm:text-3xl font-bold tracking-tight">TV Subscription Management</h1>
-        <p className="text-muted-foreground mt-2 text-xs sm:text-base">Manage TV subscriptions and renewals</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-3xl font-bold tracking-tight">TV Subscription Management</h1>
+          <p className="text-muted-foreground mt-2 text-xs sm:text-base">Manage TV subscriptions and renewals</p>
+        </div>
+        <Button
+          className="tx-bg-primary hover:opacity-90 w-full sm:w-auto"
+          onClick={() => setOpenAddProviderDialog(true)}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Provider
+        </Button>
       </div>
+
+      <AddTvProviderDialog open={openAddProviderDialog} onOpenChange={setOpenAddProviderDialog} />
 
       {/* Stats Cards */}
       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -135,10 +164,40 @@ export function TvManagement() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" className="w-full sm:w-auto">
+            <div className="flex-1 min-w-[200px]">
+              <DatePickerWithRange date={dateRange} onChange={setDateRange} />
+            </div>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                const dataToExport = transactions.length > 0 ? transactions : []
+                if (dataToExport.length === 0) {
+                  toast({ title: "No data", description: "No transactions to export", variant: "destructive" })
+                  return
+                }
+                exportToCSV(dataToExport, "tv-transactions")
+                toast({ title: "Exported", description: "Transactions exported successfully" })
+              }}
+            >
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
+            {/* Clear filters button */}
+            {(searchQuery || selectedProvider !== "all" || dateRange) && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setSearchQuery("")
+                  setSelectedProvider("all")
+                  setDateRange(undefined)
+                }}
+                title="Clear filters"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
 
           <div className="border border-border/30 rounded-lg overflow-x-auto">
@@ -174,7 +233,7 @@ export function TvManagement() {
                     <TableRow key={transaction.transactionId}>
                       <TableCell className="font-medium text-xs sm:text-sm">{transaction.transactionId}</TableCell>
                       <TableCell className="text-xs sm:text-sm">{transaction.user}</TableCell>
-                      <TableCell className="text-xs sm:text-sm">{transaction.smartcardNumber || transaction.smartCardNumber}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{transaction.smartCardNumber}</TableCell>
                       <TableCell className="text-xs sm:text-sm">{transaction.provider}</TableCell>
                       <TableCell className="text-xs sm:text-sm">{transaction.package}</TableCell>
                       <TableCell className="font-semibold text-xs sm:text-sm">₦{transaction.amount?.toLocaleString()}</TableCell>
@@ -202,9 +261,12 @@ export function TvManagement() {
           {/* Pagination */}
           {pagination && (
             <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3 sm:gap-4">
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                Showing {pagination.from} to {pagination.to} of {pagination.total} transactions
-              </p>
+              <div className="flex items-center gap-4">
+                <PaginationSelector value={perPage} onValueChange={setPerPage} />
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Showing {pagination.from} to {pagination.to} of {pagination.total} transactions
+                </p>
+              </div>
               <div className="flex items-center gap-1 sm:gap-2">
                 <Button
                   variant="outline"
