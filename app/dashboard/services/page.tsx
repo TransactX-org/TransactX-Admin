@@ -14,28 +14,24 @@ const services = [
     description: "Manage airtime purchases and recharge cards",
     icon: Smartphone,
     href: "/dashboard/services/airtime",
-    stats: { total: "₦2.4M", count: "1,234 purchases" },
   },
   {
     title: "Data",
     description: "Manage data bundles and WiFi services",
     icon: Wifi,
     href: "/dashboard/services/data",
-    stats: { total: "₦3.8M", count: "2,456 purchases" },
   },
   {
     title: "Electricity",
     description: "Manage electricity bill payments",
     icon: Zap,
     href: "/dashboard/services/electricity",
-    stats: { total: "₦5.2M", count: "3,789 payments" },
   },
   {
     title: "TV",
     description: "Manage TV subscriptions and renewals",
     icon: Tv,
     href: "/dashboard/services/tv",
-    stats: { total: "₦1.9M", count: "987 subscriptions" },
   },
 ]
 
@@ -62,14 +58,11 @@ export default function ServicesPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <CardTitle className="text-sm sm:text-base">{service.title}</CardTitle>
-                      <CardDescription className="text-xs">{service.stats.count}</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-4 sm:p-6 pt-0">
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-3">{service.description}</p>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold tx-text-primary">{service.stats.total}</p>
-                  <p className="text-xs text-muted-foreground">Total this month</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{service.description}</p>
                 </CardContent>
               </Card>
             </Link>
