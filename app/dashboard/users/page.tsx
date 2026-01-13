@@ -6,8 +6,10 @@ import { UsersFilters } from "@/components/users/users-filters"
 import { UserStats } from "@/components/users/user-stats"
 import { Button } from "@/components/ui/button"
 import { UserPlus } from "lucide-react"
+import { CreateUserDialog } from "@/components/users/create-user-dialog"
 
 export default function UsersPage() {
+  const [openCreateDialog, setOpenCreateDialog] = useState(false)
   const [filters, setFilters] = useState({
     search: "",
     status: "",
@@ -33,11 +35,19 @@ export default function UsersPage() {
           <h1 className="text-xl sm:text-3xl font-bold">Users</h1>
           <p className="text-muted-foreground mt-1 text-xs sm:text-base">Manage user accounts and permissions</p>
         </div>
-        <Button className="tx-bg-primary hover:opacity-90 w-full sm:w-auto">
+        <Button
+          className="tx-bg-primary hover:opacity-90 w-full sm:w-auto"
+          onClick={() => setOpenCreateDialog(true)}
+        >
           <UserPlus className="h-4 w-4 mr-2" />
           Add New User
         </Button>
       </div>
+
+      <CreateUserDialog
+        open={openCreateDialog}
+        onOpenChange={setOpenCreateDialog}
+      />
 
       <UserStats />
       <UsersFilters

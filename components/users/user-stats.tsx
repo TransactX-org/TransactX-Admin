@@ -71,6 +71,18 @@ export function UserStats() {
       icon: Users,
       description: "Created this month",
     },
+    {
+      title: "Verified NIN",
+      value: 0, // TODO: Connect to real API aggregation
+      icon: UserCheck,
+      description: "NIN Verified",
+    },
+    {
+      title: "Verified BVN",
+      value: 0, // TODO: Connect to real API aggregation
+      icon: UserCheck,
+      description: "BVN Verified",
+    },
   ]
 
   return (
