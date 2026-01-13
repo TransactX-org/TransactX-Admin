@@ -5,6 +5,8 @@ import { ReportsOverview } from "@/components/reports/reports-overview"
 import { ReportsCharts } from "@/components/reports/reports-charts"
 import { ReportsFilters } from "@/components/reports/reports-filters"
 import { useTransactionStatistics, useTransactionReports } from "@/lib/api/hooks/use-transactions"
+import { exportToCSV } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
 
 export default function ReportsPage() {
   const [filters, setFilters] = useState({
@@ -13,9 +15,10 @@ export default function ReportsPage() {
     start_date: "",
     end_date: "",
   })
+  const { toast } = useToast()
 
-  const { data: statsData, isLoading: isLoadingStats } = useTransactionStatistics(filters.year, filters.month)
-  const { data: reportsData, isLoading: isLoadingReports } = useTransactionReports(
+  const { data: statsData, isLoading: isLoadingStats, refetch: refetchStats } = useTransactionStatistics(filters.year, filters.month)
+  const { data: reportsData, isLoading: isLoadingReports, refetch: refetchReports } = useTransactionReports(
     filters.year,
     filters.start_date || undefined,
     filters.end_date || undefined
@@ -23,6 +26,30 @@ export default function ReportsPage() {
 
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {
     setFilters(prev => ({ ...prev, ...newFilters }))
+  }
+
+  const handleRefresh = () => {
+    refetchStats()
+    refetchReports()
+    toast({ title: "Refreshed", description: "Reports data refreshed" })
+  }
+
+  const handleExport = () => {
+    if (!reportsData?.data) {
+      toast({ title: "No data", description: "No data to export", variant: "destructive" })
+      return
+    }
+
+    // Flatten data for export - primarily revenue overview as it's time-series
+    const exportData = reportsData.data.charts.revenue_overview.map((item, index) => ({
+      Month: item.month,
+      Revenue: item.revenue,
+      "Transaction Volume": reportsData.data.charts.transaction_volume[index]?.total || 0,
+      "New Users": reportsData.data.charts.user_growth[index]?.count || 0
+    }))
+
+    exportToCSV(exportData, `reports-${filters.year}`)
+    toast({ title: "Exported", description: "Reports exported successfully" })
   }
 
   return (
@@ -34,7 +61,12 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <ReportsFilters filters={filters} onFilterChange={handleFilterChange} />
+      <ReportsFilters
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onRefresh={handleRefresh}
+        onExport={handleExport}
+      />
 
       <ReportsOverview
         data={reportsData?.data?.summary}

@@ -15,9 +15,11 @@ interface ReportsFiltersProps {
     end_date: string
   }
   onFilterChange: (newFilters: Partial<ReportsFiltersProps["filters"]>) => void
+  onRefresh?: () => void
+  onExport?: () => void
 }
 
-export function ReportsFilters({ filters, onFilterChange }: ReportsFiltersProps) {
+export function ReportsFilters({ filters, onFilterChange, onRefresh, onExport }: ReportsFiltersProps) {
   const currentYear = new Date().getFullYear()
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i)
 
@@ -84,10 +86,19 @@ export function ReportsFilters({ filters, onFilterChange }: ReportsFiltersProps)
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2 w-full lg:w-auto ml-auto">
-            <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 border-border/40 bg-background/50 rounded-xl hover:bg-primary/5 hover:text-primary transition-colors">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-11 w-11 shrink-0 border-border/40 bg-background/50 rounded-xl hover:bg-primary/5 hover:text-primary transition-colors"
+              onClick={onRefresh}
+            >
               <RefreshCw className="h-4 w-4" />
             </Button>
-            <Button variant="outline" className="h-11 flex-1 lg:flex-none border-border/40 bg-background/50 rounded-xl px-4 font-black text-[10px] uppercase tracking-widest hover:bg-primary/5 hover:text-primary transition-colors">
+            <Button
+              variant="outline"
+              className="h-11 flex-1 lg:flex-none border-border/40 bg-background/50 rounded-xl px-4 font-black text-[10px] uppercase tracking-widest hover:bg-primary/5 hover:text-primary transition-colors"
+              onClick={onExport}
+            >
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
