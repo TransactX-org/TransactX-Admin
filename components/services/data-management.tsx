@@ -7,18 +7,36 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Search, Download, Plus, Loader2 } from "lucide-react"
+import { Search, Download, Plus, Loader2, X } from "lucide-react"
+import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { DateRange } from "react-day-picker"
 import { useDataStats, useDataTransactions, useDataProviders } from "@/lib/api/hooks/use-data"
 import { format } from "date-fns"
+import { PaginationSelector } from "@/components/ui/pagination-selector"
+import { AddDataPlanDialog } from "./add-data-plan-dialog"
+import { exportToCSV } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
 
 export function DataManagement() {
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedNetwork, setSelectedNetwork] = useState("all")
-  const perPage = 15
+  const [perPage, setPerPage] = useState(15)
+  const [openAddDataPlanDialog, setOpenAddDataPlanDialog] = useState(false)
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const { toast } = useToast()
 
   const { data: statsData, isLoading: statsLoading } = useDataStats()
-  const { data: transactionsData, isLoading: transactionsLoading, error } = useDataTransactions(currentPage, perPage)
+  const { data: transactionsData, isLoading: transactionsLoading, error } = useDataTransactions(
+    currentPage,
+    perPage,
+    {
+      search: searchQuery || undefined,
+      network: selectedNetwork === "all" ? undefined : selectedNetwork,
+      start_date: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined,
+      end_date: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined,
+    }
+  )
   const { data: providersData } = useDataProviders()
 
   const stats = statsData?.data
@@ -51,17 +69,8 @@ export function DataManagement() {
     }
   }
 
-  // Filter transactions
-  const filteredTransactions = transactions.filter((transaction) => {
-    const matchesSearch =
-      transaction.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      transaction.phoneNumber.includes(searchQuery) ||
-      transaction.transactionId.toLowerCase().includes(searchQuery.toLowerCase())
-
-    const matchesNetwork = selectedNetwork === "all" || transaction.network.toLowerCase() === selectedNetwork.toLowerCase()
-
-    return matchesSearch && matchesNetwork
-  })
+  // Filters now handled by API
+  const filteredTransactions = transactions
 
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
@@ -70,11 +79,16 @@ export function DataManagement() {
           <h1 className="text-xl sm:text-3xl font-bold tracking-tight">Data Management</h1>
           <p className="text-muted-foreground mt-2 text-xs sm:text-base">Manage data bundles and WiFi services</p>
         </div>
-        <Button className="tx-bg-primary hover:opacity-90 w-full sm:w-auto">
+        <Button
+          className="tx-bg-primary hover:opacity-90 w-full sm:w-auto"
+          onClick={() => setOpenAddDataPlanDialog(true)}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Data Plan
         </Button>
       </div>
+
+      <AddDataPlanDialog open={openAddDataPlanDialog} onOpenChange={setOpenAddDataPlanDialog} />
 
       {/* Stats Cards */}
       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -160,7 +174,22 @@ export function DataManagement() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" className="sleek-focus w-full sm:w-auto">
+            <div className="flex-1 min-w-[200px]">
+              <DatePickerWithRange date={dateRange} onChange={setDateRange} />
+            </div>
+            <Button
+              variant="outline"
+              className="sleek-focus w-full sm:w-auto"
+              onClick={() => {
+                const dataToExport = transactions.length > 0 ? transactions : []
+                if (dataToExport.length === 0) {
+                  toast({ title: "No data", description: "No transactions to export", variant: "destructive" })
+                  return
+                }
+                exportToCSV(dataToExport, "data-transactions")
+                toast({ title: "Exported", description: "Transactions exported successfully" })
+              }}
+            >
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
@@ -238,9 +267,12 @@ export function DataManagement() {
           {/* Pagination */}
           {pagination && (
             <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3 sm:gap-4">
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                Showing {pagination.from} to {pagination.to} of {pagination.total} transactions
-              </p>
+              <div className="flex items-center gap-4">
+                <PaginationSelector value={perPage} onValueChange={setPerPage} />
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Showing {pagination.from} to {pagination.to} of {pagination.total} transactions
+                </p>
+              </div>
               <div className="flex items-center gap-1 sm:gap-2">
                 <Button
                   variant="outline"

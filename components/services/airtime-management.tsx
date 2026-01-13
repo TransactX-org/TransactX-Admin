@@ -7,18 +7,36 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Search, Download, Plus, Loader2 } from "lucide-react"
+import { Search, Download, Plus, Loader2, X } from "lucide-react"
+import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { DateRange } from "react-day-picker"
 import { useAirtimeStats, useAirtimeTransactions, useAirtimeNetworks } from "@/lib/api/hooks/use-airtime"
 import { format } from "date-fns"
+import { PaginationSelector } from "@/components/ui/pagination-selector"
+import { AddRechargeCardDialog } from "./add-recharge-card-dialog"
+import { exportToCSV } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
 
 export function AirtimeManagement() {
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedNetwork, setSelectedNetwork] = useState("all")
-  const perPage = 15
+  const [perPage, setPerPage] = useState(15)
+  const [openAddRechargeCardDialog, setOpenAddRechargeCardDialog] = useState(false)
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const { toast } = useToast()
 
   const { data: statsData, isLoading: statsLoading } = useAirtimeStats()
-  const { data: transactionsData, isLoading: transactionsLoading, error } = useAirtimeTransactions(currentPage, perPage)
+  const { data: transactionsData, isLoading: transactionsLoading, error } = useAirtimeTransactions(
+    currentPage,
+    perPage,
+    {
+      search: searchQuery || undefined,
+      network: selectedNetwork === "all" ? undefined : selectedNetwork,
+      start_date: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined,
+      end_date: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined,
+    }
+  )
   const { data: networksData } = useAirtimeNetworks()
 
   const stats = statsData?.data
@@ -51,17 +69,8 @@ export function AirtimeManagement() {
     }
   }
 
-  // Filter transactions based on search and network
-  const filteredTransactions = transactions.filter((transaction) => {
-    const matchesSearch =
-      transaction.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      transaction.phoneNumber.includes(searchQuery) ||
-      transaction.transactionId.toLowerCase().includes(searchQuery.toLowerCase())
-
-    const matchesNetwork = selectedNetwork === "all" || transaction.network.toLowerCase() === selectedNetwork.toLowerCase()
-
-    return matchesSearch && matchesNetwork
-  })
+  // Filters now handled by API
+  const filteredTransactions = transactions
 
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
@@ -70,11 +79,16 @@ export function AirtimeManagement() {
           <h1 className="text-xl sm:text-3xl font-bold tracking-tight">Airtime Management</h1>
           <p className="text-muted-foreground mt-2 text-xs sm:text-base">Manage airtime purchases and recharge cards</p>
         </div>
-        <Button className="tx-bg-primary hover:opacity-90 w-full sm:w-auto">
+        <Button
+          className="tx-bg-primary hover:opacity-90 w-full sm:w-auto"
+          onClick={() => setOpenAddRechargeCardDialog(true)}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Recharge Card
         </Button>
       </div>
+
+      <AddRechargeCardDialog open={openAddRechargeCardDialog} onOpenChange={setOpenAddRechargeCardDialog} />
 
       {/* Stats Cards */}
       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -171,10 +185,40 @@ export function AirtimeManagement() {
                 <SelectItem value="failed">Failed</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" className="w-full sm:w-auto">
+            <div className="flex-1 min-w-[200px]">
+              <DatePickerWithRange date={dateRange} onChange={setDateRange} />
+            </div>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                const dataToExport = transactions.length > 0 ? transactions : []
+                if (dataToExport.length === 0) {
+                  toast({ title: "No data", description: "No transactions to export", variant: "destructive" })
+                  return
+                }
+                exportToCSV(dataToExport, "airtime-transactions")
+                toast({ title: "Exported", description: "Transactions exported successfully" })
+              }}
+            >
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
+            {/* Clear filters button */}
+            {(searchQuery || selectedNetwork !== "all" || dateRange) && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setSearchQuery("")
+                  setSelectedNetwork("all")
+                  setDateRange(undefined)
+                }}
+                title="Clear filters"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
 
           {/* Table */}
@@ -244,12 +288,14 @@ export function AirtimeManagement() {
             </Table>
           </div>
 
-          {/* Pagination */}
           {pagination && (
             <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3 sm:gap-4">
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                Showing {pagination.from} to {pagination.to} of {pagination.total} transactions
-              </p>
+              <div className="flex items-center gap-4">
+                <PaginationSelector value={perPage} onValueChange={setPerPage} />
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Showing {pagination.from} to {pagination.to} of {pagination.total} transactions
+                </p>
+              </div>
               <div className="flex items-center gap-1 sm:gap-2">
                 <Button
                   variant="outline"
