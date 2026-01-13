@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useSidebar } from "@/contexts/sidebar-context"
+import { useCurrentUser } from "@/lib/api/hooks/use-auth"
 import {
   LayoutDashboard,
   CreditCard,
@@ -67,6 +68,7 @@ export const navItems = [
 export function Sidebar() {
   const pathname = usePathname()
   const { isCollapsed } = useSidebar()
+  const user = useCurrentUser()
 
   return (
     <aside className={cn(
@@ -87,6 +89,11 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => {
+          // Hide Admins menu if user is not super admin
+          if (item.label === "Admins" && user && !user.is_super_admin) {
+            return null
+          }
+
           const Icon = item.icon
           const isActive = item.href === "/dashboard"
             ? pathname === "/dashboard"
