@@ -8,6 +8,10 @@ import { Search, Filter, Download, RefreshCw, UserCheck, ShieldCheck } from "luc
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { DateRange } from "react-day-picker"
 import { format } from "date-fns"
+import { getUsers } from "@/lib/api/services/user.service"
+import { exportToCSV } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
+import { Loader2 } from "lucide-react"
 
 interface UsersFiltersProps {
   filters: {
@@ -28,6 +32,8 @@ interface UsersFiltersProps {
 
 export function UsersFilters({ filters, onFilterChange }: UsersFiltersProps) {
   const [localSearch, setLocalSearch] = useState(filters.search)
+  const [isExporting, setIsExporting] = useState(false)
+  const { toast } = useToast()
 
   // Debounce search
   useEffect(() => {
@@ -49,6 +55,55 @@ export function UsersFilters({ filters, onFilterChange }: UsersFiltersProps) {
       start_date: range?.from ? format(range.from, "yyyy-MM-dd") : "",
       end_date: range?.to ? format(range.to, "yyyy-MM-dd") : "",
     })
+  }
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true)
+      const toastId = toast({
+        title: "Exporting...",
+        description: "Fetching user records for export.",
+      })
+
+      // Fetch all records (up to reasonable limit)
+      const response = await getUsers(1, 1000, {
+        search: filters.search || undefined,
+        status: filters.status || undefined,
+        kyc_status: filters.kyc_status || undefined,
+        kyb_status: filters.kyb_status || undefined,
+        user_type: filters.user_type || undefined,
+        account_type: filters.account_type || undefined,
+        is_active: filters.is_active || undefined,
+        country: filters.country || undefined,
+        email_verified: filters.email_verified || undefined,
+        start_date: filters.start_date || undefined,
+        end_date: filters.end_date || undefined,
+      })
+
+      const data = response.data.data
+
+      if (data.length > 0) {
+        exportToCSV(data, `users-${format(new Date(), "yyyy-MM-dd-HH-mm")}`)
+        toast({
+          title: "Export Complete",
+          description: `Successfully exported ${data.length} records.`,
+        })
+      } else {
+        toast({
+          title: "Export Failed",
+          description: "No records found to export.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "An error occurred while exporting users.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   const resetFilters = () => {
@@ -93,8 +148,13 @@ export function UsersFilters({ filters, onFilterChange }: UsersFiltersProps) {
               Reset
             </Button>
 
-            <Button variant="outline" className="h-11 border-border/40 bg-background/50 rounded-xl px-4 tx-text-primary hover:bg-primary/5 transition-all">
-              <Download className="h-4 w-4 mr-2" />
+            <Button
+              variant="outline"
+              className="h-11 border-border/40 bg-background/50 rounded-xl px-4 tx-text-primary hover:bg-primary/5 transition-all"
+              onClick={handleExport}
+              disabled={isExporting}
+            >
+              {isExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
               Export
             </Button>
           </div>

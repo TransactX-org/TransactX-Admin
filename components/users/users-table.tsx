@@ -13,6 +13,7 @@ import { useUsers, useDeleteUser } from "@/lib/api/hooks/use-users"
 import { format } from "date-fns"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { PaginationSelector } from "@/components/ui/pagination-selector"
 
 interface UsersTableProps {
   filters: {
@@ -34,7 +35,7 @@ export function UsersTable({ filters }: UsersTableProps) {
   const router = useRouter()
   const [selectedRows, setSelectedRows] = useState<string[]>([])
   const [currentPage, setCurrentPage] = useState(1)
-  const perPage = 15
+  const [perPage, setPerPage] = useState(15)
 
   // Map filters to API parameters
   const apiFilters = {
@@ -62,7 +63,14 @@ export function UsersTable({ filters }: UsersTableProps) {
   }
 
   const toggleAllRows = () => {
-    setSelectedRows((prev) => (prev.length === users.length ? [] : users.map((u) => u.id)))
+    const allIds = users.map((u) => u.id)
+    const isAllSelected = allIds.every(id => selectedRows.includes(id))
+
+    if (isAllSelected) {
+      setSelectedRows(prev => prev.filter(id => !allIds.includes(id)))
+    } else {
+      setSelectedRows(prev => [...Array.from(new Set([...prev, ...allIds]))])
+    }
   }
 
   const handleDeleteUser = async (id: string) => {
@@ -128,7 +136,7 @@ export function UsersTable({ filters }: UsersTableProps) {
                   <TableRow className="hover:bg-transparent border-none">
                     <TableHead className="w-[48px] px-4">
                       <Checkbox
-                        checked={users.length > 0 && selectedRows.length === users.length}
+                        checked={users.length > 0 && users.every(u => selectedRows.includes(u.id))}
                         onCheckedChange={toggleAllRows}
                         className="rounded-full size-3"
                       />
@@ -310,25 +318,29 @@ export function UsersTable({ filters }: UsersTableProps) {
                 <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-tight">
                   Page <span className="font-bold text-foreground">{pagination.current_page}</span> of {pagination.last_page}
                 </p>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={!pagination.prev_page_url || isLoading}
-                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                    className="h-9 text-xs font-bold hover:bg-muted rounded-xl"
-                  >
-                    Prev
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={!pagination.next_page_url || isLoading}
-                    onClick={() => setCurrentPage((prev) => prev + 1)}
-                    className="h-9 text-xs font-bold tx-text-primary hover:bg-primary/5 rounded-xl"
-                  >
-                    Next
-                  </Button>
+                <div className="flex items-center gap-4">
+                  <PaginationSelector value={perPage} onValueChange={setPerPage} />
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={!pagination.prev_page_url || isLoading}
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      className="h-9 text-xs font-bold hover:bg-muted rounded-xl"
+                    >
+                      Prev
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={!pagination.next_page_url || isLoading}
+                      onClick={() => setCurrentPage((prev) => prev + 1)}
+                      className="h-9 text-xs font-bold tx-text-primary hover:bg-primary/5 rounded-xl"
+                    >
+                      Next
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
