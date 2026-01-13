@@ -11,6 +11,7 @@ import { Eye, ChevronLeft, ChevronRight, Loader2, CreditCard } from "lucide-reac
 import { TransactionDetailsModal } from "./transaction-details-modal"
 import { useTransactions } from "@/lib/api/hooks/use-transactions"
 import { format } from "date-fns"
+import { PaginationSelector } from "@/components/ui/pagination-selector"
 
 interface TransactionsTableProps {
   filters: {
@@ -26,7 +27,7 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
   const [selectedRows, setSelectedRows] = useState<string[]>([])
   const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const perPage = 15
+  const [perPage, setPerPage] = useState(15)
 
   // Map empty filters to undefined for API
   const apiFilters = {
@@ -47,7 +48,13 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
 
   const toggleAllRows = () => {
     const allIds = transactions.map((t) => t.transactionId)
-    setSelectedRows((prev) => (prev.length === allIds.length ? [] : allIds))
+    const isAllSelected = allIds.every(id => selectedRows.includes(id))
+
+    if (isAllSelected) {
+      setSelectedRows(prev => prev.filter(id => !allIds.includes(id)))
+    } else {
+      setSelectedRows(prev => [...Array.from(new Set([...prev, ...allIds]))])
+    }
   }
 
   const formatDate = (dateString: string) => {
@@ -101,7 +108,7 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
                   <TableRow className="hover:bg-transparent border-b-border/20 bg-muted/5">
                     <TableHead className="w-[48px] px-6">
                       <Checkbox
-                        checked={selectedRows.length === transactions.length && transactions.length > 0}
+                        checked={transactions.length > 0 && transactions.every(t => selectedRows.includes(t.transactionId))}
                         onCheckedChange={toggleAllRows}
                         className="rounded-lg h-3.5 w-3.5"
                       />
@@ -248,25 +255,29 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
             <p className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-widest">
               Page {pagination.current_page} <span className="mx-1 opacity-20">/</span> {pagination.last_page}
             </p>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pagination.current_page === 1}
-                onClick={() => setCurrentPage(p => p - 1)}
-                className="h-8 w-8 p-0 rounded-xl border-border/40"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pagination.current_page === pagination.last_page}
-                onClick={() => setCurrentPage(p => p + 1)}
-                className="h-8 w-8 p-0 rounded-xl border-border/40"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+            <div className="flex items-center gap-4">
+              <PaginationSelector value={perPage} onValueChange={setPerPage} />
+
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pagination.current_page === 1}
+                  onClick={() => setCurrentPage(p => p - 1)}
+                  className="h-8 w-8 p-0 rounded-xl border-border/40"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pagination.current_page === pagination.last_page}
+                  onClick={() => setCurrentPage(p => p + 1)}
+                  className="h-8 w-8 p-0 rounded-xl border-border/40"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         )}
