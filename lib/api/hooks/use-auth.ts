@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation"
 import { login, forgotPassword, resetPassword, logout } from "../services/auth.service"
 import type { LoginPayload, ForgotPasswordPayload, ResetPasswordPayload } from "../services/auth.service"
 import { useToast } from "@/hooks/use-toast"
+import { useState, useEffect } from "react"
 
 // Login mutation
 export const useLogin = () => {
@@ -121,3 +122,21 @@ export const useLogout = () => {
   }
 }
 
+export const useCurrentUser = () => {
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedUser = localStorage.getItem("user")
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser))
+        } catch (e) {
+          console.error("Failed to parse user from local storage", e)
+        }
+      }
+    }
+  }, [])
+
+  return user
+}

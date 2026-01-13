@@ -2,6 +2,9 @@
 
 import { useState } from "react"
 import { useAdminStats, useAdmins } from "@/lib/api/hooks/use-admins"
+import { useCurrentUser } from "@/lib/api/hooks/use-auth"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 import { AdminStats } from "@/components/admins/admin-stats"
 import { AdminTable } from "@/components/admins/admin-table"
 import { Button } from "@/components/ui/button"
@@ -13,6 +16,18 @@ export default function AdminsPage() {
     const { data: stats, isLoading: statsLoading } = useAdminStats()
     const { data: adminsData, isLoading: adminsLoading } = useAdmins(page)
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+    const user = useCurrentUser()
+    const router = useRouter()
+
+    useEffect(() => {
+        if (user && !user.is_super_admin) {
+            router.push("/dashboard")
+        }
+    }, [user, router])
+
+    if (!user || !user.is_super_admin) {
+        return null // Or a loading spinner while checking auth
+    }
 
     return (
         <div className="p-4 md:p-8 space-y-8 animate-fade-in">
