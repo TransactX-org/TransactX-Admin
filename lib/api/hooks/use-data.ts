@@ -30,10 +30,21 @@ export const useDataStats = () => {
 }
 
 // Get data transactions
-export const useDataTransactions = (page: number = 1, perPage: number = 15) => {
+// Get data transactions
+export const useDataTransactions = (
+  page: number = 1,
+  perPage: number = 15,
+  filters?: {
+    search?: string
+    network?: string
+    status?: string
+    start_date?: string
+    end_date?: string
+  }
+) => {
   return useQuery({
-    queryKey: dataKeys.list({ page, perPage }),
-    queryFn: () => getDataTransactions(page, perPage),
+    queryKey: dataKeys.list({ page, perPage, ...filters }),
+    queryFn: () => getDataTransactions(page, perPage, filters),
     staleTime: 1000 * 60 * 2, // 2 minutes
   })
 }

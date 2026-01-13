@@ -30,10 +30,20 @@ export const useAirtimeStats = () => {
 }
 
 // Get airtime transactions
-export const useAirtimeTransactions = (page: number = 1, perPage: number = 15) => {
+export const useAirtimeTransactions = (
+  page: number = 1,
+  perPage: number = 15,
+  filters?: {
+    search?: string
+    network?: string
+    status?: string
+    start_date?: string
+    end_date?: string
+  }
+) => {
   return useQuery({
-    queryKey: airtimeKeys.list({ page, perPage }),
-    queryFn: () => getAirtimeTransactions(page, perPage),
+    queryKey: airtimeKeys.list({ page, perPage, ...filters }),
+    queryFn: () => getAirtimeTransactions(page, perPage, filters),
     staleTime: 1000 * 60 * 2, // 2 minutes
   })
 }
