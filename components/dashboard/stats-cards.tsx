@@ -32,7 +32,7 @@ export function StatsCards() {
       icon: Users,
     },
     {
-      label: "Pending Approvals",
+      label: "Pending Transactions",
       value: stats?.pending_approvals?.toLocaleString() || "0",
       change: stats?.approvals_change ? `${stats.approvals_change > 0 ? "+" : ""}${stats.approvals_change.toFixed(1)}%` : "-0%",
       trend: stats?.approvals_change && stats.approvals_change < 0 ? "up" : "down",
