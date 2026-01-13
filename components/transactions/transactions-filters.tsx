@@ -8,6 +8,11 @@ import { Search, Filter, Download, RefreshCw, X } from "lucide-react"
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { DateRange } from "react-day-picker"
 import { format } from "date-fns"
+import { startOfDay, endOfDay } from "date-fns"
+import { getTransactions } from "@/lib/api/services/transaction.service"
+import { exportToCSV } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
+import { Loader2 } from "lucide-react"
 
 interface TransactionsFiltersProps {
   filters: {
@@ -42,6 +47,8 @@ const TRANSACTION_STATUSES = [
 
 export function TransactionsFilters({ filters, onFilterChange }: TransactionsFiltersProps) {
   const [localSearch, setLocalSearch] = useState(filters.search)
+  const [isExporting, setIsExporting] = useState(false)
+  const { toast } = useToast()
 
   // Debounce search
   useEffect(() => {
@@ -63,6 +70,49 @@ export function TransactionsFilters({ filters, onFilterChange }: TransactionsFil
       start_date: range?.from ? format(range.from, "yyyy-MM-dd") : "",
       end_date: range?.to ? format(range.to, "yyyy-MM-dd") : "",
     })
+  }
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true)
+      const toastId = toast({
+        title: "Exporting...",
+        description: "Fetching transaction records for export.",
+      })
+
+      // Fetch all records (up to reasonable limit)
+      const response = await getTransactions(1, 1000, {
+        search: filters.search || undefined,
+        status: (filters.status === "all" || !filters.status) ? undefined : filters.status,
+        type: (filters.type === "all" || !filters.type) ? undefined : filters.type,
+        start_date: filters.start_date || undefined,
+        end_date: filters.end_date || undefined,
+      })
+
+      const data = response.data.data
+
+      if (data.length > 0) {
+        exportToCSV(data, `transactions-${format(new Date(), "yyyy-MM-dd-HH-mm")}`)
+        toast({
+          title: "Export Complete",
+          description: `Successfully exported ${data.length} records.`,
+        })
+      } else {
+        toast({
+          title: "Export Failed",
+          description: "No records found to export.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "An error occurred while exporting transactions.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   const clearFilters = () => {
@@ -132,8 +182,13 @@ export function TransactionsFilters({ filters, onFilterChange }: TransactionsFil
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
-            <Button variant="outline" className="h-10 rounded-xl border-border/40 bg-background/50 flex-1 sm:flex-none font-bold text-[10px] uppercase tracking-widest">
-              <Download className="h-4 w-4 mr-2" />
+            <Button
+              variant="outline"
+              className="h-10 rounded-xl border-border/40 bg-background/50 flex-1 sm:flex-none font-bold text-[10px] uppercase tracking-widest"
+              onClick={handleExport}
+              disabled={isExporting}
+            >
+              {isExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
               Export
             </Button>
           </div>
