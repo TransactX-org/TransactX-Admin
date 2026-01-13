@@ -9,7 +9,7 @@ import { formatDistanceToNow } from "date-fns"
 
 export function RecentActivity() {
   const { data, isLoading, error } = useRecentActivity(5)
-  const activities = data?.data || []
+  const activities = data?.data?.data || []
   return (
     <Card className="border border-border/50 sleek-card">
       <CardHeader className="pb-3 sm:pb-6">
@@ -41,7 +41,7 @@ export function RecentActivity() {
 
               return (
                 <div
-                  key={activity.id}
+                  key={activity.transactionId}
                   className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border border-border rounded-lg hover:bg-accent transition-colors sleek-transition gap-3 sm:gap-4"
                 >
                   <div className="flex items-center gap-3 sm:gap-4">
@@ -60,13 +60,13 @@ export function RecentActivity() {
                   <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
                     <div className="text-left sm:text-right">
                       <p className="font-medium flex items-center gap-1 text-sm sm:text-base">
-                        <span className="truncate">{activity.amount}</span>
+                        <span className="truncate">₦{activity.amount.toLocaleString()}</span>
                       </p>
                       <Badge
                         variant={
-                          activity.status === "success" || activity.status === "SUCCESSFUL"
+                          activity.status.toLowerCase() === "success" || activity.status.toLowerCase() === "successful"
                             ? "default"
-                            : activity.status === "pending" || activity.status === "PENDING"
+                            : activity.status.toLowerCase() === "pending"
                               ? "secondary"
                               : "destructive"
                         }
