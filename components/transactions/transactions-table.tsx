@@ -194,10 +194,10 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
               </Table>
             </div>
 
-            <div className="md:hidden divide-y divide-border/10">
+            <div className="md:hidden space-y-3">
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="p-5 h-24 animate-pulse bg-muted/5" />
+                  <div key={i} className="p-5 h-28 rounded-2xl bg-card border border-border/40 animate-pulse" />
                 ))
               ) : transactions.map((transaction) => {
                 const statusConfig = getStatusConfig(transaction.status)
@@ -206,42 +206,57 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
                   <div
                     key={transaction.transactionId}
                     className={cn(
-                      "p-5 space-y-4 transition-all active:scale-95",
-                      isSelected ? "bg-primary/5" : "bg-transparent"
+                      "relative p-4 rounded-2xl border transition-all duration-200 bg-card active:scale-[0.99]",
+                      isSelected ? "border-primary/40 ring-1 ring-primary/20 bg-primary/5 shadow-sm" : "border-border/40"
                     )}
                     onClick={() => setSelectedTransactionId(transaction.transactionId)}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
+                    {/* Top Section */}
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="pt-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleRowSelection(transaction.transactionId);
+                        }}
+                      >
                         <Checkbox
                           checked={isSelected}
-                          onCheckedChange={(checked) => {
-                            if (checked) setSelectedRows(p => [...p, transaction.transactionId])
-                            else setSelectedRows(p => p.filter(id => id !== transaction.transactionId))
-                          }}
-                          className="rounded-lg h-4 w-4"
-                          onClick={(e) => e.stopPropagation()}
+                          onCheckedChange={() => { }}
+                          className="rounded-full size-5 border-border active:scale-95 transition-transform"
                         />
-                        <div>
-                          <p className="font-black text-sm tracking-tight">{transaction.user}</p>
-                          <p className="text-[9px] font-mono font-black text-muted-foreground uppercase mt-0.5">{transaction.transactionId}</p>
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="font-bold text-sm leading-tight truncate pr-2">{transaction.user}</p>
+                            <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest font-bold opacity-70">
+                              #{transaction.transactionId}
+                            </p>
+                          </div>
+                          <Badge className={cn("text-[9px] font-black px-2 py-0.5 rounded-md border uppercase tracking-widest shadow-none shrink-0", statusConfig.className)}>
+                            {transaction.status}
+                          </Badge>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 mt-2">
+                          <Badge variant="outline" className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-muted/30 border-border/40 uppercase tracking-wider text-muted-foreground">
+                            {transaction.type.replace("_", " ")}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground font-bold opacity-50">
+                            {formatDate(transaction.date)}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/10">
+                          <p className="text-base font-black tracking-tight">{formatCurrency(transaction.amount)}</p>
+
+                          <Button variant="ghost" size="sm" className="h-7 text-xs font-semibold pr-0 hover:bg-transparent hover:text-primary">
+                            View Details <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                          </Button>
                         </div>
                       </div>
-                      <Badge className={cn("text-[9px] font-black px-2.5 py-0.5 rounded-md border uppercase tracking-widest shadow-none", statusConfig.className)}>
-                        {transaction.status}
-                      </Badge>
-                    </div>
-
-                    <div className="flex items-end justify-between pt-2">
-                      <div className="space-y-1">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Type & Date</p>
-                        <p className="text-[10px] font-bold">
-                          <span className="text-primary uppercase">{transaction.type.replace("_", " ")}</span>
-                          <span className="mx-2 text-muted-foreground/20">|</span>
-                          <span className="text-muted-foreground/60">{formatDate(transaction.date)}</span>
-                        </p>
-                      </div>
-                      <p className="text-lg font-black tracking-tight">{formatCurrency(transaction.amount)}</p>
                     </div>
                   </div>
                 )
