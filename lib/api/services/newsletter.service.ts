@@ -39,12 +39,24 @@ export interface SendNewsletterDTO {
     send_to_all?: boolean
 }
 
+export interface NewsletterResponse {
+    newsletters: Newsletter[]
+    pagination: {
+        total: number
+        per_page: number
+        current_page: number
+        last_page: number
+        from: number
+        to: number
+    }
+}
+
 // Get all newsletters
 export const getNewsletters = async (
     page: number = 1,
     perPage: number = 15
-): Promise<ApiResponse<PaginatedResponse<Newsletter>>> => {
-    const response = await apiClient.get<ApiResponse<PaginatedResponse<Newsletter>>>("/admin/newsletters", {
+): Promise<ApiResponse<NewsletterResponse>> => {
+    const response = await apiClient.get<ApiResponse<NewsletterResponse>>("/admin/newsletters", {
         params: {
             page,
             per_page: perPage,
