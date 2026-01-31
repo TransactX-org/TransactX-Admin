@@ -5,11 +5,16 @@ import type { ApiResponse, PaginatedResponse } from "../types"
 export interface Notification {
   id: string
   type: string
-  title: string
-  message: string
-  read: boolean
+  data: {
+    title: string
+    message: string
+    data?: any
+  }
+  read_at: string | null
   created_at: string
   updated_at: string
+  // Computed property for convenience in UI, though not in API raw response
+  read?: boolean
 }
 
 // Get all notifications
