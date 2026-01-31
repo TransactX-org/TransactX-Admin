@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { MobileNav } from "./mobile-nav"
+import { NotificationsSheet } from "./notifications-sheet"
 import { useUnreadNotificationsCount, useNotifications, useMarkAllNotificationsAsRead, useMarkSingleNotificationAsRead } from "@/lib/api/hooks/use-notifications"
 import { useLogout } from "@/lib/api/hooks/use-auth"
 import { formatDistanceToNow } from "date-fns"
@@ -63,6 +64,10 @@ export function Header() {
         <div className="flex items-center gap-4">
           <MobileNav />
 
+          <div className="flex md:hidden items-center gap-2">
+            <img src="/transactx.svg" alt="TransactX Logo" className="h-8 w-auto" />
+          </div>
+
           {/* Sidebar Toggle - Desktop Only */}
           <Button
             variant="ghost"
@@ -88,10 +93,15 @@ export function Header() {
 
         {/* Right section */}
         <div className="flex items-center gap-3">
-          {/* Notifications */}
+          {/* Notifications - Mobile Sheet */}
+          <div className="md:hidden">
+            <NotificationsSheet />
+          </div>
+
+          {/* Notifications - Desktop Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative hidden md:flex">
                 <Bell className="h-5 w-5" />
                 {notificationCount > 0 && (
                   <Badge
@@ -125,15 +135,15 @@ export function Header() {
                   <DropdownMenuItem
                     key={notification.id}
                     className="cursor-pointer"
-                    onClick={() => !notification.read && markAsRead.mutate(notification.id)}
+                    onClick={() => !notification.read_at && markAsRead.mutate(notification.id)}
                   >
                     <div className="flex flex-col gap-1 w-full">
                       <div className="flex items-start justify-between gap-2">
-                        <p className={`text-sm font-medium ${notification.read ? "" : "font-semibold"}`}>
-                          {notification.title || notification.message}
+                        <p className={`text-sm font-medium ${notification.read_at ? "" : "font-semibold"}`}>
+                          {notification.data?.title || notification.data?.message || "Notification"}
                         </p>
-                        {!notification.read && (
-                          <div className="h-2 w-2 rounded-full bg-primary mt-1 flex-shrink-0" />
+                        {!notification.read_at && (
+                          <div className="h-2 w-2 rounded-full bg-primary mt-1 shrink-0" />
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">

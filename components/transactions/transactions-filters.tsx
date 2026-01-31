@@ -13,6 +13,7 @@ import { getTransactions } from "@/lib/api/services/transaction.service"
 import { exportToCSV } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
+import { MobileFilterSheet } from "@/components/ui/mobile-filter-sheet"
 
 interface TransactionsFiltersProps {
   filters: {
@@ -143,42 +144,88 @@ export function TransactionsFilters({ filters, onFilterChange }: TransactionsFil
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-            <Select
-              value={filters.status || "all"}
-              onValueChange={(value) => onFilterChange({ status: value })}
-            >
-              <SelectTrigger className="h-10 bg-background/50 border-border/40 rounded-xl sm:w-[150px] font-bold text-[10px] uppercase tracking-widest">
-                <Filter className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-border/40 bg-card/95 backdrop-blur-md">
-                <SelectItem value="all" className="text-[10px] font-bold uppercase tracking-widest">All Status</SelectItem>
-                {TRAN_STATUSES_MAPPING}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <MobileFilterSheet onReset={clearFilters} className="md:hidden">
+              <div className="space-y-4 pt-2">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">Date Range</label>
+                  <DatePickerWithRange date={dateRange} onChange={handleDateRangeChange} className="w-full" />
+                </div>
 
-            <Select
-              value={filters.type || "all"}
-              onValueChange={(value) => onFilterChange({ type: value })}
-            >
-              <SelectTrigger className="h-10 bg-background/50 border-border/40 rounded-xl sm:w-[150px] font-bold text-[10px] uppercase tracking-widest">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-border/40 bg-card/95 backdrop-blur-md">
-                <SelectItem value="all" className="text-[10px] font-bold uppercase tracking-widest">All Types</SelectItem>
-                {TRAN_TYPES_MAPPING}
-              </SelectContent>
-            </Select>
-            <DatePickerWithRange date={dateRange} onChange={handleDateRangeChange} />
-          </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">Status</label>
+                  <Select
+                    value={filters.status || "all"}
+                    onValueChange={(value) => onFilterChange({ status: value })}
+                  >
+                    <SelectTrigger className="w-full h-11 rounded-xl bg-background border-border/40">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      {TRAN_STATUSES_MAPPING}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-          <div className="flex items-center gap-2 w-full lg:w-auto ml-auto">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">Type</label>
+                  <Select
+                    value={filters.type || "all"}
+                    onValueChange={(value) => onFilterChange({ type: value })}
+                  >
+                    <SelectTrigger className="w-full h-11 rounded-xl bg-background border-border/40">
+                      <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      {TRAN_TYPES_MAPPING}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </MobileFilterSheet>
+
+            <div className="hidden md:block">
+              <Select
+                value={filters.status || "all"}
+                onValueChange={(value) => onFilterChange({ status: value })}
+              >
+                <SelectTrigger className="h-10 bg-background/50 border-border/40 rounded-xl sm:w-[150px] font-bold text-[10px] uppercase tracking-widest">
+                  <Filter className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border/40 bg-card/95 backdrop-blur-md">
+                  <SelectItem value="all" className="text-[10px] font-bold uppercase tracking-widest">All Status</SelectItem>
+                  {TRAN_STATUSES_MAPPING}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="hidden md:block">
+              <Select
+                value={filters.type || "all"}
+                onValueChange={(value) => onFilterChange({ type: value })}
+              >
+                <SelectTrigger className="h-10 bg-background/50 border-border/40 rounded-xl sm:w-[150px] font-bold text-[10px] uppercase tracking-widest">
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border/40 bg-card/95 backdrop-blur-md">
+                  <SelectItem value="all" className="text-[10px] font-bold uppercase tracking-widest">All Types</SelectItem>
+                  {TRAN_TYPES_MAPPING}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="hidden md:block">
+              <DatePickerWithRange date={dateRange} onChange={handleDateRangeChange} />
+            </div>
+
             <Button
               variant="ghost"
               size="icon"
               onClick={clearFilters}
-              className="h-10 w-10 border border-border/40 rounded-xl bg-background/50 text-muted-foreground hover:text-foreground"
+              className="hidden md:flex h-10 w-10 border border-border/40 rounded-xl bg-background/50 text-muted-foreground hover:text-foreground"
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
@@ -189,9 +236,28 @@ export function TransactionsFilters({ filters, onFilterChange }: TransactionsFil
               disabled={isExporting}
             >
               {isExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-              Export
+              <span className="hidden md:inline">Export</span>
+              <span className="md:hidden">Export</span>
+            </Button>
+
+            {/* Mobile Reset Button (outside sheet, next to Export) */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={clearFilters}
+              className="md:hidden h-10 w-10 border border-border/40 rounded-xl bg-background/50 text-muted-foreground hover:text-foreground"
+            >
+              <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
+
+          <div className="hidden lg:flex items-center gap-2 w-full lg:w-auto ml-auto">
+            {/* Desktop layout adjustment if needed, but the current flex-wrap handles it roughly well. 
+                 Previous layout had this div but it was duplicating buttons. I've consolidated them above.
+                 I will leave this empty or remove it. Better to remove it to clean up. 
+             */}
+          </div>
+
         </div>
       </div>
     </div>

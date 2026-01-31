@@ -185,69 +185,73 @@ export function AdminTable({ admins, isLoading, pagination, page, onPageChange }
                     </table>
                 </div>
 
-                {/* Mobile Card View */}
-                <div className="md:hidden divide-y divide-border/20">
+                <div className="md:hidden space-y-3">
                     {filteredAdmins.map((admin) => (
-                        <div key={admin.id} className="p-4 space-y-4 hover:bg-muted/5 transition-colors">
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-3">
-                                    <Avatar className="h-12 w-12 ring-2 ring-primary/5">
-                                        <AvatarImage src={admin.avatar || undefined} />
-                                        <AvatarFallback className="bg-primary/10 text-primary font-black text-xs">
-                                            {admin.name.split(" ").map(n => n[0]).join("")}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <div className="font-black text-sm tracking-tight flex items-center gap-2">
-                                            {admin.name}
+                        <div key={admin.id} className="relative p-4 rounded-2xl border border-border/40 bg-card active:scale-[0.99] transition-all">
+                            <div className="flex items-center gap-3 mb-3">
+                                <Avatar className="h-10 w-10 ring-1 ring-border/40">
+                                    <AvatarImage src={admin.avatar || undefined} />
+                                    <AvatarFallback className="bg-primary/10 text-primary font-black text-xs">
+                                        {admin.name.split(" ").map(n => n[0]).join("")}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-bold text-sm leading-tight truncate">{admin.name}</p>
                                             {admin.is_super_admin && (
-                                                <Badge className="bg-amber-500/10 text-amber-600 border-none h-4 px-1.5 rounded text-[8px] font-black uppercase tracking-widest">SUPER</Badge>
+                                                <Badge className="bg-amber-500/10 text-amber-600 border-none h-4 px-1.5 rounded text-[8px] font-black uppercase tracking-widest shrink-0">SUPER</Badge>
                                             )}
                                         </div>
-                                        <div className="text-[10px] font-bold text-muted-foreground/60 uppercase">{admin.email}</div>
+
+                                        <div onClick={(e) => e.stopPropagation()}>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-muted-foreground">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-56 rounded-2xl border-border/40 shadow-xl">
+                                                    <DropdownMenuItem onClick={() => {
+                                                        setSelectedAdmin(admin)
+                                                        setIsUpdateDialogOpen(true)
+                                                    }} className="gap-2 py-2.5">
+                                                        <UserCog className="h-4 w-4" />
+                                                        Permissions
+                                                    </DropdownMenuItem>
+                                                    {!admin.is_super_admin && (
+                                                        <DropdownMenuItem onClick={() => handleDelete(admin)} className="text-destructive gap-2 py-2.5">
+                                                            <Trash2 className="h-4 w-4" />
+                                                            Delete
+                                                        </DropdownMenuItem>
+                                                    )}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
                                     </div>
+                                    <p className="text-[10px] items-center gap-1.5 text-muted-foreground font-medium truncate opacity-70 mt-0.5 max-w-[200px] block">
+                                        {admin.email}
+                                    </p>
                                 </div>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl text-muted-foreground">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-56 rounded-2xl">
-                                        <DropdownMenuItem onClick={() => {
-                                            setSelectedAdmin(admin)
-                                            setIsUpdateDialogOpen(true)
-                                        }}>
-                                            <UserCog className="h-4 w-4 mr-3" />
-                                            Permissions
-                                        </DropdownMenuItem>
-                                        {!admin.is_super_admin && (
-                                            <DropdownMenuItem onClick={() => handleDelete(admin)} className="text-rose-500">
-                                                <Trash2 className="h-4 w-4 mr-3" />
-                                                Delete
-                                            </DropdownMenuItem>
-                                        )}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Role</p>
-                                    <Badge variant="outline" className="h-6 px-3 rounded-lg border-primary/20 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-widest">
+                            <div className="grid grid-cols-2 gap-4 border-t border-border/10 pt-3">
+                                <div>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">Role</p>
+                                    <Badge variant="outline" className="h-5 px-2 rounded-md border-primary/20 bg-primary/5 text-primary text-[9px] font-bold uppercase tracking-widest">
                                         {admin.role.name}
                                     </Badge>
                                 </div>
-                                <div className="space-y-1 text-right">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Joined</p>
-                                    <p className="text-[10px] font-bold">
+                                <div className="text-right">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">Joined</p>
+                                    <p className="text-[10px] font-bold text-muted-foreground">
                                         {admin.created_at || admin.role?.created_at ? new Date(admin.created_at || admin.role.created_at!).toLocaleDateString() : "N/A"}
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="space-y-1.5">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Permissions</p>
+                            <div className="mt-3 pt-3 border-t border-border/10">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1.5">Permissions</p>
                                 <div className="flex flex-wrap gap-1">
                                     {(() => {
                                         const perms = parsePermissions(admin.permissions)
@@ -258,11 +262,20 @@ export function AdminTable({ admins, isLoading, pagination, page, onPageChange }
                                                 </Badge>
                                             )
                                         }
-                                        return perms.map(p => (
-                                            <span key={p} className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-muted/30 border border-border/10">
-                                                {p.replace("-", " ")}
-                                            </span>
-                                        ))
+                                        return (
+                                            <>
+                                                {perms.slice(0, 4).map(p => (
+                                                    <span key={p} className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/10">
+                                                        {p.split("-")[0]}
+                                                    </span>
+                                                ))}
+                                                {perms.length > 4 && (
+                                                    <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/10 opacity-70">
+                                                        +{perms.length - 4}
+                                                    </span>
+                                                )}
+                                            </>
+                                        )
                                     })()}
                                 </div>
                             </div>
