@@ -22,6 +22,8 @@ import { useUnreadNotificationsCount, useNotifications, useMarkAllNotificationsA
 import { useLogout } from "@/lib/api/hooks/use-auth"
 import { formatDistanceToNow } from "date-fns"
 
+import { NotificationDetailsModal } from "./notification-details-modal"
+
 export function Header() {
   const router = useRouter()
   const { toggleSidebar } = useSidebar()
@@ -30,6 +32,9 @@ export function Header() {
   const markAllAsRead = useMarkAllNotificationsAsRead()
   const markAsRead = useMarkSingleNotificationAsRead()
   const logout = useLogout()
+
+  const [selectedNotification, setSelectedNotification] = useState<any>(null)
+  const [notificationModalOpen, setNotificationModalOpen] = useState(false)
 
   const notificationCount = unreadCountData?.data?.count || 0
   const notifications = notificationsData?.data?.data || []
@@ -187,7 +192,13 @@ export function Header() {
                   <DropdownMenuItem
                     key={notification.id}
                     className="cursor-pointer"
-                    onClick={() => !notification.read_at && markAsRead.mutate(notification.id)}
+                    onClick={() => {
+                      if (!notification.read_at) {
+                        markAsRead.mutate(notification.id)
+                      }
+                      setSelectedNotification(notification)
+                      setNotificationModalOpen(true)
+                    }}
                   >
                     <div className="flex flex-col gap-1 w-full">
                       <div className="flex items-start justify-between gap-2">
@@ -198,7 +209,10 @@ export function Header() {
                           <div className="h-2 w-2 rounded-full bg-primary mt-1 shrink-0" />
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {notification.data?.message}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">
                         {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                       </p>
                     </div>
@@ -207,6 +221,12 @@ export function Header() {
               )}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <NotificationDetailsModal
+            notification={selectedNotification}
+            open={notificationModalOpen}
+            onOpenChange={setNotificationModalOpen}
+          />
 
           {/* User menu */}
           <DropdownMenu>

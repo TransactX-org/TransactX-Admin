@@ -16,6 +16,9 @@ import { useMarkAllNotificationsAsRead, useMarkSingleNotificationAsRead, useNoti
 import { formatDistanceToNow } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 
+import { NotificationDetailsModal } from "./notification-details-modal"
+import { useState } from "react"
+
 interface NotificationsSheetProps {
     className?: string
     trigger?: React.ReactNode
@@ -29,6 +32,9 @@ export function NotificationsSheet({
     const { data: unreadCountData } = useUnreadNotificationsCount()
     const markAllAsRead = useMarkAllNotificationsAsRead()
     const markAsRead = useMarkSingleNotificationAsRead()
+
+    const [selectedNotification, setSelectedNotification] = useState<any>(null)
+    const [notificationModalOpen, setNotificationModalOpen] = useState(false)
 
     const notifications = notificationsData?.data?.data || []
     const notificationCount = unreadCountData?.data?.count || 0
@@ -90,9 +96,15 @@ export function NotificationsSheet({
                             notifications.map((notification) => (
                                 <div
                                     key={notification.id}
-                                    className={`flex flex-col gap-1 p-3 rounded-xl transition-colors ${notification.read_at ? "bg-transparent text-muted-foreground" : "bg-muted/30"
+                                    className={`flex flex-col gap-1 p-3 rounded-xl transition-colors cursor-pointer ${notification.read_at ? "bg-transparent text-muted-foreground hover:bg-muted/10" : "bg-muted/30 hover:bg-muted/50"
                                         }`}
-                                    onClick={() => !notification.read_at && markAsRead.mutate(notification.id)}
+                                    onClick={() => {
+                                        if (!notification.read_at) {
+                                            markAsRead.mutate(notification.id)
+                                        }
+                                        setSelectedNotification(notification)
+                                        setNotificationModalOpen(true)
+                                    }}
                                 >
                                     <div className="flex items-start justify-between gap-2">
                                         <p className={`text-sm ${notification.read_at ? "font-normal" : "font-semibold text-foreground"}`}>
@@ -120,6 +132,12 @@ export function NotificationsSheet({
                     </DrawerFooter>
                 </div>
             </DrawerContent>
+
+            <NotificationDetailsModal
+                notification={selectedNotification}
+                open={notificationModalOpen}
+                onOpenChange={setNotificationModalOpen}
+            />
         </Drawer>
     )
 }
