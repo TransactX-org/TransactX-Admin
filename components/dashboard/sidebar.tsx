@@ -18,6 +18,8 @@ import {
   Tv,
   Gift,
   Shield,
+  Megaphone,
+  Mail,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -51,6 +53,14 @@ export const navItems = [
       { label: "Data", href: "/dashboard/services/data", icon: Wifi },
       { label: "Electricity", href: "/dashboard/services/electricity", icon: Zap },
       { label: "TV", href: "/dashboard/services/tv", icon: Tv },
+    ],
+  },
+  {
+    label: "Marketing",
+    href: "/dashboard/newsletters",
+    icon: Megaphone,
+    children: [
+      { label: "Newsletters", href: "/dashboard/newsletters", icon: Mail },
     ],
   },
   {
