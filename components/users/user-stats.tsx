@@ -10,7 +10,7 @@ export function UserStats() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4">
         {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
           <Card key={i} className="border-border/40 bg-card/10 backdrop-blur-sm rounded-3xl h-32 animate-pulse" />
         ))}
@@ -86,7 +86,7 @@ export function UserStats() {
   ]
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4">
       {statCards.map((stat, index) => {
         const Icon = stat.icon
         return (

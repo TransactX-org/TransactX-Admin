@@ -6,10 +6,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowUpRight, ArrowDownLeft, Loader2 } from "lucide-react"
 import { useRecentActivity } from "@/lib/api/hooks/use-dashboard"
 import { formatDistanceToNow } from "date-fns"
+import { TransactionDetailsModal } from "@/components/transactions/transaction-details-modal"
+import { useState } from "react"
 
 export function RecentActivity() {
   const { data, isLoading, error } = useRecentActivity(5)
   const activities = data?.data?.data || []
+  const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null)
   return (
     <Card className="border border-border/50 sleek-card">
       <CardHeader className="pb-3 sm:pb-6">
@@ -42,7 +45,8 @@ export function RecentActivity() {
               return (
                 <div
                   key={activity.transactionId}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border border-border rounded-lg hover:bg-accent transition-colors sleek-transition gap-3 sm:gap-4"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border border-border rounded-lg hover:bg-accent transition-colors sleek-transition gap-3 sm:gap-4 cursor-pointer"
+                  onClick={() => setSelectedTransactionId(activity.transactionId)}
                 >
                   <div className="flex items-center gap-3 sm:gap-4">
                     <Avatar className="bg-tx-primary/10 h-8 w-8 sm:h-10 sm:w-10">
@@ -82,6 +86,10 @@ export function RecentActivity() {
           </div>
         )}
       </CardContent>
+      <TransactionDetailsModal
+        transactionId={selectedTransactionId}
+        onClose={() => setSelectedTransactionId(null)}
+      />
     </Card>
   )
 }
