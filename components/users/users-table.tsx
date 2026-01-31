@@ -256,55 +256,90 @@ export function UsersTable({ filters }: UsersTableProps) {
                     <div
                       key={user.id}
                       className={cn(
-                        "p-5 rounded-2xl border transition-all duration-200 bg-card active:scale-[0.98]",
+                        "relative p-4 rounded-2xl border transition-all duration-200 bg-card active:scale-[0.99]",
                         isSelected ? "border-primary/40 ring-1 ring-primary/20 bg-primary/5 shadow-sm" : "border-border/40"
                       )}
                       onClick={() => router.push(`/dashboard/users/${user.id}`)}
                     >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-4">
-                          <div
-                            className="p-1 -ml-1"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleRowSelection(user.id);
-                            }}
-                          >
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={() => { }}
-                              className="rounded-full size-4"
-                            />
+                      <div className="flex items-start gap-3">
+                        {/* Selection Checkbox */}
+                        <div
+                          className="pt-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleRowSelection(user.id);
+                          }}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => { }}
+                            className="rounded-full size-5 border-border active:scale-95 transition-transform"
+                          />
+                        </div>
+
+                        {/* User Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3 mb-2">
+                              <Avatar className="h-10 w-10 ring-1 ring-border/40">
+                                <AvatarImage src={user.avatar || undefined} />
+                                <AvatarFallback className="tx-bg-primary text-white font-bold text-sm">
+                                  {user.name.split(" ").map((n) => n[0]).join("").toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-bold text-sm leading-tight truncate pr-2">{user.name}</p>
+                                <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest font-bold opacity-70">
+                                  #{truncateId(user.id)}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Actions Menu (Top Right) */}
+                            <div onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 -mt-1 -mr-2 text-muted-foreground">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48 rounded-xl border-border/40 shadow-xl">
+                                  <DropdownMenuItem onClick={() => router.push(`/dashboard/users/${user.id}`)} className="cursor-pointer gap-2 py-3 text-sm">
+                                    <Eye className="h-4 w-4 text-muted-foreground" />
+                                    <span>View Profile</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="cursor-pointer gap-2 py-3 text-sm">
+                                    <Edit className="h-4 w-4 text-muted-foreground" />
+                                    <span>Edit Details</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="cursor-pointer gap-2 py-3 text-sm text-destructive">
+                                    <Trash2 className="h-4 w-4" />
+                                    <span>Delete User</span>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </div>
-                          <Avatar className="h-12 w-12 ring-2 ring-background border border-border/40">
-                            <AvatarImage src={user.avatar || undefined} />
-                            <AvatarFallback className="tx-bg-primary text-white font-bold text-lg">
-                              {user.name.split(" ").map((n) => n[0]).join("").toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-bold text-base leading-none tracking-tight">{user.name}</p>
-                            <div className="flex items-center gap-2 mt-1.5">
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/10 uppercase">
-                                {user.user_type}
-                              </span>
-                              <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest font-bold opacity-60">
-                                #{truncateId(user.id)}
-                              </p>
+
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            <Badge variant={status.variant} className={cn("text-[10px] font-bold px-2 py-0.5 rounded-md border shadow-none", status.className)}>
+                              {user.status}
+                            </Badge>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/10 uppercase">
+                              {user.user_type}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border/10">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
+                              <p className="text-xs text-muted-foreground truncate font-medium">{user.email}</p>
+                            </div>
+                            <div className="ml-auto text-[10px] text-muted-foreground font-bold opacity-50 whitespace-nowrap">
+                              {formatDate(user.created_at)}
                             </div>
                           </div>
                         </div>
-                        <Badge variant={status.variant} className={cn("text-[10px] font-bold px-3 py-1 rounded-lg border", status.className)}>
-                          {user.status}
-                        </Badge>
-                      </div>
-
-                      <div className="flex items-center justify-between text-[11px] pt-4 border-t border-border/10 mt-1">
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <Mail className="h-3 w-3" />
-                          <span className="font-medium truncate max-w-[150px]">{user.email}</span>
-                        </div>
-                        <span className="text-muted-foreground font-medium opacity-60">{formatDate(user.created_at)}</span>
                       </div>
                     </div>
                   )
