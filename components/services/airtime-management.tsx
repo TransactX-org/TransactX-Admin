@@ -17,13 +17,19 @@ import { AddRechargeCardDialog } from "./add-recharge-card-dialog"
 import { exportToCSV } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
+import { MobileFilterSheet } from "@/components/ui/mobile-filter-sheet"
+import { TransactionDetailsModal } from "@/components/transactions/transaction-details-modal"
+import { ChevronRight } from "lucide-react"
+
 export function AirtimeManagement() {
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedNetwork, setSelectedNetwork] = useState("all")
+  const [filterStatus, setFilterStatus] = useState("all")
   const [perPage, setPerPage] = useState(15)
   const [openAddRechargeCardDialog, setOpenAddRechargeCardDialog] = useState(false)
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null)
   const { toast } = useToast()
 
   const { data: statsData, isLoading: statsLoading } = useAirtimeStats()
@@ -157,40 +163,94 @@ export function AirtimeManagement() {
                   placeholder="Search by user, phone, or transaction ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-10 rounded-xl"
                 />
               </div>
             </div>
-            <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Network" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Networks</SelectItem>
-                {networks.map((network) => (
-                  <SelectItem key={network.id} value={network.code.toLowerCase()}>
-                    {network.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select defaultValue="all">
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="successful">Successful</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="flex-1 min-w-[200px]">
-              <DatePickerWithRange date={dateRange} onChange={setDateRange} />
+
+            {/* Mobile Filter Sheet */}
+            <MobileFilterSheet
+              className="md:hidden"
+              onReset={() => {
+                setSelectedNetwork("all")
+                setFilterStatus("all")
+                setDateRange(undefined)
+              }}
+            >
+              <div className="space-y-4 pt-2">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">Date Range</label>
+                  <DatePickerWithRange date={dateRange} onChange={setDateRange} className="w-full" />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">Network</label>
+                  <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
+                    <SelectTrigger className="w-full h-11 rounded-xl">
+                      <SelectValue placeholder="Network" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Networks</SelectItem>
+                      {networks.map((network) => (
+                        <SelectItem key={network.id} value={network.code.toLowerCase()}>
+                          {network.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">Status</label>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className="w-full h-11 rounded-xl">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="successful">Successful</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="failed">Failed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </MobileFilterSheet>
+
+            {/* Desktop Filters */}
+            <div className="hidden md:flex items-center gap-3">
+              <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
+                <SelectTrigger className="w-[150px] h-10 rounded-xl">
+                  <SelectValue placeholder="Network" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Networks</SelectItem>
+                  {networks.map((network) => (
+                    <SelectItem key={network.id} value={network.code.toLowerCase()}>
+                      {network.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-[140px] h-10 rounded-xl">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="successful">Successful</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="w-[240px]">
+                <DatePickerWithRange date={dateRange} onChange={setDateRange} />
+              </div>
             </div>
+
             <Button
               variant="outline"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto h-10 rounded-xl"
               onClick={() => {
                 const dataToExport = transactions.length > 0 ? transactions : []
                 if (dataToExport.length === 0) {
@@ -205,13 +265,15 @@ export function AirtimeManagement() {
               Export
             </Button>
             {/* Clear filters button */}
-            {(searchQuery || selectedNetwork !== "all" || dateRange) && (
+            {(searchQuery || selectedNetwork !== "all" || filterStatus !== "all" || dateRange) && (
               <Button
                 variant="ghost"
                 size="icon"
+                className="h-10 w-10 rounded-xl"
                 onClick={() => {
                   setSearchQuery("")
                   setSelectedNetwork("all")
+                  setFilterStatus("all")
                   setDateRange(undefined)
                 }}
                 title="Clear filters"
@@ -221,8 +283,8 @@ export function AirtimeManagement() {
             )}
           </div>
 
-          {/* Table */}
-          <div className="border border-border/30 rounded-lg overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden md:block border border-border/30 rounded-lg overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -277,7 +339,12 @@ export function AirtimeManagement() {
                       </TableCell>
                       <TableCell className="text-xs sm:text-sm text-muted-foreground">{formatDate(transaction.date)}</TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm" className="text-xs sm:text-sm">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs sm:text-sm"
+                          onClick={() => setSelectedTransactionId(transaction.transactionId)}
+                        >
                           View
                         </Button>
                       </TableCell>
@@ -286,6 +353,59 @@ export function AirtimeManagement() {
                 )}
               </TableBody>
             </Table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-3">
+            {transactionsLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="p-4 h-32 rounded-2xl bg-card border border-border/40 animate-pulse" />
+              ))
+            ) : filteredTransactions.length === 0 ? (
+              <div className="text-center py-10 bg-card/30 rounded-2xl border border-dashed border-border/40">
+                <p className="text-sm text-muted-foreground">No transactions found</p>
+              </div>
+            ) : (
+              filteredTransactions.map((transaction) => (
+                <div
+                  key={transaction.transactionId}
+                  className="relative p-4 rounded-2xl border border-border/40 bg-card active:scale-[0.99] transition-all"
+                  onClick={() => setSelectedTransactionId(transaction.transactionId)}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="font-bold text-sm text-foreground">{transaction.user}</p>
+                      <p className="text-[10px] items-center gap-1.5 text-muted-foreground font-mono font-bold mt-0.5 opacity-70">
+                        #{transaction.transactionId}
+                      </p>
+                    </div>
+                    <Badge variant={getStatusBadgeVariant(transaction.status)} className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border shadow-none">
+                      {transaction.status}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 border-t border-border/10 pt-3">
+                    <div className="space-y-0.5">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Network</p>
+                      <p className="text-xs font-bold uppercase">{transaction.network}</p>
+                    </div>
+                    <div className="space-y-0.5 text-right">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Amount</p>
+                      <p className="text-base font-black tracking-tight">{formatCurrency(transaction.amount)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/10">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <p className="text-[10px] font-bold opacity-60">{formatDate(transaction.date)}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" className="h-6 text-[10px] font-bold px-0 hover:bg-transparent hover:text-primary">
+                      View Details <ChevronRight className="ml-1 h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           {pagination && (
@@ -335,6 +455,10 @@ export function AirtimeManagement() {
                   Next
                 </Button>
               </div>
+              <TransactionDetailsModal
+                transactionId={selectedTransactionId}
+                onClose={() => setSelectedTransactionId(null)}
+              />
             </div>
           )}
         </CardContent>

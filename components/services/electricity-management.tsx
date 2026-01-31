@@ -17,6 +17,10 @@ import { AddProviderDialog } from "./add-provider-dialog"
 import { exportToCSV } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
+import { MobileFilterSheet } from "@/components/ui/mobile-filter-sheet"
+import { TransactionDetailsModal } from "@/components/transactions/transaction-details-modal"
+import { ChevronRight } from "lucide-react"
+
 export function ElectricityManagement() {
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
@@ -25,6 +29,8 @@ export function ElectricityManagement() {
   const [openAddProviderDialog, setOpenAddProviderDialog] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const [filterStatus, setFilterStatus] = useState("all")
+  const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null)
   const { toast } = useToast()
 
   const { data: statsData, isLoading: statsLoading } = useElectricityStats()
@@ -167,21 +173,58 @@ export function ElectricityManagement() {
                 />
               </div>
             </div>
-            <Select value={selectedProvider} onValueChange={setSelectedProvider}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Provider" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Providers</SelectItem>
-                <SelectItem value="ikedc">IKEDC</SelectItem>
-                <SelectItem value="ekedc">EKEDC</SelectItem>
-                <SelectItem value="aedc">AEDC</SelectItem>
-                <SelectItem value="ibedc">IBEDC</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="flex-1 min-w-[200px]">
-              <DatePickerWithRange date={dateRange} onChange={setDateRange} />
+
+            {/* Mobile Filter Sheet */}
+            <MobileFilterSheet
+              className="md:hidden"
+              onReset={() => {
+                setSelectedProvider("all")
+                setDateRange(undefined)
+              }}
+            >
+              <div className="space-y-4 pt-2">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">Date Range</label>
+                  <DatePickerWithRange date={dateRange} onChange={setDateRange} className="w-full" />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">Provider</label>
+                  <Select value={selectedProvider} onValueChange={setSelectedProvider}>
+                    <SelectTrigger className="w-full h-11 rounded-xl">
+                      <SelectValue placeholder="Provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Providers</SelectItem>
+                      <SelectItem value="ikedc">IKEDC</SelectItem>
+                      <SelectItem value="ekedc">EKEDC</SelectItem>
+                      <SelectItem value="aedc">AEDC</SelectItem>
+                      <SelectItem value="ibedc">IBEDC</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </MobileFilterSheet>
+
+            {/* Desktop Filters */}
+            <div className="hidden md:flex items-center gap-3">
+              <Select value={selectedProvider} onValueChange={setSelectedProvider}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Providers</SelectItem>
+                  <SelectItem value="ikedc">IKEDC</SelectItem>
+                  <SelectItem value="ekedc">EKEDC</SelectItem>
+                  <SelectItem value="aedc">AEDC</SelectItem>
+                  <SelectItem value="ibedc">IBEDC</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="min-w-[200px]">
+                <DatePickerWithRange date={dateRange} onChange={setDateRange} />
+              </div>
             </div>
+
             <Button
               variant="outline"
               className="w-full sm:w-auto"
@@ -215,7 +258,8 @@ export function ElectricityManagement() {
             )}
           </div>
 
-          <div className="border border-border/30 rounded-lg overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden md:block border border-border/30 rounded-lg overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -270,7 +314,12 @@ export function ElectricityManagement() {
                       </TableCell>
                       <TableCell className="text-xs sm:text-sm text-muted-foreground">{formatDate(transaction.date)}</TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm" className="text-xs sm:text-sm">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs sm:text-sm"
+                          onClick={() => setSelectedTransactionId(transaction.transactionId)}
+                        >
                           View
                         </Button>
                       </TableCell>
@@ -279,6 +328,59 @@ export function ElectricityManagement() {
                 )}
               </TableBody>
             </Table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-3">
+            {transactionsLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="p-4 h-32 rounded-2xl bg-card border border-border/40 animate-pulse" />
+              ))
+            ) : filteredTransactions.length === 0 ? (
+              <div className="text-center py-10 bg-card/30 rounded-2xl border border-dashed border-border/40">
+                <p className="text-sm text-muted-foreground">No transactions found</p>
+              </div>
+            ) : (
+              filteredTransactions.map((transaction) => (
+                <div
+                  key={transaction.transactionId}
+                  className="relative p-4 rounded-2xl border border-border/40 bg-card active:scale-[0.99] transition-all"
+                  onClick={() => setSelectedTransactionId(transaction.transactionId)}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="font-bold text-sm text-foreground">{transaction.user}</p>
+                      <p className="text-[10px] items-center gap-1.5 text-muted-foreground font-mono font-bold mt-0.5 opacity-70">
+                        #{transaction.transactionId}
+                      </p>
+                    </div>
+                    <Badge variant={getStatusBadgeVariant(transaction.status)} className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border shadow-none">
+                      {transaction.status}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 border-t border-border/10 pt-3">
+                    <div className="space-y-0.5">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Details</p>
+                      <p className="text-xs font-bold uppercase">{transaction.provider} - {formatUnits(transaction.units)}</p>
+                    </div>
+                    <div className="space-y-0.5 text-right">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Amount</p>
+                      <p className="text-base font-black tracking-tight">{formatCurrency(transaction.amount)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/10">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <p className="text-[10px] font-bold opacity-60">{formatDate(transaction.date)}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" className="h-6 text-[10px] font-bold px-0 hover:bg-transparent hover:text-primary">
+                      View Details <ChevronRight className="ml-1 h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           {pagination && (
@@ -332,6 +434,11 @@ export function ElectricityManagement() {
           )}
         </CardContent>
       </Card>
+
+      <TransactionDetailsModal
+        transactionId={selectedTransactionId}
+        onClose={() => setSelectedTransactionId(null)}
+      />
     </div>
   )
 }
