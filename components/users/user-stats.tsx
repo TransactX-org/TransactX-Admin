@@ -73,13 +73,13 @@ export function UserStats() {
     },
     {
       title: "Verified NIN",
-      value: 0, // TODO: Connect to real API aggregation
+      value: stats.nin_verified_users,
       icon: UserCheck,
       description: "NIN Verified",
     },
     {
       title: "Verified BVN",
-      value: 0, // TODO: Connect to real API aggregation
+      value: stats.bvn_verified_users,
       icon: UserCheck,
       description: "BVN Verified",
     },

@@ -193,6 +193,8 @@ export interface UserStats {
   users_created_today: number
   users_created_this_week: number
   users_created_this_month: number
+  bvn_verified_users: number
+  nin_verified_users: number
 }
 
 export interface CreateUserPayload {
