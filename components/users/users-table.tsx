@@ -144,6 +144,8 @@ export function UsersTable({ filters }: UsersTableProps) {
                     <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-4">User</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-4">Role</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-4">Status</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-4">KYC</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-4">KYB</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-4">Email</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-4">Join Date</TableHead>
                     <TableHead className="text-right px-4 py-4">Actions</TableHead>
@@ -153,25 +155,35 @@ export function UsersTable({ filters }: UsersTableProps) {
                   {isLoading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <TableRow key={i} className="border-b-border/40">
-                        <TableCell colSpan={8} className="h-16 h-skeleton" />
+                        <TableCell colSpan={9} className="h-16 h-skeleton" />
                       </TableRow>
                     ))
                   ) : error ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-12">
+                      <TableCell colSpan={9} className="text-center py-12">
                         <span className="text-sm text-destructive">Failed to load users</span>
                       </TableCell>
                     </TableRow>
                   ) : users.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-12">
+                      <TableCell colSpan={9} className="text-center py-12">
                         <span className="text-sm text-muted-foreground">No users found</span>
                       </TableCell>
                     </TableRow>
                   ) : (
                     users.map((user) => {
                       const status = getStatusConfig(user.status)
+                      const kycStatus = user.kyc_status ? user.kyc_status.toUpperCase() : "PENDING"
+                      const kybStatus = user.kyb_status ? user.kyb_status.toUpperCase() : "PENDING"
                       const isSelected = selectedRows.includes(user.id)
+
+                      const getVerificationStyle = (s: string) => {
+                        if (s === "SUCCESSFUL") return "bg-blue-500/10 text-blue-600 border-blue-500/20"
+                        if (s === "FAILED" || s === "BLOCKED") return "bg-red-500/10 text-red-600 border-red-500/20"
+                        if (s === "IN_PROGRESS") return "bg-orange-500/10 text-orange-600 border-orange-500/20"
+                        return "bg-muted text-muted-foreground border-border/40"
+                      }
+
                       return (
                         <TableRow key={user.id} className={cn("border-b-border/40 hover:bg-muted/30 transition-colors group", isSelected && "bg-muted/50")}>
                           <TableCell className="px-4">
@@ -196,14 +208,30 @@ export function UsersTable({ filters }: UsersTableProps) {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/40">
-                              {user.user_type}
-                            </span>
+                            {/* Account Type Badge */}
+                            <div className="flex flex-col gap-1 items-start">
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/40">
+                                {user.user_type}
+                              </span>
+                              <span className="text-[9px] font-mono text-muted-foreground/60 uppercase">
+                                {user.account_type}
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <Badge variant={status.variant} className={cn("font-bold text-[10px] px-2.5 py-0.5 rounded-md border shadow-none", status.className)}>
                               {user.status}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <span className={cn("text-[9px] font-bold px-2 py-1 rounded-md border uppercase whitespace-nowrap", getVerificationStyle(kycStatus))}>
+                              {kycStatus.replace("_", " ")}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className={cn("text-[9px] font-bold px-2 py-1 rounded-md border uppercase whitespace-nowrap", getVerificationStyle(kybStatus))}>
+                              {kybStatus.replace("_", " ")}
+                            </span>
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground truncate max-w-[150px]">{user.email}</TableCell>
                           <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{formatDate(user.created_at)}</TableCell>

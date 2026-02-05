@@ -136,7 +136,7 @@ export function UsersFilters({ filters, onFilterChange }: UsersFiltersProps) {
                 placeholder="Search Name, Email, Username..."
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
-                className="pl-10 h-11 bg-background/50 border-border/40 rounded-xl sleek-focus font-medium"
+                className="pl-10 h-11 bg-background border-border/40 rounded-xl sleek-focus font-medium text-foreground placeholder:text-muted-foreground"
               />
             </div>
           </div>
@@ -162,6 +162,7 @@ export function UsersFilters({ filters, onFilterChange }: UsersFiltersProps) {
                       <SelectItem value="ACTIVE">Active</SelectItem>
                       <SelectItem value="SUSPENDED">Suspended</SelectItem>
                       <SelectItem value="INACTIVE">Inactive</SelectItem>
+                      <SelectItem value="BLOCKED">Blocked</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -174,9 +175,28 @@ export function UsersFilters({ filters, onFilterChange }: UsersFiltersProps) {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All KYC</SelectItem>
-                      <SelectItem value="verified">Verified</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
+                      <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                      <SelectItem value="SUCCESSFUL">Successful</SelectItem>
+                      <SelectItem value="FAILED">Failed</SelectItem>
+                      <SelectItem value="PENDING">Pending</SelectItem>
+                      <SelectItem value="BLOCKED">Blocked</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">KYB Status</label>
+                  <Select value={filters.kyb_status || "all"} onValueChange={(v) => onFilterChange({ kyb_status: v === "all" ? "" : v })}>
+                    <SelectTrigger className="w-full h-11 rounded-xl bg-background border-border/40">
+                      <SelectValue placeholder="KYB Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All KYB</SelectItem>
+                      <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                      <SelectItem value="SUCCESSFUL">Successful</SelectItem>
+                      <SelectItem value="FAILED">Failed</SelectItem>
+                      <SelectItem value="PENDING">Pending</SelectItem>
+                      <SelectItem value="BLOCKED">Blocked</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -190,7 +210,21 @@ export function UsersFilters({ filters, onFilterChange }: UsersFiltersProps) {
                     <SelectContent>
                       <SelectItem value="all">All Types</SelectItem>
                       <SelectItem value="individual">Individual</SelectItem>
-                      <SelectItem value="business">Business</SelectItem>
+                      <SelectItem value="organization">Organization</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">Account Type</label>
+                  <Select value={filters.account_type || "all"} onValueChange={(v) => onFilterChange({ account_type: v === "all" ? "" : v })}>
+                    <SelectTrigger className="w-full h-11 rounded-xl bg-background border-border/40">
+                      <SelectValue placeholder="Account Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Accounts</SelectItem>
+                      <SelectItem value="main">Main</SelectItem>
+                      <SelectItem value="sub">Sub</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -202,9 +236,9 @@ export function UsersFilters({ filters, onFilterChange }: UsersFiltersProps) {
                       <SelectValue placeholder="Active" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Activity</SelectItem>
-                      <SelectItem value="1">Active Only</SelectItem>
-                      <SelectItem value="0">Inactive Only</SelectItem>
+                      <SelectItem value="all">Any</SelectItem>
+                      <SelectItem value="1">Active</SelectItem>
+                      <SelectItem value="0">Inactive</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -236,53 +270,90 @@ export function UsersFilters({ filters, onFilterChange }: UsersFiltersProps) {
         {/* Desktop Extended Filters */}
         <div className="hidden md:flex flex-wrap items-center gap-2 pt-2 border-t border-border/10">
           <Select value={filters.status || "all"} onValueChange={(v) => onFilterChange({ status: v === "all" ? "" : v })}>
-            <SelectTrigger className="h-9 bg-background/50 border-border/40 rounded-xl w-32 text-[10px] font-bold uppercase tracking-widest">
+            <SelectTrigger className="h-9 bg-background border-border/40 rounded-xl w-32 text-[10px] font-bold uppercase tracking-widest text-foreground">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent className="rounded-xl border-border/40">
-              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="all">Status</SelectItem>
               <SelectItem value="NEW">New</SelectItem>
               <SelectItem value="ACTIVE">Active</SelectItem>
               <SelectItem value="SUSPENDED">Suspended</SelectItem>
               <SelectItem value="INACTIVE">Inactive</SelectItem>
+              <SelectItem value="BLOCKED">Blocked</SelectItem>
             </SelectContent>
           </Select>
 
           <Select value={filters.kyc_status || "all"} onValueChange={(v) => onFilterChange({ kyc_status: v === "all" ? "" : v })}>
-            <SelectTrigger className="h-9 bg-background/50 border-border/40 rounded-xl w-32 text-[10px] font-bold uppercase tracking-widest">
+            <SelectTrigger className="h-9 bg-background border-border/40 rounded-xl w-32 text-[10px] font-bold uppercase tracking-widest text-foreground">
               <ShieldCheck className="h-3 w-3 mr-1 text-muted-foreground" />
               <SelectValue placeholder="KYC Status" />
             </SelectTrigger>
             <SelectContent className="rounded-xl border-border/40">
-              <SelectItem value="all">All KYC</SelectItem>
-              <SelectItem value="verified">Verified</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="all">KYC Status</SelectItem>
+              <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+              <SelectItem value="SUCCESSFUL">Successful</SelectItem>
+              <SelectItem value="FAILED">Failed</SelectItem>
+              <SelectItem value="PENDING">Pending</SelectItem>
+              <SelectItem value="BLOCKED">Blocked</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={filters.kyb_status || "all"} onValueChange={(v) => onFilterChange({ kyb_status: v === "all" ? "" : v })}>
+            <SelectTrigger className="h-9 bg-background border-border/40 rounded-xl w-32 text-[10px] font-bold uppercase tracking-widest text-foreground">
+              <ShieldCheck className="h-3 w-3 mr-1 text-muted-foreground" />
+              <SelectValue placeholder="KYB Status" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-border/40">
+              <SelectItem value="all">KYB Status</SelectItem>
+              <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+              <SelectItem value="SUCCESSFUL">Successful</SelectItem>
+              <SelectItem value="FAILED">Failed</SelectItem>
+              <SelectItem value="PENDING">Pending</SelectItem>
+              <SelectItem value="BLOCKED">Blocked</SelectItem>
             </SelectContent>
           </Select>
 
           <Select value={filters.user_type || "all"} onValueChange={(v) => onFilterChange({ user_type: v === "all" ? "" : v })}>
-            <SelectTrigger className="h-9 bg-background/50 border-border/40 rounded-xl w-32 text-[10px] font-bold uppercase tracking-widest">
+            <SelectTrigger className="h-9 bg-background border-border/40 rounded-xl w-32 text-[10px] font-bold uppercase tracking-widest text-foreground">
               <SelectValue placeholder="User Type" />
             </SelectTrigger>
             <SelectContent className="rounded-xl border-border/40">
-              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="all">User Type</SelectItem>
               <SelectItem value="individual">Individual</SelectItem>
-              <SelectItem value="business">Business</SelectItem>
+              <SelectItem value="organization">Organization</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={filters.account_type || "all"} onValueChange={(v) => onFilterChange({ account_type: v === "all" ? "" : v })}>
+            <SelectTrigger className="h-9 bg-background border-border/40 rounded-xl w-32 text-[10px] font-bold uppercase tracking-widest text-foreground">
+              <SelectValue placeholder="Account" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-border/40">
+              <SelectItem value="all">Account Type</SelectItem>
+              <SelectItem value="main">Main</SelectItem>
+              <SelectItem value="sub">Sub</SelectItem>
             </SelectContent>
           </Select>
 
           <Select value={filters.is_active || "all"} onValueChange={(v) => onFilterChange({ is_active: v === "all" ? "" : v })}>
-            <SelectTrigger className="h-9 bg-background/50 border-border/40 rounded-xl w-32 text-[10px] font-bold uppercase tracking-widest">
+            <SelectTrigger className="h-9 bg-background border-border/40 rounded-xl w-32 text-[10px] font-bold uppercase tracking-widest text-foreground">
               <UserCheck className="h-3 w-3 mr-1 text-muted-foreground" />
               <SelectValue placeholder="Active" />
             </SelectTrigger>
             <SelectContent className="rounded-xl border-border/40">
-              <SelectItem value="all">Activity</SelectItem>
+              <SelectItem value="all">Any Activity</SelectItem>
               <SelectItem value="1">Active Only</SelectItem>
               <SelectItem value="0">Inactive Only</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Country Filter - Text Input for now */}
+          <Input
+            placeholder="Country Code (e.g. NG)"
+            value={filters.country || ""}
+            onChange={(e) => onFilterChange({ country: e.target.value })}
+            className="h-9 w-32 text-xs bg-background border-border/40 rounded-xl font-medium text-foreground placeholder:text-muted-foreground"
+          />
         </div>
       </div>
     </div>

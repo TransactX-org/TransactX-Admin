@@ -8,8 +8,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, Activity, Loader2, Edit, Ban, Trash2, CreditCard, Link as LinkIcon, Wallet as WalletIcon, MoreHorizontal, ShieldCheck } from "lucide-react"
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, Activity, Loader2, Edit, Ban, Trash2, CreditCard, Link as LinkIcon, Wallet as WalletIcon, MoreHorizontal, ShieldCheck, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useState } from "react"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 import {
   useUser,
   useDeleteUser,
@@ -37,7 +47,9 @@ export default function UserDetailsPage() {
   const user = data?.data?.user
 
   // Fetch additional data
-  const { data: transactionsData, isLoading: transactionsLoading } = useUserTransactions(userId, 1, 10)
+  const [transactionPage, setTransactionPage] = useState(1)
+  const [transactionLimit] = useState(20)
+  const { data: transactionsData, isLoading: transactionsLoading } = useUserTransactions(userId, transactionPage, transactionLimit)
   const { data: virtualAccountsData, isLoading: virtualAccountsLoading } = useUserVirtualBankAccounts(userId, 1, 10)
   const { data: linkedBankAccountsData, isLoading: linkedBankAccountsLoading } = useUserLinkedBankAccounts(userId, 1, 10)
   const { data: beneficiariesData, isLoading: beneficiariesLoading } = useUserBeneficiaries(userId, 1, 10)
@@ -306,7 +318,7 @@ export default function UserDetailsPage() {
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Email Address</p>
                   <p className="text-base font-bold break-all">{user.email}</p>
                   {user.email_verified_at && (
-                    <div className="flex items-center gap-1.5 text-emerald-500 mt-1">
+                    <div className="flex items-center gap-1.5 text-emerald-600 mt-1">
                       <ShieldCheck className="h-3.5 w-3.5" />
                       <span className="text-[10px] font-black uppercase">Verified</span>
                     </div>
@@ -345,7 +357,7 @@ export default function UserDetailsPage() {
                 </div>
               ) : walletData?.data?.wallet || user.wallet ? (
                 <div className="space-y-8">
-                  <div className="relative overflow-hidden p-8 rounded-2xl bg-gradient-to-br from-tx-primary to-tx-primary/80 text-white shadow-xl">
+                  <div className="relative overflow-hidden p-8 rounded-2xl bg-primary bg-linear-to-br from-primary to-primary/90 text-primary-foreground shadow-xl">
                     <div className="absolute top-0 right-0 p-8 opacity-10">
                       <WalletIcon className="h-32 w-32" />
                     </div>
@@ -546,6 +558,76 @@ export default function UserDetailsPage() {
                 )
               })()}
             </CardContent>
+            {transactionsData?.data && transactionsData.data.last_page > 1 && (
+              <div className="p-4 border-t border-border/40 bg-muted/5">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setTransactionPage(p => Math.max(1, p - 1))}
+                        className={cn("cursor-pointer", transactionPage <= 1 && "pointer-events-none opacity-50")}
+                      />
+                    </PaginationItem>
+
+                    {/* First Page */}
+                    {transactionPage > 2 && (
+                      <PaginationItem>
+                        <PaginationLink onClick={() => setTransactionPage(1)} className="cursor-pointer">1</PaginationLink>
+                      </PaginationItem>
+                    )}
+
+                    {transactionPage > 3 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+
+                    {/* Pagination Window */}
+                    {[...Array(transactionsData.data.last_page)].map((_, i) => {
+                      const p = i + 1;
+                      if (
+                        p === 1 ||
+                        p === transactionsData.data.last_page ||
+                        (p >= transactionPage - 1 && p <= transactionPage + 1)
+                      ) {
+                        return (
+                          <PaginationItem key={p}>
+                            <PaginationLink
+                              isActive={p === transactionPage}
+                              onClick={() => setTransactionPage(p)}
+                              className="cursor-pointer"
+                            >
+                              {p}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )
+                      }
+                      return null;
+                    })}
+                    {/* Show ellipsis between current window and last page */}
+                    {transactionPage < transactionsData.data.last_page - 2 && (
+                      <PaginationItem><PaginationEllipsis /></PaginationItem>
+                    )}
+
+                    {/* Last Page Case is handled by the map above (p === last_page) but we need to ensure no dupes if logic overlaps. 
+                        The map logic: 
+                        if p==1 (handled)
+                        if p==last (handled)
+                        if p in window (handled)
+                        So if last page is 5, window is 3,4,5. 
+                        This logic is fine.
+                    */}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setTransactionPage(p => Math.min(transactionsData.data.last_page, p + 1))}
+                        className={cn("cursor-pointer", transactionPage >= transactionsData.data.last_page && "pointer-events-none opacity-50")}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </Card>
         </TabsContent>
 
@@ -566,7 +648,18 @@ export default function UserDetailsPage() {
                   </div>
                 ) : (() => {
                   const data = virtualAccountsData?.data
-                  const accounts = data?.data || (Array.isArray(data) ? data : (data && typeof data === 'object' && data.account_number ? [data] : []))
+                  // Handle potential inconsistent API response: paginated structure or raw array or single object
+                  let accounts: any[] = []
+
+                  if (data) {
+                    if ('data' in data && Array.isArray((data as any).data)) {
+                      accounts = (data as any).data
+                    } else if (Array.isArray(data)) {
+                      accounts = data
+                    } else if ('account_number' in data) {
+                      accounts = [data]
+                    }
+                  }
 
                   return accounts.length > 0 ? (
                     <div className="space-y-4">
