@@ -82,6 +82,7 @@ export interface User {
   updated_at: string
   first_name?: string
   last_name?: string
+  phone?: string
 }
 
 export interface Subscription {
