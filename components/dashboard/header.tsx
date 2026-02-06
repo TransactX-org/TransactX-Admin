@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, useEffect, KeyboardEvent } from "react"
-import { Bell, Search, PanelLeft, X } from "lucide-react"
-import { useRouter, usePathname, useSearchParams } from "next/navigation"
+import { useState, useEffect } from "react"
+import { Bell, PanelLeft } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useSidebar } from "@/contexts/sidebar-context"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -23,6 +22,7 @@ import { useLogout } from "@/lib/api/hooks/use-auth"
 import { formatDistanceToNow } from "date-fns"
 
 import { NotificationDetailsModal } from "./notification-details-modal"
+import { GlobalSearch } from "./global-search"
 
 export function Header() {
   const router = useRouter()
@@ -63,47 +63,6 @@ export function Header() {
     .join("")
     .toUpperCase() || "AU"
 
-  // Search functionality
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const [searchQuery, setSearchQuery] = useState("")
-
-  // Sync local state with URL params
-  useEffect(() => {
-    setSearchQuery(searchParams.get("search") || "")
-  }, [searchParams])
-
-  const handleSearch = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-
-      const term = searchQuery.trim()
-
-      // If empty, removing search param
-      if (!term) {
-        if (pathname === "/dashboard/transactions" || pathname === "/dashboard/users") {
-          router.push(pathname)
-        }
-        return
-      }
-
-      // Determine where to search
-      if (pathname.includes("/dashboard/users")) {
-        router.push(`/dashboard/users?search=${encodeURIComponent(term)}`)
-      } else {
-        // Default to transactions for all other pages (including dashboard home)
-        router.push(`/dashboard/transactions?search=${encodeURIComponent(term)}`)
-      }
-    }
-  }
-
-  const clearSearch = () => {
-    setSearchQuery("")
-    if (pathname === "/dashboard/transactions" || pathname === "/dashboard/users") {
-      router.push(pathname)
-    }
-  }
-
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background">
       <div className="flex h-16 items-center justify-between px-4 lg:px-6">
@@ -125,26 +84,8 @@ export function Header() {
           </Button>
 
           {/* Search */}
-          <div className="hidden md:block max-w-xl">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search transactions, users..."
-                className="pl-10 pr-8 border-border bg-muted/30 w-80 sleek-input sleek-focus"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearch}
-              />
-              {searchQuery && (
-                <button
-                  onClick={clearSearch}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
+          <div className="hidden md:block w-full max-w-xl">
+            <GlobalSearch />
           </div>
         </div>
 
