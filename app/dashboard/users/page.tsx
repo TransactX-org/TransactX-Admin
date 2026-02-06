@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { UsersTable } from "@/components/users/users-table"
 import { UsersFilters } from "@/components/users/users-filters"
 import { UserStats } from "@/components/users/user-stats"
@@ -9,9 +10,11 @@ import { UserPlus } from "lucide-react"
 import { CreateUserDialog } from "@/components/users/create-user-dialog"
 
 export default function UsersPage() {
+  const searchParams = useSearchParams()
   const [openCreateDialog, setOpenCreateDialog] = useState(false)
+
   const [filters, setFilters] = useState({
-    search: "",
+    search: searchParams.get("search") || "",
     status: "",
     kyc_status: "",
     kyb_status: "",
