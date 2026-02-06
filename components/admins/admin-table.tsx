@@ -326,7 +326,14 @@ export function AdminTable({ admins, isLoading, pagination, page, onPageChange }
                 <UpdatePermissionsDialog
                     admin={selectedAdmin}
                     open={isUpdateDialogOpen}
-                    onOpenChange={setIsUpdateDialogOpen}
+                    onOpenChange={(open) => {
+                        setIsUpdateDialogOpen(open)
+                        if (!open) {
+                            setTimeout(() => {
+                                document.body.style.pointerEvents = ""
+                            }, 500)
+                        }
+                    }}
                 />
             )}
         </Card>

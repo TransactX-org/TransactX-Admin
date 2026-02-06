@@ -1,12 +1,15 @@
 "use client"
 
 import { useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { TransactionsTable } from "@/components/transactions/transactions-table"
 import { TransactionsFilters } from "@/components/transactions/transactions-filters"
 
 export default function TransactionsPage() {
+  const searchParams = useSearchParams()
+
   const [filters, setFilters] = useState({
-    search: "",
+    search: searchParams.get("search") || "",
     status: "",
     type: "",
     start_date: "",
