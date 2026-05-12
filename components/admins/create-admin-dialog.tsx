@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select"
 import { Loader2, Plus, Shield, Check } from "lucide-react"
 import { useCreateAdmin, useAdminRoles } from "@/lib/api/hooks/use-admins"
+import type { AdminRole } from "@/lib/api/types"
 
 interface CreateAdminDialogProps {
     open: boolean
@@ -50,14 +51,7 @@ export function CreateAdminDialog({ open, onOpenChange }: CreateAdminDialogProps
     const createAdminMutation = useCreateAdmin()
     const { data: rolesData, isLoading: rolesLoading } = useAdminRoles()
 
-    // Safely extract roles list, handling potential pagination or different API structures
-    const rolesList = Array.isArray(rolesData?.data)
-        ? rolesData.data
-        // @ts-ignore - Handle case where data might be paginated
-        : Array.isArray(rolesData?.data?.data)
-            // @ts-ignore
-            ? rolesData.data.data
-            : []
+    const rolesList: AdminRole[] = rolesData?.data ?? []
 
     // Set default role when roles are loaded
     useEffect(() => {
@@ -163,7 +157,7 @@ export function CreateAdminDialog({ open, onOpenChange }: CreateAdminDialogProps
                                 <SelectValue placeholder={rolesLoading ? "Loading roles..." : "Select a role"} />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl border-border/40 bg-card/95 backdrop-blur-md">
-                                {rolesList.map((role: any) => (
+                                {rolesList.map((role) => (
                                     <SelectItem key={role.id} value={role.id} className="text-xs font-bold uppercase tracking-widest">
                                         {role.name}
                                     </SelectItem>

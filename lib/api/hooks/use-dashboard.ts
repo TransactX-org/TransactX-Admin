@@ -19,7 +19,7 @@ export const useDashboardStats = () => {
   const currentYear = currentDate.getFullYear()
   const currentMonth = currentDate.getMonth() + 1
 
-  const { data: transactionStats, isLoading } = useTransactionStatistics(currentYear, currentMonth)
+  const { data: transactionStats, isLoading, error, refetch } = useTransactionStatistics(currentYear, currentMonth)
 
   const stats = useMemo(() => {
     if (!transactionStats?.data) return undefined
@@ -38,7 +38,9 @@ export const useDashboardStats = () => {
 
   return {
     data: stats ? { success: true, message: "Success", data: stats } : undefined,
-    isLoading
+    isLoading,
+    error,
+    refetch,
   }
 }
 

@@ -1,5 +1,5 @@
 import apiClient from "../client"
-import type { ApiResponse, Admin, UpdateAdminRolePayload, PaginatedResponse, AdminStats, CreateAdminPayload } from "../types"
+import type { ApiResponse, Admin, AdminRole, UpdateAdminRolePayload, PaginatedResponse, AdminStats, CreateAdminPayload } from "../types"
 
 /**
  * Get all admins with pagination

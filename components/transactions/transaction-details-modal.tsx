@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { CheckCircle2, XCircle, Clock, Download, Loader2, User, ArrowRightLeft, Cpu, Activity, Info } from "lucide-react"
+import { CheckCircle2, XCircle, Clock, Download, Loader2, User, ArrowRightLeft, Cpu, Activity, Info, AlertCircle, RefreshCw } from "lucide-react"
 import { useTransaction } from "@/lib/api/hooks/use-transactions"
 import { cn } from "@/lib/utils"
 
@@ -14,7 +14,7 @@ interface TransactionDetailsModalProps {
 }
 
 export function TransactionDetailsModal({ transactionId, onClose }: TransactionDetailsModalProps) {
-  const { data: response, isLoading } = useTransaction(transactionId)
+  const { data: response, isLoading, error, refetch } = useTransaction(transactionId)
   const transaction = response?.data
 
   const getStatusConfig = (status?: string) => {
@@ -74,11 +74,20 @@ export function TransactionDetailsModal({ transactionId, onClose }: TransactionD
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
               <Loader2 className="h-10 w-10 animate-spin text-primary/20" />
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Decrypting Ledger Entry...</p>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Fetching transaction record...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <AlertCircle className="h-10 w-10 text-destructive/30" />
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Failed to load transaction</p>
+              <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2 text-[10px] font-bold uppercase tracking-widest rounded-xl">
+                <RefreshCw className="h-3.5 w-3.5" /> Retry
+              </Button>
             </div>
           ) : !transaction ? (
-            <div className="text-center py-10">
-              <p className="text-muted-foreground">Log details unavailable</p>
+            <div className="flex flex-col items-center justify-center py-20 gap-3">
+              <Info className="h-10 w-10 text-muted-foreground/20" />
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Transaction record not found</p>
             </div>
           ) : (
             <>

@@ -54,3 +54,27 @@ export const logout = async (): Promise<void> => {
   }
 }
 
+export interface UpdateProfilePayload {
+  first_name: string
+  last_name: string
+  email: string
+}
+
+export interface ChangePasswordPayload {
+  current_password: string
+  password: string
+  password_confirmation: string
+}
+
+// Update admin profile
+export const updateProfile = async (payload: UpdateProfilePayload): Promise<ApiResponse<{ admin: any }>> => {
+  const response = await apiClient.put<ApiResponse<{ admin: any }>>("/admin/auth/profile", payload)
+  return response.data
+}
+
+// Change admin password
+export const changePassword = async (payload: ChangePasswordPayload): Promise<ApiResponse<{ message: string }>> => {
+  const response = await apiClient.post<ApiResponse<{ message: string }>>("/admin/auth/change-password", payload)
+  return response.data
+}
+

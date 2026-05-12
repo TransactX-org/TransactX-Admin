@@ -102,11 +102,22 @@ export const deleteUser = async (id: string): Promise<ApiResponse<{ message: str
 }
 
 // Get user transactions
-export const getUserTransactions = async (id: string, page: number = 1, perPage: number = 15): Promise<ApiResponse<PaginatedResponse<UserTransaction>>> => {
+export const getUserTransactions = async (
+    id: string,
+    page: number = 1,
+    perPage: number = 15,
+    filters?: {
+        status?: string
+        type?: string
+        start_date?: string
+        end_date?: string
+    }
+): Promise<ApiResponse<PaginatedResponse<UserTransaction>>> => {
     const response = await apiClient.get<ApiResponse<PaginatedResponse<UserTransaction>>>(`/admin/user-management/${id}/transactions`, {
         params: {
             page,
             per_page: perPage,
+            ...filters,
         },
     })
     return response.data
@@ -137,6 +148,15 @@ export const getUserLinkedAccounts = async (id: string, page: number = 1, perPag
 // Get user wallet
 export const getUserWallet = async (id: string): Promise<ApiResponse<{ wallet: Wallet }>> => {
     const response = await apiClient.get<ApiResponse<{ wallet: Wallet }>>(`/admin/user-management/${id}/wallets`)
+    return response.data
+}
+
+// Update wallet balance (super admin only)
+export const updateWalletBalance = async (
+    walletId: string,
+    payload: { type: "credit" | "debit"; amount: string; reason: string }
+): Promise<ApiResponse<any>> => {
+    const response = await apiClient.post<ApiResponse<any>>(`/admin/wallets/${walletId}/update-balance`, payload)
     return response.data
 }
 

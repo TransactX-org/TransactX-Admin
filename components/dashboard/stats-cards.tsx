@@ -1,12 +1,13 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowUpRight, ArrowDownRight, DollarSign, Receipt, Users, Clock, Loader2 } from "lucide-react"
+import { ArrowUpRight, ArrowDownRight, DollarSign, Receipt, Users, Clock, AlertCircle, RefreshCw, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useDashboardStats } from "@/lib/api/hooks/use-dashboard"
+import { Button } from "@/components/ui/button"
 
 export function StatsCards() {
-  const { data, isLoading } = useDashboardStats()
+  const { data, isLoading, error, refetch } = useDashboardStats()
   const stats = data?.data
 
   const statsConfig = [
@@ -34,11 +35,26 @@ export function StatsCards() {
     {
       label: "Pending Transactions",
       value: stats?.pending_approvals?.toLocaleString() || "0",
-      change: stats?.approvals_change ? `${stats.approvals_change > 0 ? "+" : ""}${stats.approvals_change.toFixed(1)}%` : "-0%",
+      change: stats?.approvals_change ? `${stats.approvals_change > 0 ? "+" : ""}${stats.approvals_change.toFixed(1)}%` : "0%",
+      // Fewer pending is good → a decrease is "up" (positive), an increase is "down" (negative)
       trend: stats?.approvals_change && stats.approvals_change < 0 ? "up" : "down",
       icon: Clock,
     },
   ]
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-between rounded-2xl border border-destructive/20 bg-destructive/5 px-5 py-4">
+        <div className="flex items-center gap-3 text-destructive/80">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <p className="text-[11px] font-bold uppercase tracking-widest">Failed to load dashboard statistics</p>
+        </div>
+        <Button variant="ghost" size="sm" onClick={() => refetch()} className="h-8 gap-2 text-[10px] font-bold uppercase tracking-widest">
+          <RefreshCw className="h-3.5 w-3.5" /> Retry
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">

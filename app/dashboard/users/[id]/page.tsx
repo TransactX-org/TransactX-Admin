@@ -8,9 +8,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, Activity, Loader2, Edit, Ban, Trash2, CreditCard, Link as LinkIcon, Wallet as WalletIcon, MoreHorizontal, ShieldCheck, ChevronLeft, ChevronRight } from "lucide-react"
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, Activity, Loader2, Edit, Ban, Trash2, CreditCard, Link as LinkIcon, Wallet as WalletIcon, MoreHorizontal, ShieldCheck, ChevronLeft, ChevronRight, Eye, Search, RefreshCw, Filter } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { DateRange } from "react-day-picker"
 import {
   Pagination,
   PaginationContent,
@@ -30,11 +34,14 @@ import {
   useUserWallet,
   useUserSubscriptions,
   useSuspendUser,
-  useActivateUser
+  useActivateUser,
+  useUpdateWalletBalance
 } from "@/lib/api/hooks/use-users"
+import { useCurrentUser } from "@/lib/api/hooks/use-auth"
 import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { TransactionDetailsModal } from "@/components/transactions/transaction-details-modal"
 
 export default function UserDetailsPage() {
   const params = useParams()
@@ -48,8 +55,42 @@ export default function UserDetailsPage() {
 
   // Fetch additional data
   const [transactionPage, setTransactionPage] = useState(1)
+  const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null)
   const [transactionLimit] = useState(20)
-  const { data: transactionsData, isLoading: transactionsLoading } = useUserTransactions(userId, transactionPage, transactionLimit)
+  const [txFilters, setTxFilters] = useState({ search: "", status: "", type: "", start_date: "", end_date: "" })
+  const [txSearchInput, setTxSearchInput] = useState("")
+  const [knownTxTypes, setKnownTxTypes] = useState<string[]>([])
+
+  // Debounce search input into filter state
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (txSearchInput !== txFilters.search) {
+        setTransactionPage(1)
+        setTxFilters(f => ({ ...f, search: txSearchInput }))
+      }
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [txSearchInput, txFilters.search])
+
+  // Only pass server-supported params (status, type, dates) — search is handled client-side
+  const activeTxFilters = {
+    status: txFilters.status || undefined,
+    type: txFilters.type || undefined,
+    start_date: txFilters.start_date || undefined,
+    end_date: txFilters.end_date || undefined,
+  }
+
+  const { data: transactionsData, isLoading: transactionsLoading } = useUserTransactions(userId, transactionPage, transactionLimit, activeTxFilters)
+
+  // Accumulate unique transaction types from loaded data so the filter is always up-to-date
+  useEffect(() => {
+    const incoming = transactionsData?.data?.data?.map(t => t.type).filter(Boolean) ?? []
+    if (incoming.length === 0) return
+    setKnownTxTypes(prev => {
+      const merged = Array.from(new Set([...prev, ...incoming])).sort()
+      return merged.length === prev.length && merged.every((v, i) => v === prev[i]) ? prev : merged
+    })
+  }, [transactionsData])
   const { data: virtualAccountsData, isLoading: virtualAccountsLoading } = useUserVirtualBankAccounts(userId, 1, 10)
   const { data: linkedBankAccountsData, isLoading: linkedBankAccountsLoading } = useUserLinkedBankAccounts(userId, 1, 10)
   const { data: beneficiariesData, isLoading: beneficiariesLoading } = useUserBeneficiaries(userId, 1, 10)
@@ -57,6 +98,11 @@ export default function UserDetailsPage() {
   const { data: subscriptionsData, isLoading: subscriptionsLoading } = useUserSubscriptions(userId, 1, 10)
   const suspendUserMutation = useSuspendUser()
   const activateUserMutation = useActivateUser()
+  const updateBalanceMutation = useUpdateWalletBalance(userId)
+  const currentUser = useCurrentUser()
+  const isSuperAdmin = currentUser?.is_super_admin === true
+
+  const [balanceForm, setBalanceForm] = useState({ type: "credit" as "credit" | "debit" | "overwrite", amount: "", reason: "" })
 
   const isSuspended = user?.status === "SUSPENDED"
   const isActionPending = suspendUserMutation.isPending || activateUserMutation.isPending
@@ -293,13 +339,16 @@ export default function UserDetailsPage() {
       {/* Tabs */}
       <Tabs defaultValue="info" className="w-full">
         <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:px-0 sm:pb-0 scrollbar-hide">
-          <TabsList className="flex items-center gap-1.5 w-fit sm:w-full min-w-full sm:grid sm:grid-cols-6 p-1 bg-muted/30 rounded-2xl border border-border/40">
+          <TabsList className={`flex items-center gap-1.5 w-fit sm:w-full min-w-full sm:grid p-1 bg-muted/30 rounded-2xl border border-border/40 ${isSuperAdmin ? "sm:grid-cols-7" : "sm:grid-cols-6"}`}>
             <TabsTrigger value="info" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all">Info</TabsTrigger>
             <TabsTrigger value="wallet" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all">Wallet</TabsTrigger>
             <TabsTrigger value="subscription" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all">Sub</TabsTrigger>
             <TabsTrigger value="beneficiaries" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all">Saved</TabsTrigger>
             <TabsTrigger value="transactions" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all">History</TabsTrigger>
             <TabsTrigger value="accounts" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all text-center">Banks</TabsTrigger>
+            {isSuperAdmin && (
+              <TabsTrigger value="balance" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all text-amber-500 data-[state=active]:text-primary-foreground">Balance</TabsTrigger>
+            )}
           </TabsList>
         </div>
 
@@ -365,7 +414,7 @@ export default function UserDetailsPage() {
                     <div className="flex items-baseline gap-2">
                       <span className="text-xl font-bold opacity-60">₦</span>
                       <p className="text-5xl font-black tracking-tighter">
-                        {(walletData?.data?.wallet?.balance || user.wallet?.balance || 0).toLocaleString()}
+                        {(walletData?.data?.wallet?.balance ?? user.wallet?.balance ?? 0).toLocaleString()}
                       </p>
                     </div>
                     <div className="mt-8 flex items-center gap-4">
@@ -508,8 +557,81 @@ export default function UserDetailsPage() {
 
         <TabsContent value="transactions" className="space-y-4 mt-6">
           <Card className="border-border/40 bg-card/30 backdrop-blur-sm rounded-3xl overflow-hidden">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-black uppercase tracking-widest text-muted-foreground/70">Recent History</CardTitle>
+            <CardHeader className="pb-4">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-black uppercase tracking-widest text-muted-foreground/70">Transaction History</CardTitle>
+                  {(txFilters.search || txFilters.status || txFilters.type || txFilters.start_date) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-3 text-[10px] font-bold uppercase tracking-widest border border-border/40 rounded-xl bg-background/50 text-muted-foreground hover:text-foreground"
+                      onClick={() => { setTxSearchInput(""); setTransactionPage(1); setTxFilters({ search: "", status: "", type: "", start_date: "", end_date: "" }) }}
+                    >
+                      <RefreshCw className="h-3 w-3 mr-1.5" />
+                      Reset
+                    </Button>
+                  )}
+                </div>
+
+                {/* Search — full width */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search reference, description, narration..."
+                    value={txSearchInput}
+                    onChange={(e) => setTxSearchInput(e.target.value)}
+                    className="pl-9 h-10 text-xs bg-background border-border/40 rounded-xl font-medium w-full"
+                  />
+                </div>
+
+                {/* Status · Type · Date — responsive row */}
+                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+                  <Select
+                    value={txFilters.status || "all"}
+                    onValueChange={(v) => { setTransactionPage(1); setTxFilters(f => ({ ...f, status: v === "all" ? "" : v })) }}
+                  >
+                    <SelectTrigger className="h-9 text-[10px] font-bold uppercase tracking-widest bg-background border-border/40 rounded-xl sm:w-[130px]">
+                      <Filter className="h-3 w-3 mr-1.5 shrink-0 text-muted-foreground" />
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-border/40">
+                      <SelectItem value="all" className="text-[10px] font-bold uppercase">All Status</SelectItem>
+                      {["SUCCESSFUL","FAILED","PENDING","PROCESSING","REVERSED"].map(s => (
+                        <SelectItem key={s} value={s} className="text-[10px] font-bold uppercase">{s.replace(/_/g, " ")}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={txFilters.type || "all"}
+                    onValueChange={(v) => { setTransactionPage(1); setTxFilters(f => ({ ...f, type: v === "all" ? "" : v })) }}
+                  >
+                    <SelectTrigger className="h-9 text-[10px] font-bold uppercase tracking-widest bg-background border-border/40 rounded-xl sm:w-[150px]">
+                      <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-border/40">
+                      <SelectItem value="all" className="text-[10px] font-bold uppercase">All Types</SelectItem>
+                      {knownTxTypes.map(t => (
+                        <SelectItem key={t} value={t} className="text-[10px] font-bold uppercase">{t.replace(/_/g, " ")}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <DatePickerWithRange
+                    date={txFilters.start_date ? { from: new Date(txFilters.start_date), to: txFilters.end_date ? new Date(txFilters.end_date) : undefined } : undefined}
+                    onChange={(range) => {
+                      setTransactionPage(1)
+                      setTxFilters(f => ({
+                        ...f,
+                        start_date: range?.from ? format(range.from, "yyyy-MM-dd") : "",
+                        end_date: range?.to ? format(range.to, "yyyy-MM-dd") : "",
+                      }))
+                    }}
+                    className="col-span-2 sm:w-[210px]"
+                  />
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
               {transactionsLoading ? (
@@ -517,7 +639,25 @@ export default function UserDetailsPage() {
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
               ) : (() => {
-                const transactions = transactionsData?.data?.data || (Array.isArray(transactionsData?.data) ? transactionsData.data : [])
+                const raw = transactionsData?.data?.data || (Array.isArray(transactionsData?.data) ? transactionsData.data : [])
+
+                // Client-side search: match reference, description, narration
+                const q = txFilters.search.toLowerCase().trim()
+                const transactions = q
+                  ? raw.filter((t: any) =>
+                      t.reference?.toLowerCase().includes(q) ||
+                      t.description?.toLowerCase().includes(q) ||
+                      t.narration?.toLowerCase().includes(q)
+                    )
+                  : raw
+
+                const getStatusClass = (status: string) => {
+                  const s = status?.toUpperCase()
+                  if (s === "SUCCESS" || s === "SUCCESSFUL") return "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                  if (s === "PENDING" || s === "PROCESSING") return "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                  if (s === "FAILED" || s === "REVERSED") return "bg-rose-500/10 text-rose-600 border-rose-500/20"
+                  return "bg-muted/30 text-muted-foreground border-border/20"
+                }
                 return transactions.length > 0 ? (
                   <div className="overflow-x-auto">
                     <Table>
@@ -528,11 +668,16 @@ export default function UserDetailsPage() {
                           <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Amount</TableHead>
                           <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Status</TableHead>
                           <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Date</TableHead>
+                          <TableHead className="py-4 w-10" />
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {transactions.map((transaction: any) => (
-                          <TableRow key={transaction.id || transaction.reference} className="border-b-border/40 hover:bg-muted/20">
+                          <TableRow
+                            key={transaction.id}
+                            className="border-b-border/40 hover:bg-muted/20 cursor-pointer"
+                            onClick={() => setSelectedTransactionId(transaction.reference)}
+                          >
                             <TableCell className="font-mono text-[10px] font-bold py-4">#{transaction.reference?.slice(0, 8)}...</TableCell>
                             <TableCell>
                               <span className="text-[10px] font-bold px-2 py-1 rounded bg-muted border border-border/40 uppercase">
@@ -541,11 +686,21 @@ export default function UserDetailsPage() {
                             </TableCell>
                             <TableCell className="font-bold">₦{transaction.amount?.toLocaleString()}</TableCell>
                             <TableCell>
-                              <Badge variant={transaction.status === "SUCCESS" || transaction.status === "SUCCESSFUL" ? "default" : "secondary"} className="text-[10px] font-bold">
+                              <Badge className={cn("text-[10px] font-bold border shadow-none", getStatusClass(transaction.status))}>
                                 {transaction.status}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-[10px] font-bold text-muted-foreground">{formatDate(transaction.created_at || transaction.date)}</TableCell>
+                            <TableCell className="text-[10px] font-bold text-muted-foreground">{formatDate(transaction.created_at)}</TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-primary/10"
+                                onClick={(e) => { e.stopPropagation(); setSelectedTransactionId(transaction.reference) }}
+                              >
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -647,20 +802,7 @@ export default function UserDetailsPage() {
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
                 ) : (() => {
-                  const data = virtualAccountsData?.data
-                  // Handle potential inconsistent API response: paginated structure or raw array or single object
-                  let accounts: any[] = []
-
-                  if (data) {
-                    if ('data' in data && Array.isArray((data as any).data)) {
-                      accounts = (data as any).data
-                    } else if (Array.isArray(data)) {
-                      accounts = data
-                    } else if ('account_number' in data) {
-                      accounts = [data]
-                    }
-                  }
-
+                  const accounts = virtualAccountsData?.data?.data ?? []
                   return accounts.length > 0 ? (
                     <div className="space-y-4">
                       {accounts.map((account: any, index: number) => (
@@ -702,8 +844,7 @@ export default function UserDetailsPage() {
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
                 ) : (() => {
-                  const data = linkedBankAccountsData?.data
-                  const accounts = data?.data || (Array.isArray(data) ? data : [])
+                  const accounts = linkedBankAccountsData?.data?.data ?? []
 
                   return accounts.length > 0 ? (
                     <div className="space-y-4">
@@ -744,7 +885,189 @@ export default function UserDetailsPage() {
             </Card>
           </div>
         </TabsContent>
+        {isSuperAdmin && (
+          <TabsContent value="balance" className="space-y-4 mt-6">
+            <Card className="border-border/40 bg-card/30 backdrop-blur-sm rounded-3xl overflow-hidden">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                    <WalletIcon className="h-4 w-4 text-amber-500" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg font-black uppercase tracking-widest text-muted-foreground/70">Manual Balance Adjustment</CardTitle>
+                    <p className="text-[10px] font-bold text-amber-500/70 uppercase tracking-widest mt-0.5">Restricted — Super Admin Only</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                {/* Wallet snapshot */}
+                {(walletData?.data?.wallet || user.wallet) && (
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/40">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Ledger Balance</p>
+                      <p className="text-2xl font-black tracking-tighter mt-1">
+                        ₦{(walletData?.data?.wallet?.balance ?? user.wallet?.balance ?? 0).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Wallet Ref</p>
+                      <p className="font-mono text-[10px] font-bold opacity-50 mt-1">{walletData?.data?.wallet?.id ?? user.wallet?.id ?? "—"}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Direction */}
+                <div className="grid grid-cols-3 gap-3">
+                  {([
+                    { value: "credit",    label: "Credit",    symbol: "+",  active: "border-emerald-500 bg-emerald-500/10 text-emerald-600" },
+                    { value: "debit",     label: "Debit",     symbol: "−",  active: "border-rose-500 bg-rose-500/10 text-rose-600" },
+                    { value: "overwrite", label: "Overwrite", symbol: "=",  active: "border-amber-500 bg-amber-500/10 text-amber-600" },
+                  ] as const).map(({ value, label, symbol, active }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setBalanceForm(f => ({ ...f, type: value, amount: "", reason: "" }))}
+                      className={cn(
+                        "flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all font-black uppercase tracking-widest text-sm",
+                        balanceForm.type === value ? active : "border-border/40 bg-muted/10 text-muted-foreground hover:bg-muted/20"
+                      )}
+                    >
+                      <span className="text-xl">{symbol}</span>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Amount input — label changes per mode */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                    {balanceForm.type === "credit" ? "Credit Amount (₦)" : balanceForm.type === "debit" ? "Debit Amount (₦)" : "Set Balance To (₦)"}
+                  </label>
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    value={balanceForm.amount}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      if (v === "" || /^\d*\.?\d{0,2}$/.test(v)) {
+                        setBalanceForm(f => ({ ...f, amount: v }))
+                      }
+                    }}
+                    className="h-12 text-lg font-bold bg-background border-border/40 rounded-xl"
+                  />
+                </div>
+
+                {/* Narration — only for credit / debit */}
+                {balanceForm.type !== "overwrite" && (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Narration</label>
+                    <textarea
+                      placeholder="e.g. Reversal of failed transfer — TXN-XXXXXXX"
+                      value={balanceForm.reason}
+                      onChange={(e) => setBalanceForm(f => ({ ...f, reason: e.target.value }))}
+                      rows={3}
+                      className="w-full px-4 py-3 text-sm font-medium bg-background border border-border/40 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground"
+                    />
+                  </div>
+                )}
+
+                {/* Summary preview */}
+                {(() => {
+                  const val = parseFloat(balanceForm.amount)
+                  if (!balanceForm.amount || isNaN(val) || val < 0) return null
+                  const current = walletData?.data?.wallet?.balance ?? user.wallet?.balance ?? 0
+
+                  if (balanceForm.type === "overwrite") {
+                    return (
+                      <div className="p-4 rounded-2xl border bg-amber-500/5 border-amber-500/20 flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Balance will be set to</span>
+                        <span className="text-xl font-black tracking-tighter text-amber-600">
+                          ₦{val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    )
+                  }
+
+                  const newBalance = current + (balanceForm.type === "credit" ? 1 : -1) * val
+                  const isDebit = balanceForm.type === "debit"
+                  return (
+                    <div className={cn("p-4 rounded-2xl border space-y-3", isDebit ? "bg-rose-500/5 border-rose-500/20" : "bg-emerald-500/5 border-emerald-500/20")}>
+                      <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+                        <span>Before</span>
+                        <span>₦{current.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
+                        <span className={isDebit ? "text-rose-500" : "text-emerald-500"}>{isDebit ? "Debit" : "Credit"}</span>
+                        <span className={isDebit ? "text-rose-500" : "text-emerald-500"}>
+                          {isDebit ? "−" : "+"} ₦{val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                      <div className="border-t border-border/20 pt-2 flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">After</span>
+                        <span className={cn("text-xl font-black tracking-tighter", isDebit ? "text-rose-600" : "text-emerald-600")}>
+                          ₦{newBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {/* Apply */}
+                <Button
+                  className={cn(
+                    "w-full h-12 font-black uppercase tracking-widest text-sm rounded-2xl transition-all text-white",
+                    balanceForm.type === "credit"    && "bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20",
+                    balanceForm.type === "debit"     && "bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-500/20",
+                    balanceForm.type === "overwrite" && "bg-amber-600 hover:bg-amber-700 shadow-lg shadow-amber-500/20",
+                  )}
+                  disabled={
+                    updateBalanceMutation.isPending ||
+                    !balanceForm.amount ||
+                    isNaN(parseFloat(balanceForm.amount)) ||
+                    parseFloat(balanceForm.amount) < 0 ||
+                    (balanceForm.type !== "overwrite" && !balanceForm.reason.trim()) ||
+                    !(walletData?.data?.wallet?.id ?? user.wallet?.id)
+                  }
+                  onClick={() => {
+                    const walletId = walletData?.data?.wallet?.id ?? user.wallet?.id
+                    if (!walletId) return
+                    const val = parseFloat(balanceForm.amount)
+                    const current = walletData?.data?.wallet?.balance ?? user.wallet?.balance ?? 0
+                    const newBalance = balanceForm.type === "overwrite"
+                      ? val
+                      : current + (balanceForm.type === "credit" ? 1 : -1) * val
+                    updateBalanceMutation.mutate({
+                      walletId,
+                      payload: {
+                        type: balanceForm.type === "overwrite" ? "credit" : balanceForm.type,
+                        amount: newBalance.toFixed(2),
+                        reason: balanceForm.type === "overwrite" ? "Manual balance override by admin" : balanceForm.reason.trim(),
+                      },
+                    }, {
+                      onSuccess: () => setBalanceForm(f => ({ ...f, amount: "", reason: "" })),
+                    })
+                  }}
+                >
+                  {updateBalanceMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  {updateBalanceMutation.isPending
+                    ? "Applying..."
+                    : balanceForm.type === "credit"    ? "Apply Credit"
+                    : balanceForm.type === "debit"     ? "Apply Debit"
+                    : "Set Balance"
+                  }
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+
       </Tabs>
+
+      <TransactionDetailsModal
+        transactionId={selectedTransactionId}
+        onClose={() => setSelectedTransactionId(null)}
+      />
     </div>
   )
 }

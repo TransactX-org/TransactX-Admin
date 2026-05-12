@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
-import { login, forgotPassword, resetPassword, logout } from "../services/auth.service"
-import type { LoginPayload, ForgotPasswordPayload, ResetPasswordPayload } from "../services/auth.service"
+import { login, forgotPassword, resetPassword, logout, updateProfile, changePassword } from "../services/auth.service"
+import type { LoginPayload, ForgotPasswordPayload, ResetPasswordPayload, UpdateProfilePayload, ChangePasswordPayload } from "../services/auth.service"
 import { useToast } from "@/hooks/use-toast"
 import { useState, useEffect } from "react"
 
@@ -139,4 +139,52 @@ export const useCurrentUser = () => {
   }, [])
 
   return user
+}
+
+// Update profile mutation
+export const useUpdateProfile = () => {
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: (payload: UpdateProfilePayload) => updateProfile(payload),
+    onSuccess: (response) => {
+      const admin = response.data?.admin
+      if (admin && typeof window !== "undefined") {
+        const stored = localStorage.getItem("user")
+        const current = stored ? JSON.parse(stored) : {}
+        localStorage.setItem("user", JSON.stringify({
+          ...current,
+          name: `${admin.first_name ?? current.first_name} ${admin.last_name ?? current.last_name}`.trim(),
+          email: admin.email ?? current.email,
+        }))
+      }
+      toast({ title: "Profile updated", description: "Your profile has been saved." })
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update failed",
+        description: error.response?.data?.message || "Failed to update profile",
+        variant: "destructive",
+      })
+    },
+  })
+}
+
+// Change password mutation
+export const useChangePassword = () => {
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: (payload: ChangePasswordPayload) => changePassword(payload),
+    onSuccess: () => {
+      toast({ title: "Password changed", description: "Your password has been updated." })
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Change failed",
+        description: error.response?.data?.message || "Failed to change password",
+        variant: "destructive",
+      })
+    },
+  })
 }

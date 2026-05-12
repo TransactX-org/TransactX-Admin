@@ -3,7 +3,8 @@ import {
   getTransactions,
   getTransactionStatistics,
   getTransactionReports,
-  getTransactionById
+  getTransactionById,
+  getTopUsersByVolume,
 } from "../services/transaction.service"
 
 // Query keys
@@ -15,6 +16,7 @@ export const transactionKeys = {
   detail: (id: string) => [...transactionKeys.details(), id] as const,
   statistics: (filters: Record<string, any>) => [...transactionKeys.all, "statistics", { filters }] as const,
   reports: (filters: Record<string, any>) => [...transactionKeys.all, "reports", { filters }] as const,
+  topUsers: (year: number) => [...transactionKeys.all, "top-users", year] as const,
 }
 
 // Get all transactions
@@ -61,6 +63,15 @@ export const useTransaction = (id: string | null) => {
     queryFn: () => getTransactionById(id!),
     enabled: !!id,
     staleTime: 1000 * 60 * 5, // 5 minutes
+  })
+}
+
+// Get top 10 users by transaction volume for a given year / date range
+export const useTopUsersByVolume = (year: number, start_date?: string, end_date?: string) => {
+  return useQuery({
+    queryKey: [...transactionKeys.topUsers(year), { start_date, end_date }],
+    queryFn: () => getTopUsersByVolume(year, start_date, end_date),
+    staleTime: 1000 * 60 * 10,
   })
 }
 

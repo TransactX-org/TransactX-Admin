@@ -181,6 +181,7 @@ export interface UserTransaction {
   status: string
   is_withdrawn: number | boolean
   created_at: string
+  date: string
   updated_at: string
 }
 
@@ -566,4 +567,10 @@ export interface TransactionReports {
       total: number
     }[]
   }
+}
+
+export interface TopUserVolume {
+  user: string
+  total: number
+  monthly: Record<string, number>
 }

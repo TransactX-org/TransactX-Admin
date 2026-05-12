@@ -14,7 +14,8 @@ import {
   getUserBeneficiaries,
   getUserLinkedBankAccounts,
   suspendUser,
-  activateUser
+  activateUser,
+  updateWalletBalance
 } from "../services/user.service"
 import type { CreateUserPayload } from "../types"
 import { useToast } from "@/hooks/use-toast"
@@ -157,12 +158,22 @@ export const useDeleteUser = () => {
 }
 
 // Get user transactions
-export const useUserTransactions = (id: string | null, page: number = 1, perPage: number = 15) => {
+export const useUserTransactions = (
+  id: string | null,
+  page: number = 1,
+  perPage: number = 15,
+  filters?: {
+    status?: string
+    type?: string
+    start_date?: string
+    end_date?: string
+  }
+) => {
   return useQuery({
-    queryKey: [...userKeys.transactions(id || ""), { page, perPage }],
-    queryFn: () => getUserTransactions(id!, page, perPage),
+    queryKey: [...userKeys.transactions(id || ""), { page, perPage, ...filters }],
+    queryFn: () => getUserTransactions(id!, page, perPage, filters),
     enabled: !!id,
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 60 * 2,
   })
 }
 
@@ -270,6 +281,37 @@ export const useActivateUser = () => {
       toast({
         title: "Error",
         description: error.response?.data?.message || "Failed to activate user",
+        variant: "destructive",
+      })
+    },
+  })
+}
+
+
+// Update wallet balance (super admin only)
+export const useUpdateWalletBalance = (userId: string) => {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: ({ walletId, payload }: { walletId: string; payload: { type: "credit" | "debit"; amount: string; reason: string } }) =>
+      updateWalletBalance(walletId, payload),
+    onSuccess: () => {
+      // Invalidate wallet balance (shown in Wallet tab and Balance tab)
+      queryClient.invalidateQueries({ queryKey: userKeys.wallet(userId) })
+      // Invalidate transaction history (new record created by the balance update)
+      queryClient.invalidateQueries({ queryKey: userKeys.transactions(userId) })
+      // Invalidate the user detail itself (user.wallet fallback and total_transactions count)
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(userId) })
+      toast({
+        title: "Balance updated",
+        description: "Wallet balance has been updated successfully.",
+      })
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update balance",
+        description: error.response?.data?.message || "An error occurred.",
         variant: "destructive",
       })
     },

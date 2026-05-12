@@ -15,6 +15,7 @@ interface DatePickerWithRangeProps extends React.HTMLAttributes<HTMLDivElement> 
 }
 
 export function DatePickerWithRange({ className, date: externalDate, onChange }: DatePickerWithRangeProps) {
+  const [open, setOpen] = React.useState(false)
   const [date, setDate] = React.useState<DateRange | undefined>(externalDate)
 
   // Sync with external date
@@ -23,18 +24,35 @@ export function DatePickerWithRange({ className, date: externalDate, onChange }:
   }, [externalDate])
 
   const handleSelect = (newDate: DateRange | undefined) => {
+    // When user has only `from` selected and clicks the same day again,
+    // react-day-picker clears the selection (newDate becomes undefined).
+    // Intercept this to treat it as a confirmed single-day selection.
+    if (date?.from && !date?.to && !newDate?.from) {
+      const singleDay = { from: date.from, to: date.from }
+      setDate(singleDay)
+      onChange?.(singleDay)
+      setOpen(false)
+      return
+    }
+
     setDate(newDate)
     onChange?.(newDate)
+
+    // Auto-close when a complete range is selected
+    if (newDate?.from && newDate?.to) {
+      setOpen(false)
+    }
   }
 
   const clearDate = (e: React.MouseEvent) => {
     e.stopPropagation()
-    handleSelect(undefined)
+    setDate(undefined)
+    onChange?.(undefined)
   }
 
   return (
     <div className={cn("grid gap-2", className)}>
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             id="date"

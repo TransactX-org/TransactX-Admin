@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { UsersTable } from "@/components/users/users-table"
 import { UsersFilters } from "@/components/users/users-filters"
 import { UserStats } from "@/components/users/user-stats"
@@ -11,24 +11,32 @@ import { CreateUserDialog } from "@/components/users/create-user-dialog"
 
 export default function UsersPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const [openCreateDialog, setOpenCreateDialog] = useState(false)
 
   const [filters, setFilters] = useState({
     search: searchParams.get("search") || "",
-    status: "",
-    kyc_status: "",
-    kyb_status: "",
-    user_type: "",
-    account_type: "",
-    is_active: "",
-    country: "",
-    email_verified: "",
-    start_date: "",
-    end_date: "",
+    status: searchParams.get("status") || "",
+    kyc_status: searchParams.get("kyc_status") || "",
+    kyb_status: searchParams.get("kyb_status") || "",
+    user_type: searchParams.get("user_type") || "",
+    account_type: searchParams.get("account_type") || "",
+    is_active: searchParams.get("is_active") || "",
+    country: searchParams.get("country") || "",
+    email_verified: searchParams.get("email_verified") || "",
+    start_date: searchParams.get("start_date") || "",
+    end_date: searchParams.get("end_date") || "",
   })
 
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }))
+    const updated = { ...filters, ...newFilters }
+    setFilters(updated)
+    const params = new URLSearchParams()
+    Object.entries(updated).forEach(([key, value]) => {
+      if (value) params.set(key, value)
+    })
+    const query = params.toString()
+    router.replace(query ? `?${query}` : "?", { scroll: false })
   }
 
   return (
