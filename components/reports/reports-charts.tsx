@@ -27,7 +27,8 @@ const TOP_USER_COLORS = [
   "oklch(0.6 0.2 240)",
 ]
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+const ALL_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+const MONTHS = ALL_MONTHS.slice(0, new Date().getMonth() + 1)
 
 const formatRevenue = (value: number) => {
   if (value >= 1_000_000_000) return `₦${(value / 1_000_000_000).toFixed(1)}B`
@@ -111,12 +112,13 @@ export function ReportsCharts({ data, statsCharts, topUsers, topUsersLoading, is
           {trendData.length === 0 ? (
             <EmptyChart label="No trend data for this period" />
           ) : (
+            <div className="overflow-x-auto">
             <ChartContainer
               config={{
                 revenue: { label: "Revenue", color: "oklch(0.6 0.2 150)" },
                 volume: { label: "Volume", color: "oklch(0.6 0.2 20)" },
               }}
-              className="h-[280px] sm:h-[350px]"
+              className="h-[280px] sm:h-[350px] min-w-[480px]"
             >
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trendData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
@@ -131,6 +133,7 @@ export function ReportsCharts({ data, statsCharts, topUsers, topUsersLoading, is
                 </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -149,9 +152,10 @@ export function ReportsCharts({ data, statsCharts, topUsers, topUsersLoading, is
             return breakdown.length === 0 ? (
               <EmptyChart label="No breakdown data for this period" />
             ) : (
+              <div className="overflow-x-auto">
               <ChartContainer
                 config={{ count: { label: "Transactions", color: "oklch(0.5 0.2 260)" } }}
-                className="h-[280px] sm:h-[350px]"
+                className="h-[280px] sm:h-[350px] min-w-[480px]"
               >
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={breakdown} margin={{ top: 10, right: 10, left: 5, bottom: 0 }}>
@@ -163,6 +167,7 @@ export function ReportsCharts({ data, statsCharts, topUsers, topUsersLoading, is
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
+              </div>
             )
           })()}
         </CardContent>
@@ -178,9 +183,10 @@ export function ReportsCharts({ data, statsCharts, topUsers, topUsersLoading, is
           {(data?.user_growth ?? []).length === 0 ? (
             <EmptyChart label="No user growth data for this period" />
           ) : (
+            <div className="overflow-x-auto">
             <ChartContainer
               config={{ count: { label: "New Users", color: "oklch(0.6 0.2 300)" } }}
-              className="h-[280px] sm:h-[350px]"
+              className="h-[280px] sm:h-[350px] min-w-[400px]"
             >
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data?.user_growth} margin={{ top: 10, right: 10, left: 5, bottom: 0 }}>
@@ -192,6 +198,7 @@ export function ReportsCharts({ data, statsCharts, topUsers, topUsersLoading, is
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -206,9 +213,10 @@ export function ReportsCharts({ data, statsCharts, topUsers, topUsersLoading, is
           {dailyVolumeData.length === 0 ? (
             <EmptyChart label="No daily data for this month" />
           ) : (
+            <div className="overflow-x-auto">
             <ChartContainer
               config={{ total: { label: "Transactions", color: "oklch(0.6 0.2 200)" } }}
-              className="h-[280px] sm:h-[350px]"
+              className="h-[280px] sm:h-[350px] min-w-[520px]"
             >
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={dailyVolumeData} margin={{ top: 10, right: 10, left: 5, bottom: 0 }}>
@@ -220,6 +228,7 @@ export function ReportsCharts({ data, statsCharts, topUsers, topUsersLoading, is
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -236,7 +245,8 @@ export function ReportsCharts({ data, statsCharts, topUsers, topUsersLoading, is
           ) : !topUsers || topUsers.length === 0 ? (
             <EmptyChart label="No transaction data for this period" />
           ) : (
-            <ChartContainer config={topUsersConfig} className="h-[340px] sm:h-[420px]">
+            <div className="overflow-x-auto">
+            <ChartContainer config={topUsersConfig} className="h-[340px] sm:h-[420px] min-w-[640px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={topUsersChartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="oklch(0.95 0 0 / 0.08)" />
@@ -260,6 +270,7 @@ export function ReportsCharts({ data, statsCharts, topUsers, topUsersLoading, is
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
+            </div>
           )}
         </CardContent>
       </Card>

@@ -347,7 +347,7 @@ export default function UserDetailsPage() {
             <TabsTrigger value="transactions" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all">History</TabsTrigger>
             <TabsTrigger value="accounts" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all text-center">Banks</TabsTrigger>
             {isSuperAdmin && (
-              <TabsTrigger value="balance" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all text-amber-500 data-[state=active]:text-primary-foreground">Balance</TabsTrigger>
+              <TabsTrigger value="balance" className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none transition-all">Balance</TabsTrigger>
             )}
           </TabsList>
         </div>
