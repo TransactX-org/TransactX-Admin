@@ -32,6 +32,7 @@ const ALL_PERMISSIONS = [
     "role-management",
     "admin-management",
     "settings-management",
+    "promotions-management",
 ]
 
 export function UpdatePermissionsDialog({ admin, open, onOpenChange }: UpdatePermissionsDialogProps) {

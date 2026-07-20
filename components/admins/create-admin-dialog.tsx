@@ -37,6 +37,7 @@ const ALL_PERMISSIONS = [
     "role-management",
     "admin-management",
     "settings-management",
+    "promotions-management",
 ]
 
 export function CreateAdminDialog({ open, onOpenChange }: CreateAdminDialogProps) {
