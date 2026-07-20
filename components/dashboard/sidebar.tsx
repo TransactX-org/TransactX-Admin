@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
+import { cn, canAccessNavItem } from "@/lib/utils"
 import { useSidebar } from "@/contexts/sidebar-context"
 import { useCurrentUser } from "@/lib/api/hooks/use-auth"
 import {
@@ -23,7 +23,18 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-export const navItems = [
+export interface NavItem {
+  label: string
+  href: string
+  icon: any
+  /** Permission slug required to see this item (maps to a backend *.scope middleware). */
+  requiredPermission?: string
+  /** Only super admins may see this item. */
+  superAdminOnly?: boolean
+  children?: { label: string; href: string; icon: any }[]
+}
+
+export const navItems: NavItem[] = [
   {
     label: "Dashboard",
     href: "/dashboard",
@@ -33,21 +44,25 @@ export const navItems = [
     label: "Transactions",
     href: "/dashboard/transactions",
     icon: CreditCard,
+    requiredPermission: "transaction-management",
   },
   {
     label: "Users",
     href: "/dashboard/users",
     icon: Users,
+    requiredPermission: "user-management",
   },
   {
     label: "Admins",
     href: "/dashboard/admins",
     icon: Shield,
+    superAdminOnly: true,
   },
   {
     label: "Services",
     href: "/dashboard/services",
     icon: Gift,
+    requiredPermission: "services-management",
     children: [
       { label: "Airtime", href: "/dashboard/services/airtime", icon: Smartphone },
       { label: "Data", href: "/dashboard/services/data", icon: Wifi },
@@ -59,6 +74,7 @@ export const navItems = [
     label: "Marketing",
     href: "/dashboard/newsletters",
     icon: Megaphone,
+    requiredPermission: "promotions-management",
     children: [
       { label: "Newsletters", href: "/dashboard/newsletters", icon: Mail },
     ],
@@ -67,6 +83,7 @@ export const navItems = [
     label: "Reports",
     href: "/dashboard/reports",
     icon: BarChart3,
+    requiredPermission: "transaction-management",
   },
   {
     label: "Settings",
@@ -99,8 +116,8 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => {
-          // Hide Admins menu if user is not super admin
-          if (item.label === "Admins" && user && !user.is_super_admin) {
+          // Hide items the admin doesn't have permission to access.
+          if (!canAccessNavItem(user, item)) {
             return null
           }
 

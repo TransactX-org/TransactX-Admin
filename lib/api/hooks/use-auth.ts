@@ -31,6 +31,9 @@ export const useLogin = () => {
         email: response.data.email,
         role: response.data.role,
         is_super_admin: response.data.is_super_admin,
+        // Captured so the UI can hide features the admin cannot access.
+        // Safe if the API omits it (undefined -> gating degrades to show-all).
+        permissions: response.data.permissions ?? [],
       }
 
       // Store token and user

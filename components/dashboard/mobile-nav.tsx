@@ -7,12 +7,13 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
 import { navItems } from "./sidebar"
-import { cn } from "@/lib/utils"
+import { cn, canAccessNavItem } from "@/lib/utils"
 import { useCurrentUser } from "@/lib/api/hooks/use-auth"
 
 export function MobileNav() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
+  const user = useCurrentUser()
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -34,9 +35,8 @@ export function MobileNav() {
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-2">
             {navItems.map((item) => {
-              // Hide Admins menu if user is not super admin
-              const user = useCurrentUser()
-              if (item.label === "Admins" && user && !user.is_super_admin) {
+              // Hide items the admin doesn't have permission to access.
+              if (!canAccessNavItem(user, item)) {
                 return null
               }
 

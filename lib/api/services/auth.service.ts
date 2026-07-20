@@ -14,6 +14,7 @@ export interface LoginResponse {
   email: string
   role: string
   is_super_admin?: boolean
+  permissions?: string[] | string
   token: string
 }
 
