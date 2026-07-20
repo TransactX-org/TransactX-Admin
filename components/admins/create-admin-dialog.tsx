@@ -51,7 +51,14 @@ export function CreateAdminDialog({ open, onOpenChange }: CreateAdminDialogProps
     const createAdminMutation = useCreateAdmin()
     const { data: rolesData, isLoading: rolesLoading } = useAdminRoles()
 
-    const rolesList: AdminRole[] = rolesData?.data ?? []
+    // The /admin/roles endpoint may return either a plain array or a
+    // paginated object ({ data: [...] }), so normalise to an array here.
+    const rolesResponse = rolesData?.data as AdminRole[] | { data?: AdminRole[] } | undefined
+    const rolesList: AdminRole[] = Array.isArray(rolesResponse)
+        ? rolesResponse
+        : Array.isArray(rolesResponse?.data)
+            ? rolesResponse.data
+            : []
 
     // Set default role when roles are loaded
     useEffect(() => {
