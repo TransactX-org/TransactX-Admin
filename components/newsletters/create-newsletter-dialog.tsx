@@ -57,18 +57,22 @@ interface CreateNewsletterDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     newsletter?: Newsletter | null
+    onCreated?: (newsletter: Newsletter) => void
 }
 
 export function CreateNewsletterDialog({
     open,
     onOpenChange,
     newsletter,
+    onCreated,
 }: CreateNewsletterDialogProps) {
     const [bannerImage, setBannerImage] = useState<File | null>(null)
     const [imagePreview, setImagePreview] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const contentRef = useRef<HTMLTextAreaElement | null>(null)
     const [selectedUsers, setSelectedUsers] = useState<ApiUser[]>([])
+    // Which create button was clicked: save quietly, or continue into Review & Send
+    const submitActionRef = useRef<"draft" | "continue">("continue")
 
     const createNewsletter = useCreateNewsletter()
     const updateNewsletter = useUpdateNewsletter()
@@ -204,14 +208,23 @@ export function CreateNewsletterDialog({
             )
         } else {
             createNewsletter.mutate(data, {
-                onSuccess: () => {
+                onSuccess: (response) => {
                     onOpenChange(false)
                     form.reset()
                     setBannerImage(null)
                     setImagePreview(null)
+                    const created = response.data?.newsletter
+                    if (submitActionRef.current === "continue" && created) {
+                        onCreated?.(created)
+                    }
                 },
             })
         }
+    }
+
+    const handleCreateClick = (action: "draft" | "continue") => {
+        submitActionRef.current = action
+        form.handleSubmit(onSubmit)()
     }
 
     const isLoading = createNewsletter.isPending || updateNewsletter.isPending
@@ -531,14 +544,39 @@ export function CreateNewsletterDialog({
                     <Button variant="ghost" onClick={() => onOpenChange(false)}>
                         Cancel
                     </Button>
-                    <Button
-                        onClick={form.handleSubmit(onSubmit)}
-                        disabled={isLoading}
-                        className="bg-primary text-white min-w-[120px]"
-                    >
-                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {newsletter ? "Update" : "Create"}
-                    </Button>
+                    {newsletter ? (
+                        <Button
+                            onClick={form.handleSubmit(onSubmit)}
+                            disabled={isLoading}
+                            className="bg-primary text-white min-w-[120px]"
+                        >
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Update
+                        </Button>
+                    ) : (
+                        <>
+                            <Button
+                                variant="outline"
+                                onClick={() => handleCreateClick("draft")}
+                                disabled={isLoading}
+                            >
+                                {isLoading && submitActionRef.current === "draft" && (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
+                                Save as Draft
+                            </Button>
+                            <Button
+                                onClick={() => handleCreateClick("continue")}
+                                disabled={isLoading}
+                                className="bg-primary text-white min-w-[150px]"
+                            >
+                                {isLoading && submitActionRef.current === "continue" && (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
+                                Create &amp; Continue
+                            </Button>
+                        </>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>

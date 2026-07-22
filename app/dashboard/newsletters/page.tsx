@@ -211,6 +211,12 @@ export default function NewslettersPage() {
                 open={isCreateOpen}
                 onOpenChange={setIsCreateOpen}
                 newsletter={selectedNewsletter}
+                onCreated={(created) => {
+                    setSelectedNewsletter(created)
+                    // Let the create modal finish closing before opening Review & Send,
+                    // so the two Radix dialogs never overlap (avoids the stuck pointer-events bug)
+                    setTimeout(() => setIsDetailsOpen(true), 200)
+                }}
             />
 
             <NewsletterDetails

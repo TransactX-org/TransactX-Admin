@@ -82,7 +82,7 @@ export const getNewsletter = async (id: string): Promise<ApiResponse<{ newslette
 }
 
 // Create newsletter
-export const createNewsletter = async (data: CreateNewsletterDTO): Promise<ApiResponse<Newsletter>> => {
+export const createNewsletter = async (data: CreateNewsletterDTO): Promise<ApiResponse<{ newsletter: Newsletter }>> => {
     const formData = new FormData()
 
     Object.entries(data).forEach(([key, value]) => {
@@ -97,7 +97,7 @@ export const createNewsletter = async (data: CreateNewsletterDTO): Promise<ApiRe
         }
     })
 
-    const response = await apiClient.post<ApiResponse<Newsletter>>("/admin/newsletters", formData, {
+    const response = await apiClient.post<ApiResponse<{ newsletter: Newsletter }>>("/admin/newsletters", formData, {
         headers: {
             "Content-Type": "multipart/form-data",
         },
