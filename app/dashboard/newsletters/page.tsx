@@ -14,7 +14,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { CreateNewsletterSheet } from "@/components/newsletters/create-newsletter-sheet"
+import { CreateNewsletterDialog } from "@/components/newsletters/create-newsletter-dialog"
 import { NewsletterDetails } from "@/components/newsletters/newsletter-details"
 import { useNewsletters, useDeleteNewsletter } from "@/lib/api/hooks/use-newsletters"
 import { Newsletter } from "@/lib/api/services/newsletter.service"
@@ -183,7 +183,7 @@ export default function NewslettersPage() {
                                         >
                                             View & Send
                                         </Button>
-                                        <DropdownMenu>
+                                        <DropdownMenu modal={false}>
                                             <DropdownMenuTrigger asChild>
                                                 <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg hover:bg-muted">
                                                     <MoreVertical className="h-4 w-4" />
@@ -207,7 +207,7 @@ export default function NewslettersPage() {
                 )}
             </div>
 
-            <CreateNewsletterSheet
+            <CreateNewsletterDialog
                 open={isCreateOpen}
                 onOpenChange={setIsCreateOpen}
                 newsletter={selectedNewsletter}

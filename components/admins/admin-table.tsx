@@ -145,7 +145,7 @@ export function AdminTable({ admins, isLoading, pagination, page, onPageChange }
                                         </div>
                                     </td>
                                     <td className="py-4 px-6 text-right">
-                                        <DropdownMenu>
+                                        <DropdownMenu modal={false}>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground">
                                                     <MoreHorizontal className="h-4 w-4" />
@@ -205,7 +205,7 @@ export function AdminTable({ admins, isLoading, pagination, page, onPageChange }
                                         </div>
 
                                         <div onClick={(e) => e.stopPropagation()}>
-                                            <DropdownMenu>
+                                            <DropdownMenu modal={false}>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-muted-foreground">
                                                         <MoreHorizontal className="h-4 w-4" />

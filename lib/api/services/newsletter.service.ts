@@ -1,6 +1,9 @@
 import apiClient from "../client"
 import type { ApiResponse, PaginatedResponse } from "../types"
 
+// "organization" is the backend's name for business accounts
+export type NewsletterAudience = "all" | "individual" | "organization" | "custom"
+
 export interface Newsletter {
     id: string
     title: string
@@ -10,6 +13,8 @@ export interface Newsletter {
     date?: string
     time?: string
     is_active: boolean
+    target_user_type?: NewsletterAudience | null
+    target_user_ids?: string[] | null
     created_at: string
     updated_at: string
 }
@@ -22,6 +27,8 @@ export interface CreateNewsletterDTO {
     date?: string
     time?: string
     is_active?: boolean
+    target_user_type?: NewsletterAudience
+    target_user_ids?: string[]
 }
 
 export interface UpdateNewsletterDTO {
@@ -32,11 +39,14 @@ export interface UpdateNewsletterDTO {
     date?: string
     time?: string
     is_active?: boolean
+    target_user_type?: NewsletterAudience
+    target_user_ids?: string[]
 }
 
 export interface SendNewsletterDTO {
     user_ids?: string[]
     send_to_all?: boolean
+    user_type?: NewsletterAudience
 }
 
 export interface NewsletterResponse {
@@ -79,6 +89,8 @@ export const createNewsletter = async (data: CreateNewsletterDTO): Promise<ApiRe
         if (value !== undefined && value !== null) {
             if (key === 'is_active') {
                 formData.append(key, value ? '1' : '0')
+            } else if (Array.isArray(value)) {
+                value.forEach((item) => formData.append(`${key}[]`, item))
             } else {
                 formData.append(key, value as string | Blob)
             }
@@ -101,6 +113,8 @@ export const updateNewsletter = async (id: string, data: UpdateNewsletterDTO): P
         if (value !== undefined && value !== null) {
             if (key === 'is_active') {
                 formData.append(key, value ? '1' : '0')
+            } else if (Array.isArray(value)) {
+                value.forEach((item) => formData.append(`${key}[]`, item))
             } else {
                 formData.append(key, value as string | Blob)
             }

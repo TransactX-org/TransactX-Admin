@@ -97,7 +97,7 @@ export function Header() {
           </div>
 
           {/* Notifications - Desktop Dropdown */}
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative hidden md:flex">
                 <Bell className="h-5 w-5" />

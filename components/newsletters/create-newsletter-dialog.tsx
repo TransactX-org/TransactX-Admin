@@ -4,15 +4,15 @@ import { useEffect, useState, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Loader2, Upload, Mail, MessageSquare, Smartphone, X, Calendar, Clock, Image as ImageIcon } from "lucide-react"
+import { Loader2, Upload, Mail, MessageSquare, Smartphone, X, Calendar, Clock, Image as ImageIcon, Users, User, Briefcase, UserCheck } from "lucide-react"
 
 import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetHeader,
-    SheetTitle,
-} from "@/components/ui/sheet"
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import {
     Form,
@@ -29,6 +29,19 @@ import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { useCreateNewsletter, useUpdateNewsletter } from "@/lib/api/hooks/use-newsletters"
 import { Newsletter } from "@/lib/api/services/newsletter.service"
+import { getUserById } from "@/lib/api/services/user.service"
+import { UserPicker } from "./user-picker"
+import type { User as ApiUser } from "@/lib/api/types"
+
+// Tags the backend replaces with each user's real details at send time.
+const personalizationTags = [
+    { token: "first_name", label: "First Name" },
+    { token: "last_name", label: "Last Name" },
+    { token: "name", label: "Full Name" },
+    { token: "email", label: "Email Address" },
+    { token: "username", label: "Username" },
+    { token: "phone", label: "Phone Number" },
+]
 
 const formSchema = z.object({
     title: z.string().min(1, "Title is required"),
@@ -37,22 +50,25 @@ const formSchema = z.object({
     date: z.string().min(1, "Date is required"),
     time: z.string().min(1, "Time is required"),
     is_active: z.boolean().default(true),
+    target_user_type: z.enum(["all", "individual", "organization", "custom"]).default("all"),
 })
 
-interface CreateNewsletterSheetProps {
+interface CreateNewsletterDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     newsletter?: Newsletter | null
 }
 
-export function CreateNewsletterSheet({
+export function CreateNewsletterDialog({
     open,
     onOpenChange,
     newsletter,
-}: CreateNewsletterSheetProps) {
+}: CreateNewsletterDialogProps) {
     const [bannerImage, setBannerImage] = useState<File | null>(null)
     const [imagePreview, setImagePreview] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const contentRef = useRef<HTMLTextAreaElement | null>(null)
+    const [selectedUsers, setSelectedUsers] = useState<ApiUser[]>([])
 
     const createNewsletter = useCreateNewsletter()
     const updateNewsletter = useUpdateNewsletter()
@@ -66,6 +82,7 @@ export function CreateNewsletterSheet({
             date: "",
             time: "",
             is_active: true,
+            target_user_type: "all",
         },
     })
 
@@ -80,8 +97,10 @@ export function CreateNewsletterSheet({
                     date: newsletter.date || "",
                     time: newsletter.time || "",
                     is_active: newsletter.is_active,
+                    target_user_type: newsletter.target_user_type || "all",
                 })
                 setImagePreview(newsletter.banner_image || null)
+                setSelectedUsers([])
             } else {
                 form.reset({
                     title: "",
@@ -90,12 +109,34 @@ export function CreateNewsletterSheet({
                     date: "",
                     time: "",
                     is_active: true,
+                    target_user_type: "all",
                 })
                 setBannerImage(null)
                 setImagePreview(null)
+                setSelectedUsers([])
             }
         }
     }, [open, newsletter, form])
+
+    // When editing a newsletter targeted at specific users, load their details
+    // so the picker shows names instead of raw IDs.
+    useEffect(() => {
+        let cancelled = false
+        if (open && newsletter?.target_user_type === "custom" && newsletter.target_user_ids?.length) {
+            Promise.all(
+                newsletter.target_user_ids.map((id) =>
+                    getUserById(id).then((res) => res.data?.user).catch(() => null)
+                )
+            ).then((users) => {
+                if (!cancelled) {
+                    setSelectedUsers(users.filter((u): u is ApiUser => Boolean(u)))
+                }
+            })
+        }
+        return () => {
+            cancelled = true
+        }
+    }, [open, newsletter])
 
     const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -109,6 +150,26 @@ export function CreateNewsletterSheet({
         }
     }
 
+    const insertPersonalizationTag = (token: string) => {
+        const placeholder = `{{${token}}}`
+        const current = form.getValues("content") || ""
+        const el = contentRef.current
+
+        if (el) {
+            const start = el.selectionStart ?? current.length
+            const end = el.selectionEnd ?? current.length
+            const next = current.slice(0, start) + placeholder + current.slice(end)
+            form.setValue("content", next, { shouldDirty: true, shouldValidate: true })
+            requestAnimationFrame(() => {
+                el.focus()
+                const pos = start + placeholder.length
+                el.setSelectionRange(pos, pos)
+            })
+        } else {
+            form.setValue("content", current + placeholder, { shouldDirty: true, shouldValidate: true })
+        }
+    }
+
     const handleRemoveImage = () => {
         setBannerImage(null)
         setImagePreview(null)
@@ -118,9 +179,15 @@ export function CreateNewsletterSheet({
     }
 
     const onSubmit = (values: z.infer<typeof formSchema>) => {
+        if (values.target_user_type === "custom" && selectedUsers.length === 0) {
+            form.setError("target_user_type", { message: "Add at least one user, or pick a different audience" })
+            return
+        }
+
         const data = {
             ...values,
             banner_image: bannerImage || undefined,
+            target_user_ids: values.target_user_type === "custom" ? selectedUsers.map((u) => u.id) : undefined,
         }
 
         if (newsletter) {
@@ -155,19 +222,26 @@ export function CreateNewsletterSheet({
         { value: "push_notification", label: "Push", icon: Smartphone },
     ]
 
+    const audienceOptions = [
+        { value: "all", label: "Everyone", icon: Users },
+        { value: "individual", label: "Individuals", icon: User },
+        { value: "organization", label: "Businesses", icon: Briefcase },
+        { value: "custom", label: "Specific Users", icon: UserCheck },
+    ]
+
     return (
-        <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent className="w-full sm:w-[540px] p-0 flex flex-col h-full bg-background border-l border-border shadow-2xl">
-                <SheetHeader className="px-6 py-4 border-b border-border bg-background z-10">
-                    <SheetTitle className="text-xl font-bold tracking-tight">
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] max-h-[90vh] p-0 flex flex-col overflow-hidden bg-background rounded-2xl border-border shadow-2xl">
+                <DialogHeader className="px-6 py-4 border-b border-border bg-background z-10 text-left shrink-0">
+                    <DialogTitle className="text-xl font-bold tracking-tight">
                         {newsletter ? "Edit Newsletter" : "Create Newsletter"}
-                    </SheetTitle>
-                    <SheetDescription>
+                    </DialogTitle>
+                    <DialogDescription>
                         {newsletter
                             ? "Update your campaign details."
                             : "Design a new marketing campaign."}
-                    </SheetDescription>
-                </SheetHeader>
+                    </DialogDescription>
+                </DialogHeader>
 
                 <div className="flex-1 overflow-y-auto px-6 py-6">
                     <Form {...form}>
@@ -220,6 +294,60 @@ export function CreateNewsletterSheet({
                                                 )
                                             })}
                                         </div>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Audience Selection */}
+                            <FormField
+                                control={form.control}
+                                name="target_user_type"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-sm font-medium text-foreground">Who Should Receive This?</FormLabel>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                            {audienceOptions.map((option) => {
+                                                const Icon = option.icon
+                                                const isSelected = field.value === option.value
+                                                return (
+                                                    <div
+                                                        key={option.value}
+                                                        onClick={() => field.onChange(option.value)}
+                                                        className={cn(
+                                                            "cursor-pointer flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all duration-200",
+                                                            isSelected
+                                                                ? "border-primary bg-primary/5 text-primary ring-1 ring-primary/20"
+                                                                : "border-border hover:border-primary/30 hover:bg-muted/30 text-muted-foreground"
+                                                        )}
+                                                    >
+                                                        <Icon className={cn("h-5 w-5", isSelected ? "text-primary" : "text-muted-foreground")} />
+                                                        <span className="text-xs font-medium">{option.label}</span>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                        <FormDescription className="text-xs">
+                                            {field.value === "all"
+                                                ? "Every user gets this newsletter."
+                                                : field.value === "organization"
+                                                    ? "Only business accounts get this newsletter."
+                                                    : field.value === "individual"
+                                                        ? "Only individual (personal) accounts get this newsletter."
+                                                        : "Only the users you pick below get this newsletter."}
+                                        </FormDescription>
+                                        {field.value === "custom" && (
+                                            <div className="pt-2 animate-in slide-in-from-top-2 fade-in">
+                                                <UserPicker
+                                                    selected={selectedUsers}
+                                                    onChange={(users) => {
+                                                        setSelectedUsers(users)
+                                                        if (users.length > 0) form.clearErrors("target_user_type")
+                                                    }}
+                                                    placeholder="Search users to add..."
+                                                />
+                                            </div>
+                                        )}
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -292,8 +420,33 @@ export function CreateNewsletterSheet({
                                                 placeholder="Write your message here..."
                                                 className="min-h-[200px] resize-y bg-muted/30 border-border focus:border-primary/50"
                                                 {...field}
+                                                ref={(el) => {
+                                                    field.ref(el)
+                                                    contentRef.current = el
+                                                }}
                                             />
                                         </FormControl>
+                                        <div className="rounded-xl border border-border/50 bg-muted/20 p-3 space-y-2">
+                                            <p className="text-xs font-semibold text-foreground">Add customer details</p>
+                                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                                Click a button below to drop it into your message. When the newsletter is sent,
+                                                it is automatically swapped with each customer's real details — e.g.{" "}
+                                                <span className="font-mono">{"{{first_name}}"}</span> becomes "Ada".
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {personalizationTags.map((tag) => (
+                                                    <button
+                                                        key={tag.token}
+                                                        type="button"
+                                                        onClick={() => insertPersonalizationTag(tag.token)}
+                                                        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-colors"
+                                                    >
+                                                        {tag.label}
+                                                        <span className="font-mono text-[10px] text-muted-foreground">{`{{${tag.token}}}`}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
                                         <FormDescription className="text-xs">
                                             {form.watch("medium") === "email" ? "Supports HTML content." : "Plain text only."}
                                         </FormDescription>
@@ -374,7 +527,7 @@ export function CreateNewsletterSheet({
                 </div>
 
                 {/* Footer Actions */}
-                <div className="p-6 border-t border-border bg-background mt-auto flex items-center justify-end gap-3">
+                <div className="px-6 py-4 border-t border-border bg-background mt-auto flex items-center justify-end gap-3 shrink-0">
                     <Button variant="ghost" onClick={() => onOpenChange(false)}>
                         Cancel
                     </Button>
@@ -387,7 +540,7 @@ export function CreateNewsletterSheet({
                         {newsletter ? "Update" : "Create"}
                     </Button>
                 </div>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     )
 }

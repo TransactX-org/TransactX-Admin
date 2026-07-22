@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { format } from "date-fns"
-import { Calendar, Clock, Mail, MessageSquare, Send, Smartphone, User, Loader2, X, AlertCircle, Eye, BarChart, Users } from "lucide-react"
+import { Calendar, Clock, Mail, MessageSquare, Send, Smartphone, User, Loader2, X, AlertCircle, Eye, BarChart, Users, FlaskConical, CheckCircle2 } from "lucide-react"
 
 import {
     Dialog,
@@ -14,13 +14,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
 import { useSendNewsletter } from "@/lib/api/hooks/use-newsletters"
 import { Newsletter } from "@/lib/api/services/newsletter.service"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { cn } from "@/lib/utils"
+import { UserPicker } from "./user-picker"
+import type { User as ApiUser } from "@/lib/api/types"
 
 interface NewsletterDetailsProps {
     newsletter: Newsletter | null
@@ -34,11 +33,37 @@ export function NewsletterDetails({
     onOpenChange,
 }: NewsletterDetailsProps) {
     const sendNewsletter = useSendNewsletter()
-    const [sendToAll, setSendToAll] = useState(true)
-    const [userIds, setUserIds] = useState("")
+    const [testUsers, setTestUsers] = useState<ApiUser[]>([])
     const [isSending, setIsSending] = useState(false)
+    const [isTestSending, setIsTestSending] = useState(false)
+    const [testSentTo, setTestSentTo] = useState<number | null>(null)
 
     if (!newsletter) return null
+
+    const audience = newsletter.target_user_type || "all"
+    const customCount = newsletter.target_user_ids?.length || 0
+    const audienceLabel =
+        audience === "organization"
+            ? "Business Accounts"
+            : audience === "individual"
+                ? "Individual Accounts"
+                : audience === "custom"
+                    ? `${customCount} Specific User${customCount === 1 ? "" : "s"}`
+                    : "All Accounts"
+    const audienceDescription =
+        audience === "organization"
+            ? "all business accounts"
+            : audience === "individual"
+                ? "all individual accounts"
+                : audience === "custom"
+                    ? `the ${customCount} user${customCount === 1 ? "" : "s"} chosen when this newsletter was created`
+                    : "the entire user base"
+
+    const tagPattern = /\{\{\s*\w+\s*\}\}/g
+    const hasPersonalizationTags = tagPattern.test(newsletter.content)
+    const tagChipStyle = "display:inline-block;padding:1px 8px;border-radius:9999px;background:rgba(139,92,246,0.12);color:#8b5cf6;font-weight:600;font-size:0.85em;"
+    const highlightTags = (html: string) =>
+        html.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, name) => `<span style="${tagChipStyle}">${name.replace(/_/g, " ")}</span>`)
 
     const getMediumIcon = (medium: string) => {
         switch (medium) {
@@ -67,18 +92,22 @@ export function NewsletterDetails({
     }
 
     const handleSend = () => {
-        if (!sendToAll && !userIds) return;
+        if (audience === "custom" && customCount === 0) return;
 
         setIsSending(true)
-        const userIdsArray = userIds.split(",").map((id) => id.trim()).filter(Boolean)
 
         sendNewsletter.mutate(
             {
                 id: newsletter.id,
-                data: {
-                    send_to_all: sendToAll,
-                    user_ids: !sendToAll ? userIdsArray : undefined,
-                },
+                data: audience === "custom"
+                    ? {
+                        send_to_all: false,
+                        user_ids: newsletter.target_user_ids || [],
+                    }
+                    : {
+                        send_to_all: true,
+                        user_type: audience !== "all" ? audience : undefined,
+                    },
             },
             {
                 onSuccess: () => {
@@ -87,6 +116,32 @@ export function NewsletterDetails({
                 },
                 onError: () => {
                     setIsSending(false)
+                }
+            }
+        )
+    }
+
+    const handleTestSend = () => {
+        if (testUsers.length === 0) return;
+
+        setIsTestSending(true)
+        setTestSentTo(null)
+
+        sendNewsletter.mutate(
+            {
+                id: newsletter.id,
+                data: {
+                    send_to_all: false,
+                    user_ids: testUsers.map((u) => u.id),
+                },
+            },
+            {
+                onSuccess: () => {
+                    setIsTestSending(false)
+                    setTestSentTo(testUsers.length)
+                },
+                onError: () => {
+                    setIsTestSending(false)
                 }
             }
         )
@@ -143,11 +198,28 @@ export function NewsletterDetails({
 
                         <div className="bg-muted/20 border border-border/20 rounded-2xl p-6 min-h-[200px] shadow-inner">
                             {newsletter.medium === 'email' ? (
-                                <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-bold prose-p:text-muted-foreground" dangerouslySetInnerHTML={{ __html: newsletter.content }} />
+                                <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-bold prose-p:text-muted-foreground" dangerouslySetInnerHTML={{ __html: highlightTags(newsletter.content) }} />
                             ) : (
-                                <p className="whitespace-pre-wrap font-medium text-lg leading-relaxed text-foreground/90">{newsletter.content}</p>
+                                <p className="whitespace-pre-wrap font-medium text-lg leading-relaxed text-foreground/90">
+                                    {newsletter.content.split(/(\{\{\s*\w+\s*\}\})/g).map((part, i) =>
+                                        /^\{\{\s*\w+\s*\}\}$/.test(part) ? (
+                                            <span key={i} className="inline-block px-2 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                                                {part.replace(/[{}]/g, "").trim().replace(/_/g, " ")}
+                                            </span>
+                                        ) : (
+                                            part
+                                        )
+                                    )}
+                                </p>
                             )}
                         </div>
+
+                        {hasPersonalizationTags && (
+                            <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                                <User className="h-3 w-3" />
+                                The highlighted tags will be replaced with each customer's real details when this is sent.
+                            </p>
+                        )}
                     </div>
 
                     {/* Right Column: Analytics & Actions */}
@@ -163,13 +235,60 @@ export function NewsletterDetails({
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-0.5">
                                         <p className="text-[10px] font-bold uppercase text-muted-foreground">Audience</p>
-                                        <p className="text-sm font-black">{sendToAll ? "All Accounts" : "Custom List"}</p>
+                                        <p className="text-sm font-black">{audienceLabel}</p>
                                     </div>
                                     <Users className="h-5 w-5 text-muted-foreground/30" />
                                 </div>
                                 <div className="h-1 w-full bg-muted overflow-hidden rounded-full">
                                     <div className="h-full bg-primary w-2/3" />
                                 </div>
+                            </div>
+                        </div>
+
+                        <Separator className="bg-border/20" />
+
+                        {/* Test Send */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <FlaskConical className="h-4 w-4 text-amber-500" />
+                                <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Send a Test First</h3>
+                            </div>
+
+                            <div className="space-y-3 bg-background p-4 rounded-2xl border border-amber-500/20 shadow-sm">
+                                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                    Send this to yourself or a teammate to check how it looks before sending it to real customers.
+                                </p>
+                                <UserPicker
+                                    selected={testUsers}
+                                    onChange={(users) => {
+                                        setTestUsers(users)
+                                        setTestSentTo(null)
+                                    }}
+                                    placeholder="Search test recipient..."
+                                    maxSelection={5}
+                                />
+                                {testSentTo !== null && (
+                                    <p className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-600">
+                                        <CheckCircle2 className="h-3.5 w-3.5" />
+                                        Test sent to {testSentTo} recipient{testSentTo === 1 ? "" : "s"}. Check their inbox/device.
+                                    </p>
+                                )}
+                                <Button
+                                    variant="outline"
+                                    className="w-full h-10 rounded-xl text-xs uppercase font-black tracking-widest border-amber-500/30 text-amber-600 hover:bg-amber-500/10 hover:text-amber-700"
+                                    onClick={handleTestSend}
+                                    disabled={isTestSending || isSending || testUsers.length === 0}
+                                >
+                                    {isTestSending ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending Test...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FlaskConical className="mr-2 h-4 w-4" /> Send Test
+                                        </>
+                                    )}
+                                </Button>
                             </div>
                         </div>
 
@@ -182,41 +301,19 @@ export function NewsletterDetails({
                                 <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Launch Control</h3>
                             </div>
 
-                            <div className="space-y-4 bg-background p-4 rounded-2xl border border-border/40 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <Label htmlFor="send-all" className="flex flex-col gap-0.5 cursor-pointer">
-                                        <span className="font-bold text-sm">Broadcast Mode</span>
-                                        <span className="text-[10px] text-muted-foreground font-medium">Send to entire user base</span>
-                                    </Label>
-                                    <Switch
-                                        id="send-all"
-                                        checked={sendToAll}
-                                        onCheckedChange={setSendToAll}
-                                    />
-                                </div>
-
-                                {!sendToAll && (
-                                    <div className="space-y-2 pt-2 animate-in slide-in-from-top-2 fade-in">
-                                        <Label htmlFor="user-ids" className="text-xs font-bold uppercase text-muted-foreground">Target User UUIDs</Label>
-                                        <textarea
-                                            id="user-ids"
-                                            placeholder="Enter IDs separated by comma..."
-                                            value={userIds}
-                                            onChange={(e) => setUserIds(e.target.value)}
-                                            className="w-full text-xs font-mono h-24 p-3 rounded-xl bg-muted/20 border-border/40 resize-none focus:ring-1 focus:ring-primary focus:border-primary/50 outline-none transition-all placeholder:text-muted-foreground/30"
-                                        />
-                                        <p className="text-[10px] text-right font-mono text-muted-foreground">
-                                            {userIds.split(",").filter(Boolean).length} RECIPIENTS SELECTED
-                                        </p>
-                                    </div>
-                                )}
+                            <div className="space-y-2 bg-background p-4 rounded-2xl border border-border/40 shadow-sm">
+                                <p className="font-bold text-sm">Ready to send</p>
+                                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                    This newsletter will go to <span className="font-semibold text-foreground">{audienceDescription}</span>.
+                                    To change who receives it, close this window and use <span className="font-semibold text-foreground">Edit</span> on the newsletter.
+                                </p>
                             </div>
                         </div>
 
                         <Button
                             className="w-full h-12 rounded-xl text-xs uppercase font-black tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
                             onClick={handleSend}
-                            disabled={isSending || (!sendToAll && !userIds)}
+                            disabled={isSending || isTestSending || (audience === "custom" && customCount === 0)}
                         >
                             {isSending ? (
                                 <>
@@ -224,7 +321,14 @@ export function NewsletterDetails({
                                 </>
                             ) : (
                                 <>
-                                    <Send className="mr-2 h-4 w-4" /> Execute Campaign
+                                    <Send className="mr-2 h-4 w-4" />
+                                    {audience === "organization"
+                                        ? "Send to All Businesses"
+                                        : audience === "individual"
+                                            ? "Send to All Individuals"
+                                            : audience === "custom"
+                                                ? `Send to ${customCount} User${customCount === 1 ? "" : "s"}`
+                                                : "Send to All Users"}
                                 </>
                             )}
                         </Button>
