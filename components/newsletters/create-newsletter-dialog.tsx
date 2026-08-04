@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Loader2, Upload, Mail, MessageSquare, Smartphone, X, Calendar, Clock, Image as ImageIcon, Users, User, Briefcase, UserCheck } from "lucide-react"
+import { Loader2, Mail, MessageSquare, Smartphone, X, Calendar, Image as ImageIcon, Users, User, Briefcase, UserCheck, Bold, Italic, Heading2, List, ListOrdered, Link2, Eye, Pencil } from "lucide-react"
 
 import {
     Dialog,
@@ -26,12 +26,19 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
+import { TimePicker } from "@/components/ui/time-picker"
 import { cn } from "@/lib/utils"
 import { useCreateNewsletter, useUpdateNewsletter } from "@/lib/api/hooks/use-newsletters"
 import { Newsletter } from "@/lib/api/services/newsletter.service"
 import { getUserById } from "@/lib/api/services/user.service"
 import { UserPicker } from "./user-picker"
 import type { User as ApiUser } from "@/lib/api/types"
+import {
+    highlightPersonalizationTags,
+    newsletterContentToEditorText,
+    prepareNewsletterContent,
+    richTextToEmailHtml,
+} from "@/lib/newsletter-content"
 
 // Tags the backend replaces with each user's real details at send time.
 const personalizationTags = [
@@ -71,6 +78,7 @@ export function CreateNewsletterDialog({
     const fileInputRef = useRef<HTMLInputElement>(null)
     const contentRef = useRef<HTMLTextAreaElement | null>(null)
     const [selectedUsers, setSelectedUsers] = useState<ApiUser[]>([])
+    const [showPreview, setShowPreview] = useState(false)
     // Which create button was clicked: save quietly, or continue into Review & Send
     const submitActionRef = useRef<"draft" | "continue">("continue")
 
@@ -93,11 +101,14 @@ export function CreateNewsletterDialog({
     // Reset form when opening/closing or changing newsletter
     useEffect(() => {
         if (open) {
+            setShowPreview(false)
             if (newsletter) {
+                const medium = (newsletter.medium as "email" | "sms" | "push_notification") || "email"
                 form.reset({
                     title: newsletter.title,
-                    medium: (newsletter.medium as "email" | "sms" | "push_notification") || "email",
-                    content: newsletter.content,
+                    medium,
+                    // Saved email content is HTML — show it back as editable text.
+                    content: newsletterContentToEditorText(newsletter.content, medium),
                     date: newsletter.date || "",
                     time: newsletter.time || "",
                     is_active: newsletter.is_active,
@@ -154,25 +165,81 @@ export function CreateNewsletterDialog({
         }
     }
 
-    const insertPersonalizationTag = (token: string) => {
-        const placeholder = `{{${token}}}`
+    // Writes new content and puts the caret back where the writer expects it.
+    const commitContent = (next: string, selectionStart: number, selectionEnd: number) => {
+        form.setValue("content", next, { shouldDirty: true, shouldValidate: true })
+        requestAnimationFrame(() => {
+            const el = contentRef.current
+            if (!el) return
+            el.focus()
+            el.setSelectionRange(selectionStart, selectionEnd)
+        })
+    }
+
+    const getSelection = () => {
         const current = form.getValues("content") || ""
         const el = contentRef.current
-
-        if (el) {
-            const start = el.selectionStart ?? current.length
-            const end = el.selectionEnd ?? current.length
-            const next = current.slice(0, start) + placeholder + current.slice(end)
-            form.setValue("content", next, { shouldDirty: true, shouldValidate: true })
-            requestAnimationFrame(() => {
-                el.focus()
-                const pos = start + placeholder.length
-                el.setSelectionRange(pos, pos)
-            })
-        } else {
-            form.setValue("content", current + placeholder, { shouldDirty: true, shouldValidate: true })
-        }
+        const start = el?.selectionStart ?? current.length
+        const end = el?.selectionEnd ?? start
+        return { current, start, end }
     }
+
+    const insertPersonalizationTag = (token: string) => {
+        const placeholder = `{{${token}}}`
+        const { current, start, end } = getSelection()
+        const next = current.slice(0, start) + placeholder + current.slice(end)
+        const pos = start + placeholder.length
+        commitContent(next, pos, pos)
+    }
+
+    // Bold/italic/strike: wrap the selection, or drop in sample text to edit over.
+    const wrapSelection = (marker: string, sample: string) => {
+        const { current, start, end } = getSelection()
+        const selected = current.slice(start, end) || sample
+        const next = current.slice(0, start) + marker + selected + marker + current.slice(end)
+        commitContent(next, start + marker.length, start + marker.length + selected.length)
+    }
+
+    // Headings and lists: prefix every line the selection touches.
+    const applyLinePrefix = (makePrefix: (index: number) => string) => {
+        const { current, start, end } = getSelection()
+        const lineStart = current.lastIndexOf("\n", start - 1) + 1
+        const lineEnd = current.indexOf("\n", end) === -1 ? current.length : current.indexOf("\n", end)
+
+        const prefixed = current
+            .slice(lineStart, lineEnd)
+            .split("\n")
+            .map((line, index) => {
+                if (!line.trim()) return line
+                // Drop any prefix already there so buttons toggle cleanly.
+                const stripped = line.replace(/^(\s*)(?:[-*•]\s+|\d+[.)]\s+|#{1,3}\s+)?/, "$1")
+                const indent = stripped.match(/^\s*/)?.[0] || ""
+                return indent + makePrefix(index) + stripped.slice(indent.length)
+            })
+            .join("\n")
+
+        const next = current.slice(0, lineStart) + prefixed + current.slice(lineEnd)
+        commitContent(next, lineStart, lineStart + prefixed.length)
+    }
+
+    const insertLink = () => {
+        const { current, start, end } = getSelection()
+        const label = current.slice(start, end) || "link text"
+        const snippet = `[${label}](https://)`
+        const next = current.slice(0, start) + snippet + current.slice(end)
+        // Land the caret inside the URL so it can be pasted straight in.
+        const urlStart = start + label.length + 3
+        commitContent(next, urlStart + 8, urlStart + 8)
+    }
+
+    const formattingTools = [
+        { icon: Bold, label: "Bold", onClick: () => wrapSelection("**", "bold text") },
+        { icon: Italic, label: "Italic", onClick: () => wrapSelection("_", "italic text") },
+        { icon: Heading2, label: "Heading", onClick: () => applyLinePrefix(() => "## ") },
+        { icon: List, label: "Bullet list", onClick: () => applyLinePrefix(() => "- ") },
+        { icon: ListOrdered, label: "Numbered list", onClick: () => applyLinePrefix((i) => `${i + 1}. `) },
+        { icon: Link2, label: "Link", onClick: insertLink },
+    ]
 
     const handleRemoveImage = () => {
         setBannerImage(null)
@@ -190,6 +257,9 @@ export function CreateNewsletterDialog({
 
         const data = {
             ...values,
+            // Email is delivered as HTML, so send HTML — otherwise the line breaks
+            // and *markers* the writer used arrive as one flat blob.
+            content: prepareNewsletterContent(values.content, values.medium),
             banner_image: bannerImage || undefined,
             target_user_ids: values.target_user_type === "custom" ? selectedUsers.map((u) => u.id) : undefined,
         }
@@ -228,6 +298,7 @@ export function CreateNewsletterDialog({
     }
 
     const isLoading = createNewsletter.isPending || updateNewsletter.isPending
+    const isEmail = form.watch("medium") === "email"
 
     const mediumOptions = [
         { value: "email", label: "Email", icon: Mail },
@@ -427,19 +498,66 @@ export function CreateNewsletterDialog({
                                 name="content"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-sm font-medium text-foreground">Content</FormLabel>
-                                        <FormControl>
-                                            <Textarea
-                                                placeholder="Write your message here..."
-                                                className="min-h-[200px] resize-y bg-muted/30 border-border focus:border-primary/50"
-                                                {...field}
-                                                ref={(el) => {
-                                                    field.ref(el)
-                                                    contentRef.current = el
-                                                }}
-                                            />
-                                        </FormControl>
-                                        <div className="rounded-xl border border-border/50 bg-muted/20 p-3 space-y-2">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <FormLabel className="text-sm font-medium text-foreground">Content</FormLabel>
+                                            {isEmail && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPreview((value) => !value)}
+                                                    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                                                >
+                                                    {showPreview ? <Pencil className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                                    {showPreview ? "Back to editing" : "Preview"}
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {isEmail && !showPreview && (
+                                            <div className="flex flex-wrap items-center gap-1 rounded-lg border border-border bg-muted/20 p-1">
+                                                {formattingTools.map((tool) => {
+                                                    const Icon = tool.icon
+                                                    return (
+                                                        <button
+                                                            key={tool.label}
+                                                            type="button"
+                                                            title={tool.label}
+                                                            aria-label={tool.label}
+                                                            onClick={tool.onClick}
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-primary transition-colors"
+                                                        >
+                                                            <Icon className="h-4 w-4" />
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
+                                        )}
+
+                                        {isEmail && showPreview ? (
+                                            <div className="min-h-[200px] rounded-xl border border-border bg-white p-6 text-[15px] text-[#1f2937] overflow-x-auto">
+                                                {field.value?.trim() ? (
+                                                    <div
+                                                        dangerouslySetInnerHTML={{
+                                                            __html: highlightPersonalizationTags(richTextToEmailHtml(field.value)),
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <p className="text-sm text-muted-foreground">Nothing to preview yet.</p>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <FormControl>
+                                                <Textarea
+                                                    placeholder="Write your message here..."
+                                                    className="min-h-[200px] resize-y bg-muted/30 border-border focus:border-primary/50"
+                                                    {...field}
+                                                    ref={(el) => {
+                                                        field.ref(el)
+                                                        contentRef.current = el
+                                                    }}
+                                                />
+                                            </FormControl>
+                                        )}
+                                        <div className={cn("rounded-xl border border-border/50 bg-muted/20 p-3 space-y-2", isEmail && showPreview && "hidden")}>
                                             <p className="text-xs font-semibold text-foreground">Add customer details</p>
                                             <p className="text-[11px] text-muted-foreground leading-relaxed">
                                                 Click a button below to drop it into your message. When the newsletter is sent,
@@ -460,8 +578,19 @@ export function CreateNewsletterDialog({
                                                 ))}
                                             </div>
                                         </div>
-                                        <FormDescription className="text-xs">
-                                            {form.watch("medium") === "email" ? "Supports HTML content." : "Plain text only."}
+                                        <FormDescription className="text-xs leading-relaxed">
+                                            {isEmail ? (
+                                                <>
+                                                    Blank lines start a new paragraph and are kept when the email is sent. Use{" "}
+                                                    <span className="font-mono">*bold*</span>,{" "}
+                                                    <span className="font-mono">_italic_</span>,{" "}
+                                                    <span className="font-mono">## heading</span>,{" "}
+                                                    <span className="font-mono">- bullet</span> — or the buttons above. Check{" "}
+                                                    <span className="font-medium">Preview</span> to see exactly how it will land.
+                                                </>
+                                            ) : (
+                                                "Plain text only — bold and headings are not supported here."
+                                            )}
                                         </FormDescription>
                                         <FormMessage />
                                     </FormItem>
@@ -469,7 +598,7 @@ export function CreateNewsletterDialog({
                             />
 
                             {/* Date & Time */}
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                                 <FormField
                                     control={form.control}
                                     name="date"
@@ -478,11 +607,19 @@ export function CreateNewsletterDialog({
                                             <FormLabel className="text-sm font-medium text-foreground">Schedule Date <span className="text-destructive">*</span></FormLabel>
                                             <FormControl>
                                                 <div className="relative">
-                                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                                                     <Input
                                                         type="date"
-                                                        className="pl-9 bg-muted/30"
+                                                        className="pl-9 bg-muted/30 cursor-pointer"
                                                         {...field}
+                                                        // Open the calendar wherever the box is clicked, not just on the tiny icon.
+                                                        onClick={(event) => {
+                                                            try {
+                                                                event.currentTarget.showPicker?.()
+                                                            } catch {
+                                                                // Browser blocked it (or doesn't support it) — the field still works.
+                                                            }
+                                                        }}
                                                     />
                                                 </div>
                                             </FormControl>
@@ -498,14 +635,11 @@ export function CreateNewsletterDialog({
                                         <FormItem>
                                             <FormLabel className="text-sm font-medium text-foreground">Schedule Time <span className="text-destructive">*</span></FormLabel>
                                             <FormControl>
-                                                <div className="relative">
-                                                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                                    <Input
-                                                        type="time"
-                                                        className="pl-9 bg-muted/30"
-                                                        {...field}
-                                                    />
-                                                </div>
+                                                <TimePicker
+                                                    value={field.value}
+                                                    onChange={field.onChange}
+                                                    className="bg-muted/30"
+                                                />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>

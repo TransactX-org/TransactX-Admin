@@ -19,6 +19,7 @@ import { NewsletterDetails } from "@/components/newsletters/newsletter-details"
 import { useNewsletters, useDeleteNewsletter } from "@/lib/api/hooks/use-newsletters"
 import { Newsletter } from "@/lib/api/services/newsletter.service"
 import { cn } from "@/lib/utils"
+import { toPlainText } from "@/lib/newsletter-content"
 
 export default function NewslettersPage() {
     const [page, setPage] = useState(1)
@@ -32,9 +33,10 @@ export default function NewslettersPage() {
 
     const newsletters = data?.data?.newsletters || []
 
+    // Search the readable text, not the HTML markup behind it.
     const filteredNewsletters = newsletters.filter(n =>
         n.title.toLowerCase().includes(search.toLowerCase()) ||
-        n.content.toLowerCase().includes(search.toLowerCase())
+        toPlainText(n.content).toLowerCase().includes(search.toLowerCase())
     )
 
     const handleEdit = (newsletter: Newsletter) => {
@@ -168,11 +170,7 @@ export default function NewslettersPage() {
                                     </h3>
 
                                     <div className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1">
-                                        {newsletter.medium === 'email' ? (
-                                            <span dangerouslySetInnerHTML={{ __html: newsletter.content.replace(/<[^>]+>/g, '') }} />
-                                        ) : (
-                                            newsletter.content
-                                        )}
+                                        {toPlainText(newsletter.content)}
                                     </div>
 
                                     <div className="flex items-center gap-2 mt-auto pt-4 border-t border-border/50">

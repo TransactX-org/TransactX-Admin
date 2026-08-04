@@ -20,6 +20,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { cn } from "@/lib/utils"
 import { UserPicker } from "./user-picker"
 import type { User as ApiUser } from "@/lib/api/types"
+import { highlightPersonalizationTags, richTextToEmailHtml } from "@/lib/newsletter-content"
 
 interface NewsletterDetailsProps {
     newsletter: Newsletter | null
@@ -61,9 +62,9 @@ export function NewsletterDetails({
 
     const tagPattern = /\{\{\s*\w+\s*\}\}/g
     const hasPersonalizationTags = tagPattern.test(newsletter.content)
-    const tagChipStyle = "display:inline-block;padding:1px 8px;border-radius:9999px;background:rgba(139,92,246,0.12);color:#8b5cf6;font-weight:600;font-size:0.85em;"
-    const highlightTags = (html: string) =>
-        html.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, name) => `<span style="${tagChipStyle}">${name.replace(/_/g, " ")}</span>`)
+    // Render through the same converter used when sending, so this preview is
+    // what recipients actually get.
+    const previewHtml = highlightPersonalizationTags(richTextToEmailHtml(newsletter.content))
 
     const getMediumIcon = (medium: string) => {
         switch (medium) {
@@ -198,7 +199,7 @@ export function NewsletterDetails({
 
                         <div className="bg-muted/20 border border-border/20 rounded-2xl p-6 min-h-[200px] shadow-inner">
                             {newsletter.medium === 'email' ? (
-                                <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-bold prose-p:text-muted-foreground" dangerouslySetInnerHTML={{ __html: highlightTags(newsletter.content) }} />
+                                <div className="rounded-xl bg-white p-5 text-[15px] text-[#1f2937] overflow-x-auto" dangerouslySetInnerHTML={{ __html: previewHtml }} />
                             ) : (
                                 <p className="whitespace-pre-wrap font-medium text-lg leading-relaxed text-foreground/90">
                                     {newsletter.content.split(/(\{\{\s*\w+\s*\}\})/g).map((part, i) =>
