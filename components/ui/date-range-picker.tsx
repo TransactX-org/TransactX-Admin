@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 import { DateRange } from "react-day-picker"
 import { format } from "date-fns"
 
-interface DatePickerWithRangeProps extends React.HTMLAttributes<HTMLDivElement> {
+interface DatePickerWithRangeProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
   date?: DateRange
   onChange?: (date: DateRange | undefined) => void
 }

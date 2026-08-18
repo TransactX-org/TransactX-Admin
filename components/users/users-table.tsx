@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,7 @@ import { format } from "date-fns"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { PaginationSelector } from "@/components/ui/pagination-selector"
+import { useConfirm } from "@/components/ui/confirm-dialog"
 
 interface UsersTableProps {
   filters: {
@@ -54,6 +55,16 @@ export function UsersTable({ filters }: UsersTableProps) {
 
   const { data, isLoading, error } = useUsers(currentPage, perPage, apiFilters)
   const deleteUserMutation = useDeleteUser()
+  const { confirm, confirmDialog } = useConfirm()
+
+  // Any filter or page-size change invalidates the current page number.
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [
+    filters.search, filters.status, filters.kyc_status, filters.kyb_status,
+    filters.user_type, filters.account_type, filters.is_active, filters.country,
+    filters.email_verified, filters.start_date, filters.end_date, perPage,
+  ])
 
   const users = data?.data?.data || []
   const pagination = data?.data || null
@@ -74,7 +85,12 @@ export function UsersTable({ filters }: UsersTableProps) {
   }
 
   const handleDeleteUser = async (id: string) => {
-    if (confirm("Are you sure you want to delete this user?")) {
+    const confirmed = await confirm({
+      title: "Delete this user?",
+      description: "This permanently removes the user and their access. This action cannot be undone.",
+      confirmLabel: "Delete user",
+    })
+    if (confirmed) {
       await deleteUserMutation.mutateAsync(id)
     }
   }
@@ -410,6 +426,8 @@ export function UsersTable({ filters }: UsersTableProps) {
           </CardContent>
         </Card>
       </div>
+
+      {confirmDialog}
     </>
   )
 }

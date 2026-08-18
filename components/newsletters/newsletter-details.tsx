@@ -218,7 +218,7 @@ export function NewsletterDetails({
                         {hasPersonalizationTags && (
                             <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                                 <User className="h-3 w-3" />
-                                The highlighted tags will be replaced with each customer's real details when this is sent.
+                                The highlighted tags will be replaced with each customer&apos;s real details when this is sent.
                             </p>
                         )}
                     </div>

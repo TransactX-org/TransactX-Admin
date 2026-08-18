@@ -9,7 +9,8 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { DateRange } from "react-day-picker"
 import { format } from "date-fns"
 import { startOfDay, endOfDay } from "date-fns"
-import { getTransactions } from "@/lib/api/services/transaction.service"
+import { getAllTransactionsForSearch } from "@/lib/api/services/transaction.service"
+import { matchesSearch } from "@/lib/search"
 import { exportToCSV } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
@@ -81,16 +82,24 @@ export function TransactionsFilters({ filters, onFilterChange }: TransactionsFil
         description: "Fetching transaction records for export.",
       })
 
-      // Fetch all records (up to reasonable limit)
-      const response = await getTransactions(1, 1000, {
-        search: filters.search || undefined,
+      // Fetch all records (up to the pool cap), then apply the same
+      // client-side search the table uses so the export matches what is shown.
+      const pool = await getAllTransactionsForSearch({
         status: (filters.status === "all" || !filters.status) ? undefined : filters.status,
         type: (filters.type === "all" || !filters.type) ? undefined : filters.type,
         start_date: filters.start_date || undefined,
         end_date: filters.end_date || undefined,
       })
 
-      const data = response.data.data
+      const query = filters.search.trim()
+      const data = query
+        ? pool.records.filter((t) =>
+            matchesSearch(query, {
+              text: [t.transactionId, t.user, t.type, t.status],
+              amounts: [t.amount],
+            })
+          )
+        : pool.records
 
       if (data.length > 0) {
         exportToCSV(data, `transactions-${format(new Date(), "yyyy-MM-dd-HH-mm")}`)
@@ -136,7 +145,7 @@ export function TransactionsFilters({ filters, onFilterChange }: TransactionsFil
             <div className="relative group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:tx-text-primary transition-colors" />
               <Input
-                placeholder="Search ID, sender, or ref..."
+                placeholder="Search ID, user, amount, type..."
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
                 className="pl-10 h-10 bg-background/50 border-border/40 rounded-xl sleek-focus font-medium"

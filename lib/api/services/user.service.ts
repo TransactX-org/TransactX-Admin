@@ -1,4 +1,11 @@
 import apiClient from "../client"
+import {
+    SEARCH_POOL_MAX_PAGES,
+    SEARCH_POOL_PER_PAGE,
+    fetchPagesInBatches,
+    remainingPages,
+    type SearchPool,
+} from "../search-pool"
 import type {
     ApiResponse,
     PaginatedResponse,
@@ -203,4 +210,40 @@ export const suspendUser = async (id: string): Promise<ApiResponse<any>> => {
 export const activateUser = async (id: string): Promise<ApiResponse<any>> => {
     const response = await apiClient.post<ApiResponse<any>>(`/admin/user-management/${id}/activate`)
     return response.data
+}
+
+// Fetch a capped pool of a user's transactions so the history search can match
+// across every page instead of only the rows currently rendered.
+export const getAllUserTransactionsForSearch = async (
+    id: string,
+    filters?: {
+        status?: string
+        type?: string
+        start_date?: string
+        end_date?: string
+    },
+    maxPages: number = SEARCH_POOL_MAX_PAGES
+): Promise<SearchPool<UserTransaction>> => {
+    // This endpoint occasionally returns a bare array instead of a paginator.
+    const rowsOf = (payload: any): UserTransaction[] =>
+        Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []
+
+    const first = await getUserTransactions(id, 1, SEARCH_POOL_PER_PAGE, filters)
+    const firstPage = first.data as any
+
+    const lastPage = firstPage?.last_page ?? 1
+    const firstRows = rowsOf(firstPage)
+    const total = firstPage?.total ?? firstRows.length
+    const pagesToFetch = Math.min(lastPage, maxPages)
+
+    const rest = await fetchPagesInBatches(remainingPages(pagesToFetch), async (page) => {
+        const response = await getUserTransactions(id, page, SEARCH_POOL_PER_PAGE, filters)
+        return rowsOf(response.data)
+    })
+
+    return {
+        records: [...firstRows, ...rest],
+        total,
+        truncated: lastPage > pagesToFetch,
+    }
 }

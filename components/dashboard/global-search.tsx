@@ -2,33 +2,21 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import {
-    Calculator,
-    Calendar,
-    CreditCard,
-    Settings,
-    Smile,
-    User,
-    Search,
-    Loader2,
-    FileText
-} from "lucide-react"
+import { CreditCard, Settings, User, Loader2, FileText } from "lucide-react"
 
 import {
     CommandDialog,
-    CommandEmpty,
     CommandGroup,
     CommandInput,
     CommandItem,
     CommandList,
     CommandSeparator,
-    CommandShortcut,
 } from "@/components/ui/command"
 import { useUsers } from "@/lib/api/hooks/use-users"
-import { useTransactions } from "@/lib/api/hooks/use-transactions"
+import { useTransactionSearchPool } from "@/lib/api/hooks/use-transactions"
+import { matchesSearch } from "@/lib/search"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-// import { DialogTitle } from "@/components/ui/dialog" // CommandDialog already renders DialogTitle visually hidden or we might need to add one if accessiblity complains, but commonly CommandDialog handles it. Actually looking at command.tsx, CommandDialog renders DialogTitle in sr-only.
 
 export function GlobalSearch() {
     const router = useRouter()
@@ -56,24 +44,45 @@ export function GlobalSearch() {
         return () => clearTimeout(timer)
     }, [query])
 
-    // Fetch users
-    const { data: usersData, isLoading: isLoadingUsers } = useUsers(1, 5, {
-        search: debouncedQuery,
-    })
+    // Only query once the dialog is open and something has been typed —
+    // otherwise this fires on every dashboard page load with an empty query.
+    const hasQuery = debouncedQuery.trim().length > 0
+    const shouldSearch = open && hasQuery
 
-    // Fetch transactions
-    const { data: transactionsData, isLoading: isLoadingTransactions } = useTransactions(1, 5, {
-        search: debouncedQuery,
-    })
+    // Users search server-side (the endpoint matches name/email/username).
+    const { data: usersData, isLoading: isLoadingUsers } = useUsers(
+        1,
+        5,
+        { search: debouncedQuery },
+        shouldSearch
+    )
+
+    // Transactions search client-side: the endpoint's `search` does not match
+    // on transaction id or amount. Shares its cached pool with the
+    // transactions page, which filters the same way.
+    const { data: transactionPool, isLoading: isLoadingTransactions } = useTransactionSearchPool(
+        { status: undefined, type: undefined, start_date: undefined, end_date: undefined },
+        shouldSearch
+    )
 
     const runCommand = React.useCallback((command: () => unknown) => {
         setOpen(false)
         command()
     }, [])
 
-    const users = usersData?.data?.data || []
-    const transactions = transactionsData?.data?.data || []
-    const isLoading = isLoadingUsers || isLoadingTransactions
+    const users = hasQuery ? (usersData?.data?.data || []) : []
+    const transactions = React.useMemo(() => {
+        if (!hasQuery) return []
+        return (transactionPool?.records ?? [])
+            .filter((tx) =>
+                matchesSearch(debouncedQuery, {
+                    text: [tx.transactionId, tx.user, tx.type, tx.status],
+                    amounts: [tx.amount],
+                })
+            )
+            .slice(0, 5)
+    }, [hasQuery, transactionPool, debouncedQuery])
+    const isLoading = hasQuery && (isLoadingUsers || isLoadingTransactions)
 
     return (
         <>
@@ -84,20 +93,26 @@ export function GlobalSearch() {
                 )}
                 onClick={() => setOpen(true)}
             >
-                <span className="hidden lg:inline-flex">Search documentation...</span>
+                <span className="hidden lg:inline-flex">Search users, transactions...</span>
                 <span className="inline-flex lg:hidden">Search...</span>
                 <kbd className="pointer-events-none absolute right-[0.3rem] top-[0.3rem] hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
                     <span className="text-xs">⌘</span>K
                 </kbd>
             </Button>
-            <CommandDialog open={open} onOpenChange={setOpen}>
+            {/* shouldFilter={false}: results are already filtered above, and cmdk's own
+                matcher would drop hits our matcher found (e.g. "5,000" vs a 5000 value). */}
+            <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
                 <CommandInput
-                    placeholder="Type a command or search..."
+                    placeholder="Search by name, email, transaction ID, amount..."
                     value={query}
                     onValueChange={setQuery}
                 />
                 <CommandList>
-                    <CommandEmpty>No results found.</CommandEmpty>
+                    {hasQuery && !isLoading && users.length === 0 && transactions.length === 0 && (
+                        <div className="py-6 text-center text-sm text-muted-foreground">
+                            No results for &ldquo;{debouncedQuery}&rdquo;
+                        </div>
+                    )}
 
                     {isLoading && (
                         <div className="flex items-center justify-center py-6">
@@ -114,7 +129,7 @@ export function GlobalSearch() {
                                             key={user.id}
                                             value={`user ${user.name} ${user.email}`}
                                             onSelect={() => {
-                                                runCommand(() => router.push(`/dashboard/users?search=${user.email}`))
+                                                runCommand(() => router.push(`/dashboard/users?search=${encodeURIComponent(user.email)}`))
                                             }}
                                         >
                                             <User className="mr-2 h-4 w-4" />
@@ -134,7 +149,7 @@ export function GlobalSearch() {
                                             key={tx.transactionId}
                                             value={`transaction ${tx.transactionId} ${tx.amount}`}
                                             onSelect={() => {
-                                                runCommand(() => router.push(`/dashboard/transactions?search=${tx.transactionId}`))
+                                                runCommand(() => router.push(`/dashboard/transactions?search=${encodeURIComponent(tx.transactionId)}`))
                                             }}
                                         >
                                             <CreditCard className="mr-2 h-4 w-4" />

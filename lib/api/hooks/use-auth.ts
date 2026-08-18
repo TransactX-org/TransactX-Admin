@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { login, forgotPassword, resetPassword, logout, updateProfile, changePassword } from "../services/auth.service"
 import type { LoginPayload, ForgotPasswordPayload, ResetPasswordPayload, UpdateProfilePayload, ChangePasswordPayload } from "../services/auth.service"
 import { useToast } from "@/hooks/use-toast"
@@ -8,6 +8,7 @@ import { useState, useEffect } from "react"
 // Login mutation
 export const useLogin = () => {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
@@ -50,7 +51,9 @@ export const useLogin = () => {
         description: `Welcome back, ${user.name}!`,
       })
 
-      router.push("/dashboard")
+      // Return them to wherever the guard interrupted, if it was a dashboard page.
+      const next = searchParams.get("next")
+      router.push(next && next.startsWith("/dashboard") ? next : "/dashboard")
     },
     onError: (error: any) => {
       toast({

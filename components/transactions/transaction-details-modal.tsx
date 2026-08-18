@@ -132,7 +132,7 @@ export function TransactionDetailsModal({ transactionId, onClose }: TransactionD
                 </div>
                 <div className="col-span-2 space-y-1">
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Description</p>
-                  <p className="text-sm font-medium leading-relaxed italic">"{transaction.description}"</p>
+                  <p className="text-sm font-medium leading-relaxed italic">&ldquo;{transaction.description}&rdquo;</p>
                 </div>
               </div>
 

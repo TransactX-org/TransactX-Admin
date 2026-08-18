@@ -28,6 +28,7 @@ import {
   useUser,
   useDeleteUser,
   useUserTransactions,
+  useUserTransactionSearchPool,
   useUserVirtualBankAccounts,
   useUserLinkedBankAccounts,
   useUserBeneficiaries,
@@ -42,6 +43,9 @@ import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TransactionDetailsModal } from "@/components/transactions/transaction-details-modal"
+import { PaginationSelector } from "@/components/ui/pagination-selector"
+import { matchesSearch } from "@/lib/search"
+import { useConfirm } from "@/components/ui/confirm-dialog"
 
 export default function UserDetailsPage() {
   const params = useParams()
@@ -51,12 +55,13 @@ export default function UserDetailsPage() {
 
   const { data, isLoading, error } = useUser(userId)
   const deleteUserMutation = useDeleteUser()
+  const { confirm, confirmDialog } = useConfirm()
   const user = data?.data?.user
 
   // Fetch additional data
   const [transactionPage, setTransactionPage] = useState(1)
   const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null)
-  const [transactionLimit] = useState(20)
+  const [transactionLimit, setTransactionLimit] = useState(20)
   const [txFilters, setTxFilters] = useState({ search: "", status: "", type: "", start_date: "", end_date: "" })
   const [txSearchInput, setTxSearchInput] = useState("")
   const [knownTxTypes, setKnownTxTypes] = useState<string[]>([])
@@ -72,7 +77,9 @@ export default function UserDetailsPage() {
     return () => clearTimeout(timer)
   }, [txSearchInput, txFilters.search])
 
-  // Only pass server-supported params (status, type, dates) — search is handled client-side
+  // Only pass server-supported params (status, type, dates). Search is handled
+  // client-side because the endpoint does not match on transaction id,
+  // sender/receiver or amount — see `useUserTransactionSearchPool`.
   const activeTxFilters = {
     status: txFilters.status || undefined,
     type: txFilters.type || undefined,
@@ -80,17 +87,52 @@ export default function UserDetailsPage() {
     end_date: txFilters.end_date || undefined,
   }
 
-  const { data: transactionsData, isLoading: transactionsLoading } = useUserTransactions(userId, transactionPage, transactionLimit, activeTxFilters)
+  const txSearchQuery = txFilters.search.trim()
+  const isTxSearching = txSearchQuery.length > 0
+
+  const { data: transactionsData, isLoading: transactionsPageLoading } = useUserTransactions(userId, transactionPage, transactionLimit, activeTxFilters)
+  const { data: txSearchPool, isLoading: txPoolLoading } = useUserTransactionSearchPool(userId, activeTxFilters, isTxSearching)
+
+  // Rows of the server page, tolerating the endpoint's occasional bare array.
+  const txPageRows: any[] = transactionsData?.data?.data || (Array.isArray(transactionsData?.data) ? transactionsData.data : [])
+
+  // When a search is active we filter and paginate the cached pool locally so
+  // matches are found across every page, not just the rows on screen.
+  const txSearchResults = isTxSearching
+    ? (txSearchPool?.records ?? []).filter((t: any) =>
+        matchesSearch(txSearchQuery, {
+          text: [t.reference, t.external_transaction_reference, t.description, t.narration, t.type, t.status],
+          amounts: [t.amount],
+        })
+      )
+    : null
+
+  const transactionsLoading = isTxSearching ? txPoolLoading : transactionsPageLoading
+  const txTotal = isTxSearching
+    ? (txSearchResults?.length ?? 0)
+    : (transactionsData?.data?.total ?? txPageRows.length)
+  const txLastPage = isTxSearching
+    ? Math.max(1, Math.ceil(txTotal / transactionLimit))
+    : (transactionsData?.data?.last_page ?? 1)
+  const txPage = Math.min(transactionPage, txLastPage)
+  const visibleTransactions: any[] = isTxSearching
+    ? (txSearchResults ?? []).slice((txPage - 1) * transactionLimit, txPage * transactionLimit)
+    : txPageRows
+  const txFrom = txTotal === 0 ? 0 : (txPage - 1) * transactionLimit + 1
+  const txTo = Math.min(txPage * transactionLimit, txTotal)
 
   // Accumulate unique transaction types from loaded data so the filter is always up-to-date
   useEffect(() => {
-    const incoming = transactionsData?.data?.data?.map(t => t.type).filter(Boolean) ?? []
+    const incoming = [
+      ...txPageRows.map((t: any) => t.type),
+      ...(txSearchPool?.records ?? []).map((t: any) => t.type),
+    ].filter(Boolean)
     if (incoming.length === 0) return
     setKnownTxTypes(prev => {
       const merged = Array.from(new Set([...prev, ...incoming])).sort()
       return merged.length === prev.length && merged.every((v, i) => v === prev[i]) ? prev : merged
     })
-  }, [transactionsData])
+  }, [transactionsData, txSearchPool])
   const { data: virtualAccountsData, isLoading: virtualAccountsLoading } = useUserVirtualBankAccounts(userId, 1, 10)
   const { data: linkedBankAccountsData, isLoading: linkedBankAccountsLoading } = useUserLinkedBankAccounts(userId, 1, 10)
   const { data: beneficiariesData, isLoading: beneficiariesLoading } = useUserBeneficiaries(userId, 1, 10)
@@ -130,7 +172,12 @@ export default function UserDetailsPage() {
   }
 
   const handleDeleteUser = async () => {
-    if (confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+    const confirmed = await confirm({
+      title: "Delete this user?",
+      description: "This permanently removes the user, their wallet and their access. This action cannot be undone.",
+      confirmLabel: "Delete user",
+    })
+    if (confirmed) {
       try {
         await deleteUserMutation.mutateAsync(userId)
         toast({
@@ -578,7 +625,7 @@ export default function UserDetailsPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
-                    placeholder="Search reference, description, narration..."
+                    placeholder="Search transaction ID, sender/receiver, amount..."
                     value={txSearchInput}
                     onChange={(e) => setTxSearchInput(e.target.value)}
                     className="pl-9 h-10 text-xs bg-background border-border/40 rounded-xl font-medium w-full"
@@ -639,17 +686,7 @@ export default function UserDetailsPage() {
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
               ) : (() => {
-                const raw = transactionsData?.data?.data || (Array.isArray(transactionsData?.data) ? transactionsData.data : [])
-
-                // Client-side search: match reference, description, narration
-                const q = txFilters.search.toLowerCase().trim()
-                const transactions = q
-                  ? raw.filter((t: any) =>
-                      t.reference?.toLowerCase().includes(q) ||
-                      t.description?.toLowerCase().includes(q) ||
-                      t.narration?.toLowerCase().includes(q)
-                    )
-                  : raw
+                const transactions = visibleTransactions
 
                 const getStatusClass = (status: string) => {
                   const s = status?.toUpperCase()
@@ -708,79 +745,79 @@ export default function UserDetailsPage() {
                   </div>
                 ) : (
                   <div className="text-center py-12">
-                    <p className="text-sm text-muted-foreground font-medium">No transaction history found</p>
+                    <p className="text-sm text-muted-foreground font-medium">
+                      {isTxSearching ? `No transactions match "${txSearchQuery}"` : "No transaction history found"}
+                    </p>
                   </div>
                 )
               })()}
             </CardContent>
-            {transactionsData?.data && transactionsData.data.last_page > 1 && (
-              <div className="p-4 border-t border-border/40 bg-muted/5">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => setTransactionPage(p => Math.max(1, p - 1))}
-                        className={cn("cursor-pointer", transactionPage <= 1 && "pointer-events-none opacity-50")}
-                      />
-                    </PaginationItem>
+            {!transactionsLoading && txTotal > 0 && (
+              <div className="p-4 border-t border-border/40 bg-muted/5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-x-4 gap-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Showing {txFrom}&ndash;{txTo} of {txTotal}
+                    {isTxSearching ? " matches" : ""}
+                  </p>
+                  {isTxSearching && txSearchPool?.truncated && (
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600">
+                      Searched latest {txSearchPool.records.length} records
+                    </p>
+                  )}
+                </div>
 
-                    {/* First Page */}
-                    {transactionPage > 2 && (
-                      <PaginationItem>
-                        <PaginationLink onClick={() => setTransactionPage(1)} className="cursor-pointer">1</PaginationLink>
-                      </PaginationItem>
-                    )}
+                <div className="flex flex-wrap items-center justify-between lg:justify-end gap-4">
+                  <PaginationSelector
+                    value={transactionLimit}
+                    onValueChange={(value) => { setTransactionPage(1); setTransactionLimit(value) }}
+                  />
 
-                    {transactionPage > 3 && (
-                      <PaginationItem>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    )}
+                  {txLastPage > 1 && (
+                    <Pagination className="mx-0 w-auto">
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => setTransactionPage(Math.max(1, txPage - 1))}
+                            className={cn("cursor-pointer", txPage <= 1 && "pointer-events-none opacity-50")}
+                          />
+                        </PaginationItem>
 
-                    {/* Pagination Window */}
-                    {[...Array(transactionsData.data.last_page)].map((_, i) => {
-                      const p = i + 1;
-                      if (
-                        p === 1 ||
-                        p === transactionsData.data.last_page ||
-                        (p >= transactionPage - 1 && p <= transactionPage + 1)
-                      ) {
-                        return (
-                          <PaginationItem key={p}>
-                            <PaginationLink
-                              isActive={p === transactionPage}
-                              onClick={() => setTransactionPage(p)}
-                              className="cursor-pointer"
-                            >
-                              {p}
-                            </PaginationLink>
+                        {txPage > 3 && (
+                          <PaginationItem>
+                            <PaginationEllipsis />
                           </PaginationItem>
-                        )
-                      }
-                      return null;
-                    })}
-                    {/* Show ellipsis between current window and last page */}
-                    {transactionPage < transactionsData.data.last_page - 2 && (
-                      <PaginationItem><PaginationEllipsis /></PaginationItem>
-                    )}
+                        )}
 
-                    {/* Last Page Case is handled by the map above (p === last_page) but we need to ensure no dupes if logic overlaps. 
-                        The map logic: 
-                        if p==1 (handled)
-                        if p==last (handled)
-                        if p in window (handled)
-                        So if last page is 5, window is 3,4,5. 
-                        This logic is fine.
-                    */}
+                        {Array.from({ length: txLastPage }, (_, i) => i + 1)
+                          .filter((p) => p === 1 || p === txLastPage || (p >= txPage - 1 && p <= txPage + 1))
+                          .map((p) => (
+                            <PaginationItem key={p}>
+                              <PaginationLink
+                                isActive={p === txPage}
+                                onClick={() => setTransactionPage(p)}
+                                className="cursor-pointer"
+                              >
+                                {p}
+                              </PaginationLink>
+                            </PaginationItem>
+                          ))}
 
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => setTransactionPage(p => Math.min(transactionsData.data.last_page, p + 1))}
-                        className={cn("cursor-pointer", transactionPage >= transactionsData.data.last_page && "pointer-events-none opacity-50")}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                        {txPage < txLastPage - 2 && (
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        )}
+
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() => setTransactionPage(Math.min(txLastPage, txPage + 1))}
+                            className={cn("cursor-pointer", txPage >= txLastPage && "pointer-events-none opacity-50")}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  )}
+                </div>
               </div>
             )}
           </Card>
@@ -1068,6 +1105,8 @@ export default function UserDetailsPage() {
         transactionId={selectedTransactionId}
         onClose={() => setSelectedTransactionId(null)}
       />
+
+      {confirmDialog}
     </div>
   )
 }

@@ -1,4 +1,11 @@
 import apiClient from "../client"
+import {
+  SEARCH_POOL_MAX_PAGES,
+  SEARCH_POOL_PER_PAGE,
+  fetchPagesInBatches,
+  remainingPages,
+  type SearchPool,
+} from "../search-pool"
 import type {
   ApiResponse,
   PaginatedResponse,
@@ -114,3 +121,38 @@ export const getTopUsersByVolume = async (
     .slice(0, 10)
 }
 
+// ---------------------------------------------------------------------------
+// Client-side search pool
+//
+// The list endpoint's `search` param does not cover the transaction id, the
+// sender/receiver or the amount, so those searches are resolved client-side
+// against a capped pool of records fetched for the non-search filters.
+// ---------------------------------------------------------------------------
+
+export const getAllTransactionsForSearch = async (
+  filters?: {
+    status?: string
+    type?: string
+    start_date?: string
+    end_date?: string
+  },
+  maxPages: number = SEARCH_POOL_MAX_PAGES
+): Promise<SearchPool<TransactionSummary>> => {
+  const first = await getTransactions(1, SEARCH_POOL_PER_PAGE, filters)
+  const firstPage = first.data
+
+  const lastPage = firstPage?.last_page ?? 1
+  const total = firstPage?.total ?? firstPage?.data?.length ?? 0
+  const pagesToFetch = Math.min(lastPage, maxPages)
+
+  const rest = await fetchPagesInBatches(remainingPages(pagesToFetch), async (page) => {
+    const response = await getTransactions(page, SEARCH_POOL_PER_PAGE, filters)
+    return response.data?.data ?? []
+  })
+
+  return {
+    records: [...(firstPage?.data ?? []), ...rest],
+    total,
+    truncated: lastPage > pagesToFetch,
+  }
+}

@@ -5,6 +5,7 @@ import {
   getTransactionReports,
   getTransactionById,
   getTopUsersByVolume,
+  getAllTransactionsForSearch,
 } from "../services/transaction.service"
 
 // Query keys
@@ -17,6 +18,7 @@ export const transactionKeys = {
   statistics: (filters: Record<string, any>) => [...transactionKeys.all, "statistics", { filters }] as const,
   reports: (filters: Record<string, any>) => [...transactionKeys.all, "reports", { filters }] as const,
   topUsers: (year: number) => [...transactionKeys.all, "top-users", year] as const,
+  searchPool: (filters: Record<string, any>) => [...transactionKeys.all, "search-pool", { filters }] as const,
 }
 
 // Get all transactions
@@ -29,11 +31,13 @@ export const useTransactions = (
     search?: string
     start_date?: string
     end_date?: string
-  }
+  },
+  enabled: boolean = true
 ) => {
   return useQuery({
     queryKey: transactionKeys.list({ page, perPage, ...filters }),
     queryFn: () => getTransactions(page, perPage, filters),
+    enabled,
     staleTime: 1000 * 60 * 2, // 2 minutes
   })
 }
@@ -75,3 +79,26 @@ export const useTopUsersByVolume = (year: number, start_date?: string, end_date?
   })
 }
 
+
+/**
+ * Pool of transactions used to resolve searches client-side.
+ *
+ * Keyed on the non-search filters only, so typing in the search box filters a
+ * cached pool instead of refetching. Disabled until a search is active.
+ */
+export const useTransactionSearchPool = (
+  filters: {
+    status?: string
+    type?: string
+    start_date?: string
+    end_date?: string
+  },
+  enabled: boolean
+) => {
+  return useQuery({
+    queryKey: transactionKeys.searchPool(filters),
+    queryFn: () => getAllTransactionsForSearch(filters),
+    enabled,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  })
+}

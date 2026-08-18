@@ -15,7 +15,8 @@ import {
   getUserLinkedBankAccounts,
   suspendUser,
   activateUser,
-  updateWalletBalance
+  updateWalletBalance,
+  getAllUserTransactionsForSearch
 } from "../services/user.service"
 import type { CreateUserPayload } from "../types"
 import { useToast } from "@/hooks/use-toast"
@@ -29,6 +30,8 @@ export const userKeys = {
   detail: (id: string) => [...userKeys.details(), id] as const,
   stats: () => [...userKeys.all, "stats"] as const,
   transactions: (id: string) => [...userKeys.detail(id), "transactions"] as const,
+  transactionSearchPool: (id: string, filters: Record<string, any>) =>
+    [...userKeys.detail(id), "transactions", "search-pool", { filters }] as const,
   virtualBankAccounts: (id: string) => [...userKeys.detail(id), "virtual-bank-accounts"] as const,
   linkedAccounts: (id: string) => [...userKeys.detail(id), "linked-accounts"] as const,
   wallet: (id: string) => [...userKeys.detail(id), "wallet"] as const,
@@ -53,11 +56,13 @@ export const useUsers = (
     email_verified?: string | number | boolean
     start_date?: string
     end_date?: string
-  }
+  },
+  enabled: boolean = true
 ) => {
   return useQuery({
     queryKey: userKeys.list({ page, perPage, ...filters }),
     queryFn: () => getUsers(page, perPage, filters),
+    enabled,
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
 }
@@ -315,5 +320,29 @@ export const useUpdateWalletBalance = (userId: string) => {
         variant: "destructive",
       })
     },
+  })
+}
+
+/**
+ * Pool of a user's transactions used to resolve history searches client-side.
+ *
+ * Keyed on the non-search filters only, so typing filters a cached pool rather
+ * than refetching. Disabled until a search is active.
+ */
+export const useUserTransactionSearchPool = (
+  id: string | null,
+  filters: {
+    status?: string
+    type?: string
+    start_date?: string
+    end_date?: string
+  },
+  enabled: boolean
+) => {
+  return useQuery({
+    queryKey: userKeys.transactionSearchPool(id || "", filters),
+    queryFn: () => getAllUserTransactionsForSearch(id!, filters),
+    enabled: !!id && enabled,
+    staleTime: 1000 * 60 * 2, // 2 minutes
   })
 }

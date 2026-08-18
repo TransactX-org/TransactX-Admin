@@ -55,7 +55,9 @@ apiClient.interceptors.response.use(
           if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
             localStorage.removeItem("auth_token")
             localStorage.removeItem("user")
-            window.location.href = "/login"
+            // Preserve the current page so login can return them there.
+            const next = encodeURIComponent(window.location.pathname)
+            window.location.href = `/login?next=${next}`
           }
           break
         case 403:

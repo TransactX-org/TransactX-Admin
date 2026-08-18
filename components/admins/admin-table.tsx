@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input"
 import { useDeleteAdmin } from "@/lib/api/hooks/use-admins"
 import { UpdatePermissionsDialog } from "./update-permissions-dialog"
 import { parsePermissions } from "@/lib/utils"
+import { useConfirm } from "@/components/ui/confirm-dialog"
 
 interface AdminTableProps {
     admins: Admin[]
@@ -33,6 +34,7 @@ export function AdminTable({ admins, isLoading, pagination, page, onPageChange }
     const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null)
     const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false)
     const deleteAdminMutation = useDeleteAdmin()
+    const { confirm, confirmDialog } = useConfirm()
 
     const filteredAdmins = admins.filter(admin =>
         admin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -40,7 +42,12 @@ export function AdminTable({ admins, isLoading, pagination, page, onPageChange }
     )
 
     const handleDelete = async (admin: Admin) => {
-        if (confirm(`Are you sure you want to delete admin ${admin.name}?`)) {
+        const confirmed = await confirm({
+            title: `Delete admin ${admin.name}?`,
+            description: "This permanently revokes their access to the dashboard. This action cannot be undone.",
+            confirmLabel: "Delete admin",
+        })
+        if (confirmed) {
             await deleteAdminMutation.mutateAsync(admin.id)
         }
     }
@@ -336,6 +343,8 @@ export function AdminTable({ admins, isLoading, pagination, page, onPageChange }
                     }}
                 />
             )}
+
+            {confirmDialog}
         </Card>
     )
 }

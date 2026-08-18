@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import { useConfirm } from "@/components/ui/confirm-dialog"
+import { parsePermissions } from "@/lib/utils"
 
 const ALL_PERMISSIONS = [
     "wallet-management",
@@ -37,15 +39,17 @@ export function AdminManagement() {
     const { data, isLoading, error } = useAdmin(adminId)
     const updateRoleMutation = useUpdateAdminRole()
     const deleteAdminMutation = useDeleteAdmin()
+    const { confirm, confirmDialog } = useConfirm()
 
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
     const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
 
     const admin = data?.data?.admin
+    const adminPermissions = parsePermissions(admin?.permissions)
 
     const handleEditOpen = () => {
         if (admin) {
-            setSelectedPermissions(admin.permissions)
+            setSelectedPermissions(parsePermissions(admin.permissions))
             setIsEditDialogOpen(true)
         }
     }
@@ -65,7 +69,12 @@ export function AdminManagement() {
 
     const handleDeleteAdmin = async () => {
         if (!admin) return
-        if (confirm(`Are you sure you want to delete admin ${admin.name}?`)) {
+        const confirmed = await confirm({
+            title: `Delete admin ${admin.name}?`,
+            description: "This permanently revokes their access to the dashboard. This action cannot be undone.",
+            confirmLabel: "Delete admin",
+        })
+        if (confirmed) {
             await deleteAdminMutation.mutateAsync(admin.id)
         }
     }
@@ -152,8 +161,8 @@ export function AdminManagement() {
                                         Assigned Permissions
                                     </h4>
                                     <div className="flex flex-wrap gap-2">
-                                        {admin.permissions.length > 0 ? (
-                                            admin.permissions.map((p) => (
+                                        {adminPermissions.length > 0 ? (
+                                            adminPermissions.map((p: string) => (
                                                 <Badge key={p} variant="secondary" className="px-3 py-1 rounded-lg bg-muted/30 border border-border/10 text-[10px] font-bold uppercase tracking-tight">
                                                     {p.replace("-", " ")}
                                                 </Badge>
@@ -172,11 +181,11 @@ export function AdminManagement() {
                                     <div className="flex flex-wrap gap-4 px-1">
                                         <div className="space-y-0.5">
                                             <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Created</p>
-                                            <p className="text-[10px] font-bold">{new Date(admin.created_at).toLocaleDateString()}</p>
+                                            <p className="text-[10px] font-bold">{admin.created_at ? new Date(admin.created_at).toLocaleDateString() : "—"}</p>
                                         </div>
                                         <div className="space-y-0.5">
                                             <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Last Updated</p>
-                                            <p className="text-[10px] font-bold">{new Date(admin.updated_at).toLocaleDateString()}</p>
+                                            <p className="text-[10px] font-bold">{admin.updated_at ? new Date(admin.updated_at).toLocaleDateString() : "—"}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -225,6 +234,8 @@ export function AdminManagement() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {confirmDialog}
         </div>
     )
 }

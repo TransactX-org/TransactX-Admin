@@ -561,8 +561,8 @@ export function CreateNewsletterDialog({
                                             <p className="text-xs font-semibold text-foreground">Add customer details</p>
                                             <p className="text-[11px] text-muted-foreground leading-relaxed">
                                                 Click a button below to drop it into your message. When the newsletter is sent,
-                                                it is automatically swapped with each customer's real details — e.g.{" "}
-                                                <span className="font-mono">{"{{first_name}}"}</span> becomes "Ada".
+                                                it is automatically swapped with each customer&apos;s real details — e.g.{" "}
+                                                <span className="font-mono">{"{{first_name}}"}</span> becomes &ldquo;Ada&rdquo;.
                                             </p>
                                             <div className="flex flex-wrap gap-2">
                                                 {personalizationTags.map((tag) => (

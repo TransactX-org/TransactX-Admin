@@ -58,7 +58,8 @@ export function AirtimeManagement() {
     }
   }
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount?: number) => {
+    if (amount === null || amount === undefined) return "N/A"
     return `₦${amount.toLocaleString()}`
   }
 
@@ -330,7 +331,7 @@ export function AirtimeManagement() {
                       <TableCell className="text-xs sm:text-sm">{transaction.phoneNumber}</TableCell>
                       <TableCell className="text-xs sm:text-sm">{transaction.network}</TableCell>
                       <TableCell className="font-semibold text-xs sm:text-sm">
-                        {transaction.amount ? formatCurrency(transaction.amount) : "N/A"}
+                        {formatCurrency(transaction.amount)}
                       </TableCell>
                       <TableCell>
                         <Badge variant={getStatusBadgeVariant(transaction.status)} className="text-xs">

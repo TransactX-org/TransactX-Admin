@@ -2,6 +2,7 @@ import type React from "react"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { Header } from "@/components/dashboard/header"
 import { SidebarProvider } from "@/contexts/sidebar-context"
+import { AuthGuard } from "@/components/auth/auth-guard"
 
 export default function DashboardLayout({
   children,
@@ -9,18 +10,20 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <SidebarProvider>
-      <div className="flex h-screen overflow-hidden bg-background">
-        <Sidebar />
+    <AuthGuard>
+      <SidebarProvider>
+        <div className="flex h-screen overflow-hidden bg-background">
+          <Sidebar />
 
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header />
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <Header />
 
-          <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-            <div className="w-full">{children}</div>
-          </main>
+            <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+              <div className="w-full">{children}</div>
+            </main>
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </AuthGuard>
   )
 }

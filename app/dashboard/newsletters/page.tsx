@@ -20,6 +20,7 @@ import { useNewsletters, useDeleteNewsletter } from "@/lib/api/hooks/use-newslet
 import { Newsletter } from "@/lib/api/services/newsletter.service"
 import { cn } from "@/lib/utils"
 import { toPlainText } from "@/lib/newsletter-content"
+import { useConfirm } from "@/components/ui/confirm-dialog"
 
 export default function NewslettersPage() {
     const [page, setPage] = useState(1)
@@ -30,6 +31,7 @@ export default function NewslettersPage() {
 
     const { data, isLoading } = useNewsletters(page, 100)
     const deleteNewsletter = useDeleteNewsletter()
+    const { confirm, confirmDialog } = useConfirm()
 
     const newsletters = data?.data?.newsletters || []
 
@@ -49,8 +51,13 @@ export default function NewslettersPage() {
         setIsDetailsOpen(true)
     }
 
-    const handleDelete = (id: string) => {
-        if (confirm("Are you sure you want to delete this newsletter?")) {
+    const handleDelete = async (id: string) => {
+        const confirmed = await confirm({
+            title: "Delete this newsletter?",
+            description: "This permanently removes the newsletter and its content. This action cannot be undone.",
+            confirmLabel: "Delete newsletter",
+        })
+        if (confirmed) {
             deleteNewsletter.mutate(id)
         }
     }
@@ -222,6 +229,8 @@ export default function NewslettersPage() {
                 onOpenChange={setIsDetailsOpen}
                 newsletter={selectedNewsletter}
             />
+
+            {confirmDialog}
         </div>
     )
 }

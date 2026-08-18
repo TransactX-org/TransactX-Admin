@@ -1,17 +1,18 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Eye, ChevronLeft, ChevronRight, Loader2, CreditCard } from "lucide-react"
+import { Eye, ChevronLeft, ChevronRight, Loader2, CreditCard, AlertCircle } from "lucide-react"
 import { TransactionDetailsModal } from "./transaction-details-modal"
-import { useTransactions } from "@/lib/api/hooks/use-transactions"
+import { useTransactions, useTransactionSearchPool } from "@/lib/api/hooks/use-transactions"
 import { format } from "date-fns"
 import { PaginationSelector } from "@/components/ui/pagination-selector"
+import { matchesSearch } from "@/lib/search"
 
 interface TransactionsTableProps {
   filters: {
@@ -29,18 +30,48 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [perPage, setPerPage] = useState(15)
 
-  // Map empty filters to undefined for API
+  const searchQuery = filters.search.trim()
+  const isSearching = searchQuery.length > 0
+
+  // Map empty filters to undefined for API. `search` is deliberately omitted:
+  // the endpoint does not match on transaction id, sender/receiver or amount,
+  // so searching is done client-side over a cached pool of records instead.
   const apiFilters = {
-    search: filters.search || undefined,
     status: (filters.status === "all" || !filters.status) ? undefined : filters.status,
     type: (filters.type === "all" || !filters.type) ? undefined : filters.type,
     start_date: filters.start_date || undefined,
     end_date: filters.end_date || undefined,
   }
 
-  const { data, isLoading } = useTransactions(currentPage, perPage, apiFilters)
-  const transactions = data?.data?.data || []
-  const pagination = data?.data || null
+  const { data, isLoading: listLoading, error: listError } = useTransactions(currentPage, perPage, apiFilters, !isSearching)
+  const { data: searchPool, isLoading: poolLoading, error: poolError } = useTransactionSearchPool(apiFilters, isSearching)
+
+  // Any filter change invalidates the current page number.
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filters.search, filters.status, filters.type, filters.start_date, filters.end_date, perPage])
+
+  const searchResults = useMemo(() => {
+    if (!isSearching) return null
+    return (searchPool?.records ?? []).filter((t) =>
+      matchesSearch(searchQuery, {
+        text: [t.transactionId, t.user, t.type, t.status],
+        amounts: [t.amount],
+      })
+    )
+  }, [isSearching, searchPool, searchQuery])
+
+  const isLoading = isSearching ? poolLoading : listLoading
+  const error = isSearching ? poolError : listError
+  const totalRecords = isSearching ? (searchResults?.length ?? 0) : (data?.data?.total ?? 0)
+  const lastPage = isSearching
+    ? Math.max(1, Math.ceil(totalRecords / perPage))
+    : (data?.data?.last_page ?? 1)
+  const page = Math.min(currentPage, lastPage)
+  const transactions = isSearching
+    ? (searchResults ?? []).slice((page - 1) * perPage, page * perPage)
+    : (data?.data?.data ?? [])
+  const hasResults = !error && (isSearching ? true : !!data?.data)
 
   const toggleRowSelection = (id: string) => {
     setSelectedRows((prev) => (prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]))
@@ -91,7 +122,13 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
       <div className="space-y-4">
         <div className="flex items-center justify-between px-1">
           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 font-mono">
-            {isLoading ? "Fetching records..." : `Total Records: ${pagination?.total || 0}`}
+            {isLoading
+              ? "Fetching records..."
+              : error
+                ? "Could not load records"
+                : isSearching
+                ? `${totalRecords} Match${totalRecords === 1 ? "" : "es"}${searchPool?.truncated ? ` in latest ${searchPool.records.length}` : ""}`
+                : `Total Records: ${totalRecords}`}
           </p>
           {selectedRows.length > 0 && (
             <Button variant="outline" size="sm" className="h-7 rounded-lg text-[9px] font-black uppercase tracking-widest border-primary/20 bg-primary/5 text-primary">
@@ -134,12 +171,23 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
                         </TableCell>
                       </TableRow>
                     ))
+                  ) : error ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="h-32 text-center">
+                        <div className="flex flex-col items-center gap-2 text-destructive">
+                          <AlertCircle className="h-8 w-8" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Failed to load transactions</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
                   ) : transactions.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={8} className="h-32 text-center">
                         <div className="flex flex-col items-center gap-2 opacity-40">
                           <CreditCard className="h-8 w-8" />
-                          <span className="text-[10px] font-black uppercase tracking-widest">No transactions found</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest">
+                            {isSearching ? `No transactions match "${searchQuery}"` : "No transactions found"}
+                          </span>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -199,6 +247,18 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
                 Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="p-5 h-28 rounded-2xl bg-card border border-border/40 animate-pulse" />
                 ))
+              ) : error ? (
+                <div className="flex flex-col items-center gap-2 py-12 text-destructive">
+                  <AlertCircle className="h-8 w-8" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Failed to load transactions</span>
+                </div>
+              ) : transactions.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 py-12 opacity-40">
+                  <CreditCard className="h-8 w-8" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-center px-4">
+                    {isSearching ? `No transactions match "${searchQuery}"` : "No transactions found"}
+                  </span>
+                </div>
               ) : transactions.map((transaction) => {
                 const statusConfig = getStatusConfig(transaction.status)
                 const isSelected = selectedRows.includes(transaction.transactionId)
@@ -265,10 +325,10 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
           </CardContent>
         </Card>
 
-        {pagination && (
-          <div className="flex items-center justify-between px-1 py-2">
+        {hasResults && (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-1 py-2">
             <p className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-widest">
-              Page {pagination.current_page} <span className="mx-1 opacity-20">/</span> {pagination.last_page}
+              Page {page} <span className="mx-1 opacity-20">/</span> {lastPage}
             </p>
             <div className="flex items-center gap-4">
               <PaginationSelector value={perPage} onValueChange={setPerPage} />
@@ -277,8 +337,8 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={pagination.current_page === 1}
-                  onClick={() => setCurrentPage(p => p - 1)}
+                  disabled={page <= 1}
+                  onClick={() => setCurrentPage(page - 1)}
                   className="h-8 w-8 p-0 rounded-xl border-border/40"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -286,8 +346,8 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={pagination.current_page === pagination.last_page}
-                  onClick={() => setCurrentPage(p => p + 1)}
+                  disabled={page >= lastPage}
+                  onClick={() => setCurrentPage(page + 1)}
                   className="h-8 w-8 p-0 rounded-xl border-border/40"
                 >
                   <ChevronRight className="h-4 w-4" />

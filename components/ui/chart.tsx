@@ -104,6 +104,21 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip
 
+/**
+ * The payload entry shape recharts hands to a custom tooltip/legend renderer.
+ * Declared locally because recharts 3.x stopped exposing it on the public
+ * Tooltip/Legend prop types.
+ */
+type ChartPayloadItem = {
+  name?: string | number
+  dataKey?: string | number
+  value?: unknown
+  color?: string
+  fill?: string
+  payload?: Record<string, any>
+  [key: string]: any
+}
+
 function ChartTooltipContent({
   active,
   payload,
@@ -118,14 +133,26 @@ function ChartTooltipContent({
   color,
   nameKey,
   labelKey,
-}: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-  React.ComponentProps<'div'> & {
-    hideLabel?: boolean
-    hideIndicator?: boolean
-    indicator?: 'line' | 'dot' | 'dashed'
-    nameKey?: string
-    labelKey?: string
-  }) {
+}: Omit<React.ComponentProps<'div'>, 'color'> & {
+  active?: boolean
+  payload?: ChartPayloadItem[]
+  label?: any
+  labelFormatter?: (label: any, payload: ChartPayloadItem[]) => React.ReactNode
+  formatter?: (
+    value: any,
+    name: any,
+    item: ChartPayloadItem,
+    index: number,
+    payload: any,
+  ) => React.ReactNode
+  color?: string
+  labelClassName?: string
+  hideLabel?: boolean
+  hideIndicator?: boolean
+  indicator?: 'line' | 'dot' | 'dashed'
+  nameKey?: string
+  labelKey?: string
+}) {
   const { config } = useChart()
 
   const tooltipLabel = React.useMemo(() => {
@@ -182,7 +209,7 @@ function ChartTooltipContent({
         {payload.map((item, index) => {
           const key = `${nameKey || item.name || item.dataKey || 'value'}`
           const itemConfig = getPayloadConfigFromPayload(config, item, key)
-          const indicatorColor = color || item.payload.fill || item.color
+          const indicatorColor = color || item.payload?.fill || item.color
 
           return (
             <div
@@ -232,7 +259,7 @@ function ChartTooltipContent({
                         {itemConfig?.label || item.name}
                       </span>
                     </div>
-                    {item.value && (
+                    {(typeof item.value === "number" || typeof item.value === "string") && (
                       <span className="text-foreground font-mono font-medium tabular-nums">
                         {item.value.toLocaleString()}
                       </span>
@@ -256,11 +283,12 @@ function ChartLegendContent({
   payload,
   verticalAlign = 'bottom',
   nameKey,
-}: React.ComponentProps<'div'> &
-  Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign'> & {
-    hideIcon?: boolean
-    nameKey?: string
-  }) {
+}: React.ComponentProps<'div'> & {
+  payload?: ChartPayloadItem[]
+  verticalAlign?: 'top' | 'middle' | 'bottom'
+  hideIcon?: boolean
+  nameKey?: string
+}) {
   const { config } = useChart()
 
   if (!payload?.length) {
@@ -281,7 +309,7 @@ function ChartLegendContent({
 
         return (
           <div
-            key={item.value}
+            key={String(item.value ?? key)}
             className={
               '[&>svg]:text-muted-foreground flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3'
             }
