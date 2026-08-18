@@ -11,6 +11,7 @@ import { format } from "date-fns"
 import { startOfDay, endOfDay } from "date-fns"
 import { getAllTransactionsForSearch } from "@/lib/api/services/transaction.service"
 import { matchesSearch } from "@/lib/search"
+import { TRANSACTION_STATUSES } from "@/lib/transaction-status"
 import { exportToCSV } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
@@ -37,14 +38,6 @@ const TRANSACTION_TYPES = [
   "UTILITY",
   "TRANSACTION_SYNC",
   "SUBSCRIPTION",
-]
-
-const TRANSACTION_STATUSES = [
-  "SUCCESSFUL",
-  "FAILED",
-  "PENDING",
-  "PROCESSING",
-  "REVERSED",
 ]
 
 export function TransactionsFilters({ filters, onFilterChange }: TransactionsFiltersProps) {

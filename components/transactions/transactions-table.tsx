@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Eye, ChevronLeft, ChevronRight, Loader2, CreditCard, AlertCircle } from "lucide-react"
+import { Eye, ChevronLeft, ChevronRight, Loader2, CreditCard, AlertCircle, PencilLine } from "lucide-react"
 import { TransactionDetailsModal } from "./transaction-details-modal"
 import { useTransactions, useTransactionSearchPool } from "@/lib/api/hooks/use-transactions"
 import { format } from "date-fns"
 import { PaginationSelector } from "@/components/ui/pagination-selector"
 import { matchesSearch } from "@/lib/search"
+import { UpdateTransactionStatusDialog } from "./update-transaction-status-dialog"
+import { useCurrentUser } from "@/lib/api/hooks/use-auth"
 
 interface TransactionsTableProps {
   filters: {
@@ -27,8 +29,13 @@ interface TransactionsTableProps {
 export function TransactionsTable({ filters }: TransactionsTableProps) {
   const [selectedRows, setSelectedRows] = useState<string[]>([])
   const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null)
+  const [statusTarget, setStatusTarget] = useState<{ id: string; status: string } | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [perPage, setPerPage] = useState(15)
+
+  // Changing a transaction's status is restricted to super admins.
+  const currentUser = useCurrentUser()
+  const canUpdateStatus = currentUser?.is_super_admin === true
 
   const searchQuery = filters.search.trim()
   const isSearching = searchQuery.length > 0
@@ -226,14 +233,30 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
                           {formatDate(transaction.date)}
                         </TableCell>
                         <TableCell className="text-right px-6 py-4">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-xl hover:bg-primary/10 hover:text-primary transition-all group-hover:scale-110"
-                            onClick={() => setSelectedTransactionId(transaction.transactionId)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center justify-end gap-1">
+                            {canUpdateStatus && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Update status"
+                                className="h-8 w-8 rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
+                                onClick={() => setStatusTarget({ id: transaction.transactionId, status: transaction.status })}
+                              >
+                                <PencilLine className="h-4 w-4" />
+                                <span className="sr-only">Update status</span>
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="View details"
+                              className="h-8 w-8 rounded-xl hover:bg-primary/10 hover:text-primary transition-all group-hover:scale-110"
+                              onClick={() => setSelectedTransactionId(transaction.transactionId)}
+                            >
+                              <Eye className="h-4 w-4" />
+                              <span className="sr-only">View details</span>
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     )
@@ -312,9 +335,25 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
                         <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/10">
                           <p className="text-base font-black tracking-tight">{formatCurrency(transaction.amount)}</p>
 
-                          <Button variant="ghost" size="sm" className="h-7 text-xs font-semibold pr-0 hover:bg-transparent hover:text-primary">
-                            View Details <ChevronRight className="ml-1 h-3.5 w-3.5" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            {canUpdateStatus && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-xs font-semibold hover:bg-transparent hover:text-primary"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setStatusTarget({ id: transaction.transactionId, status: transaction.status })
+                                }}
+                              >
+                                <PencilLine className="h-3.5 w-3.5" />
+                                <span className="sr-only">Update status</span>
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="sm" className="h-7 text-xs font-semibold pr-0 hover:bg-transparent hover:text-primary">
+                              View Details <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -361,6 +400,12 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
       <TransactionDetailsModal
         transactionId={selectedTransactionId}
         onClose={() => setSelectedTransactionId(null)}
+      />
+
+      <UpdateTransactionStatusDialog
+        transactionId={statusTarget?.id ?? null}
+        currentStatus={statusTarget?.status}
+        onClose={() => setStatusTarget(null)}
       />
     </>
   )

@@ -30,6 +30,16 @@ function DialogClose({
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 }
 
+/**
+ * Stacking scale (portaled layers all land on document.body, so z-index — not
+ * DOM order — decides what wins):
+ *   500  modal surfaces: Dialog, Sheet, AlertDialog, Drawer
+ *   600  floating layers that can open *inside* a modal: Select, Popover,
+ *        DropdownMenu, Tooltip, ContextMenu, Menubar, HoverCard
+ *  1000  Toast
+ * Keep floating layers above modal surfaces or their content opens behind the
+ * overlay and reads as an unresponsive control.
+ */
 function DialogOverlay({
   className,
   ...props

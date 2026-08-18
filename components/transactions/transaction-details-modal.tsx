@@ -4,8 +4,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { CheckCircle2, XCircle, Clock, Download, Loader2, User, ArrowRightLeft, Cpu, Activity, Info, AlertCircle, RefreshCw } from "lucide-react"
+import { CheckCircle2, XCircle, Clock, Download, Loader2, User, ArrowRightLeft, Cpu, Activity, Info, AlertCircle, RefreshCw, PencilLine } from "lucide-react"
+import { useState } from "react"
 import { useTransaction } from "@/lib/api/hooks/use-transactions"
+import { useCurrentUser } from "@/lib/api/hooks/use-auth"
+import { UpdateTransactionStatusDialog } from "./update-transaction-status-dialog"
 import { cn } from "@/lib/utils"
 
 interface TransactionDetailsModalProps {
@@ -16,6 +19,10 @@ interface TransactionDetailsModalProps {
 export function TransactionDetailsModal({ transactionId, onClose }: TransactionDetailsModalProps) {
   const { data: response, isLoading, error, refetch } = useTransaction(transactionId)
   const transaction = response?.data
+
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+  const currentUser = useCurrentUser()
+  const canUpdateStatus = currentUser?.is_super_admin === true
 
   const getStatusConfig = (status?: string) => {
     const s = status?.toUpperCase() || ""
@@ -58,6 +65,7 @@ export function TransactionDetailsModal({ transactionId, onClose }: TransactionD
   const statusConfig = getStatusConfig(transaction?.status)
 
   return (
+    <>
     <Dialog open={!!transactionId} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-3xl border-border/40 bg-card/95 backdrop-blur-xl">
         <DialogHeader className="p-6 pb-0">
@@ -204,11 +212,25 @@ export function TransactionDetailsModal({ transactionId, onClose }: TransactionD
             <Download className="h-4 w-4 mr-2" />
             Export Log
           </Button>
-          <Button className="flex-1 rounded-2xl h-12 tx-bg-primary font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20">
-            Audit Finalized
-          </Button>
+          {canUpdateStatus && (
+            <Button
+              onClick={() => setIsUpdatingStatus(true)}
+              disabled={!transaction}
+              className="flex-1 rounded-2xl h-12 tx-bg-primary font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20"
+            >
+              <PencilLine className="h-4 w-4 mr-2" />
+              Update Status
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
+
+    <UpdateTransactionStatusDialog
+      transactionId={isUpdatingStatus ? transactionId : null}
+      currentStatus={transaction?.status}
+      onClose={() => setIsUpdatingStatus(false)}
+    />
+    </>
   )
 }

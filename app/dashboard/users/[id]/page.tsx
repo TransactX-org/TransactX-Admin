@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, Activity, Loader2, Edit, Ban, Trash2, CreditCard, Link as LinkIcon, Wallet as WalletIcon, MoreHorizontal, ShieldCheck, ChevronLeft, ChevronRight, Eye, Search, RefreshCw, Filter } from "lucide-react"
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, Activity, Loader2, Edit, Ban, Trash2, CreditCard, Link as LinkIcon, Wallet as WalletIcon, MoreHorizontal, ShieldCheck, ChevronLeft, ChevronRight, Eye, Search, RefreshCw, Filter, PencilLine } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
@@ -43,8 +43,10 @@ import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TransactionDetailsModal } from "@/components/transactions/transaction-details-modal"
+import { UpdateTransactionStatusDialog } from "@/components/transactions/update-transaction-status-dialog"
 import { PaginationSelector } from "@/components/ui/pagination-selector"
 import { matchesSearch } from "@/lib/search"
+import { TRANSACTION_STATUSES } from "@/lib/transaction-status"
 import { useConfirm } from "@/components/ui/confirm-dialog"
 
 export default function UserDetailsPage() {
@@ -61,6 +63,7 @@ export default function UserDetailsPage() {
   // Fetch additional data
   const [transactionPage, setTransactionPage] = useState(1)
   const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null)
+  const [statusTarget, setStatusTarget] = useState<{ id: string; status: string } | null>(null)
   const [transactionLimit, setTransactionLimit] = useState(20)
   const [txFilters, setTxFilters] = useState({ search: "", status: "", type: "", start_date: "", end_date: "" })
   const [txSearchInput, setTxSearchInput] = useState("")
@@ -644,7 +647,7 @@ export default function UserDetailsPage() {
                     </SelectTrigger>
                     <SelectContent className="rounded-xl border-border/40">
                       <SelectItem value="all" className="text-[10px] font-bold uppercase">All Status</SelectItem>
-                      {["SUCCESSFUL","FAILED","PENDING","PROCESSING","REVERSED"].map(s => (
+                      {TRANSACTION_STATUSES.map(s => (
                         <SelectItem key={s} value={s} className="text-[10px] font-bold uppercase">{s.replace(/_/g, " ")}</SelectItem>
                       ))}
                     </SelectContent>
@@ -705,7 +708,7 @@ export default function UserDetailsPage() {
                           <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Amount</TableHead>
                           <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Status</TableHead>
                           <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Date</TableHead>
-                          <TableHead className="py-4 w-10" />
+                          <TableHead className="py-4 w-10 text-right" />
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -729,14 +732,30 @@ export default function UserDetailsPage() {
                             </TableCell>
                             <TableCell className="text-[10px] font-bold text-muted-foreground">{formatDate(transaction.created_at)}</TableCell>
                             <TableCell>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 hover:bg-primary/10"
-                                onClick={(e) => { e.stopPropagation(); setSelectedTransactionId(transaction.reference) }}
-                              >
-                                <Eye className="h-4 w-4 text-muted-foreground" />
-                              </Button>
+                              <div className="flex items-center justify-end gap-1">
+                                {isSuperAdmin && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    title="Update status"
+                                    className="h-8 w-8 hover:bg-primary/10"
+                                    onClick={(e) => { e.stopPropagation(); setStatusTarget({ id: transaction.reference, status: transaction.status }) }}
+                                  >
+                                    <PencilLine className="h-4 w-4 text-muted-foreground" />
+                                    <span className="sr-only">Update status</span>
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  title="View details"
+                                  className="h-8 w-8 hover:bg-primary/10"
+                                  onClick={(e) => { e.stopPropagation(); setSelectedTransactionId(transaction.reference) }}
+                                >
+                                  <Eye className="h-4 w-4 text-muted-foreground" />
+                                  <span className="sr-only">View details</span>
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -1104,6 +1123,12 @@ export default function UserDetailsPage() {
       <TransactionDetailsModal
         transactionId={selectedTransactionId}
         onClose={() => setSelectedTransactionId(null)}
+      />
+
+      <UpdateTransactionStatusDialog
+        transactionId={statusTarget?.id ?? null}
+        currentStatus={statusTarget?.status}
+        onClose={() => setStatusTarget(null)}
       />
 
       {confirmDialog}

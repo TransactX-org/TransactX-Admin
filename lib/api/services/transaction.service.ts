@@ -1,4 +1,5 @@
 import apiClient from "../client"
+import type { TransactionStatus } from "../../transaction-status"
 import {
   SEARCH_POOL_MAX_PAGES,
   SEARCH_POOL_PER_PAGE,
@@ -41,6 +42,20 @@ export const getTransactions = async (
 // Get single transaction
 export const getTransactionById = async (id: string): Promise<ApiResponse<TransactionDetail>> => {
   const response = await apiClient.get<ApiResponse<TransactionDetail>>(`/admin/transactions/${id}`)
+  return response.data
+}
+
+// Update a transaction's status.
+// The API takes the new status as a query param rather than a body.
+export const updateTransactionStatus = async (
+  id: string,
+  status: TransactionStatus
+): Promise<ApiResponse<TransactionDetail>> => {
+  const response = await apiClient.put<ApiResponse<TransactionDetail>>(
+    `/admin/transactions/${id}/status`,
+    undefined,
+    { params: { status } }
+  )
   return response.data
 }
 

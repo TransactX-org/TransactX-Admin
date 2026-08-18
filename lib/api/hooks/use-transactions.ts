@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query"
 import {
   getTransactions,
   getTransactionStatistics,
@@ -6,7 +6,12 @@ import {
   getTransactionById,
   getTopUsersByVolume,
   getAllTransactionsForSearch,
+  updateTransactionStatus,
 } from "../services/transaction.service"
+import { userKeys } from "./use-users"
+import { withUpdatedStatus } from "../transaction-cache"
+import type { TransactionStatus } from "@/lib/transaction-status"
+import { useToast } from "@/hooks/use-toast"
 
 // Query keys
 export const transactionKeys = {
@@ -100,5 +105,52 @@ export const useTransactionSearchPool = (
     queryFn: () => getAllTransactionsForSearch(filters),
     enabled,
     staleTime: 1000 * 60 * 2, // 2 minutes
+  })
+}
+
+const patchStatusInCache = (queryClient: QueryClient, id: string, status: string) => {
+  const patch = (old: any) => withUpdatedStatus(old, id, status)
+  queryClient.setQueriesData({ queryKey: transactionKeys.all }, patch)
+  queryClient.setQueriesData({ queryKey: userKeys.all }, patch)
+}
+
+/**
+ * Update a transaction's status.
+ *
+ * The server is the authority on the resulting status — it may store something
+ * other than what was requested (marking a debit FAILED can land the record in
+ * REVERSED, for instance), so the response is what gets written to the cache
+ * and reported, not the requested value.
+ */
+export const useUpdateTransactionStatus = () => {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: TransactionStatus }) =>
+      updateTransactionStatus(id, status),
+    onSuccess: (response, { id, status }) => {
+      const serverStatus = (response?.data?.status || status).toUpperCase()
+
+      // Reflect the change straight away, then reconcile in the background.
+      patchStatusInCache(queryClient, id, serverStatus)
+      queryClient.invalidateQueries({ queryKey: transactionKeys.all })
+      queryClient.invalidateQueries({ queryKey: userKeys.all })
+
+      toast({
+        title: "Status updated",
+        description:
+          serverStatus === status
+            ? `Transaction marked as ${status}.`
+            : `Requested ${status} — the server recorded this transaction as ${serverStatus}.`,
+      })
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update failed",
+        description: error.response?.data?.message || "Could not update the transaction status.",
+        variant: "destructive",
+      })
+    },
   })
 }
