@@ -15,14 +15,41 @@
 /** How far to descend before giving up. Real payloads nest two, maybe three deep. */
 const MAX_DEPTH = 4
 
-/** Money arrives as a number or as a decimal string ("1500.00"); both count. */
+/**
+ * Money arrives in three shapes across these endpoints: a raw number (1500), a
+ * plain decimal string ("1500.00"), or a display-formatted string carrying
+ * thousands separators ("121,711.05"). `Number()` yields NaN for the last of
+ * those, which would blank the column, so separators are resolved first.
+ */
 const toAmount = (value: unknown): number | null => {
   if (typeof value === "number") return Number.isFinite(value) ? value : null
-  if (typeof value === "string" && value.trim() !== "") {
-    const parsed = Number(value)
-    return Number.isFinite(parsed) ? parsed : null
+  if (typeof value !== "string") return null
+
+  // Drop currency symbols and whitespace; keep digits, separators and sign.
+  const cleaned = value.replace(/[^\d.,-]/g, "")
+  if (cleaned === "" || cleaned === "-") return null
+
+  const lastComma = cleaned.lastIndexOf(",")
+  const lastDot = cleaned.lastIndexOf(".")
+
+  let normalized: string
+  if (lastComma !== -1 && lastDot !== -1) {
+    // Both present: whichever appears last is the decimal separator.
+    normalized =
+      lastComma > lastDot
+        ? cleaned.replace(/\./g, "").replace(",", ".")
+        : cleaned.replace(/,/g, "")
+  } else if (lastComma !== -1) {
+    // Comma alone is either thousands grouping ("1,000") or a decimal ("1,05").
+    normalized = /^-?\d{1,3}(,\d{3})+$/.test(cleaned)
+      ? cleaned.replace(/,/g, "")
+      : cleaned.replace(",", ".")
+  } else {
+    normalized = cleaned
   }
-  return null
+
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 /**
@@ -44,6 +71,14 @@ const asContainer = (value: unknown): object | null => {
   return null
 }
 
+/**
+ * Keys are compared with separators and case removed, so `balance_after`,
+ * `balanceAfter` and `BALANCE_AFTER` all count as the same field. Endpoints in
+ * this API are not consistent about casing, and a rename on one of them should
+ * not silently blank the column.
+ */
+const normalizeKey = (key: string) => key.replace(/[^a-z0-9]/gi, "").toLowerCase()
+
 /** First numeric value stored under `key`, breadth-first-ish, bounded by depth. */
 const findByKey = (value: unknown, key: string, depth: number): number | null => {
   const container = asContainer(value)
@@ -58,10 +93,14 @@ const findByKey = (value: unknown, key: string, depth: number): number | null =>
   }
 
   const record = container as Record<string, unknown>
+  const target = normalizeKey(key)
 
   // A hit at this level wins over anything buried deeper.
-  const direct = toAmount(record[key])
-  if (direct !== null) return direct
+  for (const [candidate, candidateValue] of Object.entries(record)) {
+    if (normalizeKey(candidate) !== target) continue
+    const direct = toAmount(candidateValue)
+    if (direct !== null) return direct
+  }
 
   for (const nested of Object.values(record)) {
     const found = findByKey(nested, key, depth + 1)
