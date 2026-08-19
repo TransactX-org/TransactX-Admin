@@ -15,6 +15,7 @@ import { PaginationSelector } from "@/components/ui/pagination-selector"
 import { matchesSearch } from "@/lib/search"
 import { UpdateTransactionStatusDialog } from "./update-transaction-status-dialog"
 import { useCurrentUser } from "@/lib/api/hooks/use-auth"
+import { getBalanceAfter } from "@/lib/api/transaction-balance"
 
 interface TransactionsTableProps {
   filters: {
@@ -160,6 +161,7 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
                     <TableHead className="text-[10px] font-black uppercase tracking-widest py-4 px-4">Transaction ID</TableHead>
                     <TableHead className="text-[10px] font-black uppercase tracking-widest py-4 px-4">User</TableHead>
                     <TableHead className="text-[10px] font-black uppercase tracking-widest py-4 px-4 text-right">Amount</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest py-4 px-4 text-right">Balance After</TableHead>
                     <TableHead className="text-[10px] font-black uppercase tracking-widest py-4 px-4">Type</TableHead>
                     <TableHead className="text-[10px] font-black uppercase tracking-widest py-4 px-4 text-center">Status</TableHead>
                     <TableHead className="text-[10px] font-black uppercase tracking-widest py-4 px-4">Date</TableHead>
@@ -170,7 +172,7 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
                   {isLoading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <TableRow key={i} className="border-b-border/10">
-                        <TableCell colSpan={8} className="h-16 text-center">
+                        <TableCell colSpan={9} className="h-16 text-center">
                           <div className="flex items-center justify-center gap-2 opacity-20">
                             <Loader2 className="h-4 w-4 animate-spin" />
                             <span className="text-[10px] font-black uppercase tracking-widest">Loading...</span>
@@ -180,7 +182,7 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
                     ))
                   ) : error ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="h-32 text-center">
+                      <TableCell colSpan={9} className="h-32 text-center">
                         <div className="flex flex-col items-center gap-2 text-destructive">
                           <AlertCircle className="h-8 w-8" />
                           <span className="text-[10px] font-black uppercase tracking-widest">Failed to load transactions</span>
@@ -189,7 +191,7 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
                     </TableRow>
                   ) : transactions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="h-32 text-center">
+                      <TableCell colSpan={9} className="h-32 text-center">
                         <div className="flex flex-col items-center gap-2 opacity-40">
                           <CreditCard className="h-8 w-8" />
                           <span className="text-[10px] font-black uppercase tracking-widest">
@@ -201,6 +203,7 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
                   ) : transactions.map((transaction) => {
                     const statusConfig = getStatusConfig(transaction.status)
                     const isSelected = selectedRows.includes(transaction.transactionId)
+                    const balanceAfter = getBalanceAfter(transaction)
                     return (
                       <TableRow key={transaction.transactionId} className={cn("border-b-border/10 hover:bg-muted/10 transition-colors group", isSelected && "bg-primary/5")}>
                         <TableCell className="px-6">
@@ -218,6 +221,13 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
                         </TableCell>
                         <TableCell className="font-black text-sm text-right px-4 py-4">
                           {formatCurrency(transaction.amount)}
+                        </TableCell>
+                        <TableCell className="text-sm text-right px-4 py-4 whitespace-nowrap">
+                          {balanceAfter === null ? (
+                            <span className="font-bold text-muted-foreground/30">&mdash;</span>
+                          ) : (
+                            <span className="font-bold text-muted-foreground">{formatCurrency(balanceAfter)}</span>
+                          )}
                         </TableCell>
                         <TableCell className="px-4 py-4">
                           <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md bg-muted/20 border-border/40">
@@ -285,6 +295,7 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
               ) : transactions.map((transaction) => {
                 const statusConfig = getStatusConfig(transaction.status)
                 const isSelected = selectedRows.includes(transaction.transactionId)
+                const balanceAfter = getBalanceAfter(transaction)
                 return (
                   <div
                     key={transaction.transactionId}
@@ -333,7 +344,14 @@ export function TransactionsTable({ filters }: TransactionsTableProps) {
                         </div>
 
                         <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/10">
-                          <p className="text-base font-black tracking-tight">{formatCurrency(transaction.amount)}</p>
+                          <div>
+                            <p className="text-base font-black tracking-tight">{formatCurrency(transaction.amount)}</p>
+                            {balanceAfter !== null && (
+                              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 mt-0.5">
+                                Bal {formatCurrency(balanceAfter)}
+                              </p>
+                            )}
+                          </div>
 
                           <div className="flex items-center gap-1">
                             {canUpdateStatus && (

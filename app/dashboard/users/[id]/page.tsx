@@ -46,6 +46,7 @@ import { TransactionDetailsModal } from "@/components/transactions/transaction-d
 import { UpdateTransactionStatusDialog } from "@/components/transactions/update-transaction-status-dialog"
 import { PaginationSelector } from "@/components/ui/pagination-selector"
 import { matchesSearch } from "@/lib/search"
+import { getBalanceAfter } from "@/lib/api/transaction-balance"
 import { TRANSACTION_STATUSES } from "@/lib/transaction-status"
 import { useConfirm } from "@/components/ui/confirm-dialog"
 
@@ -698,6 +699,14 @@ export default function UserDetailsPage() {
                   if (s === "FAILED" || s === "REVERSED") return "bg-rose-500/10 text-rose-600 border-rose-500/20"
                   return "bg-muted/30 text-muted-foreground border-border/20"
                 }
+
+                // Absent on records written before the wallet started recording it.
+                const renderBalanceAfter = (transaction: any) => {
+                  const balance = getBalanceAfter(transaction)
+                  return balance === null
+                    ? <span className="font-bold text-muted-foreground/30">&mdash;</span>
+                    : <span className="font-bold text-muted-foreground">₦{balance.toLocaleString()}</span>
+                }
                 return transactions.length > 0 ? (
                   <div className="overflow-x-auto">
                     <Table>
@@ -706,6 +715,7 @@ export default function UserDetailsPage() {
                           <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Reference</TableHead>
                           <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Type</TableHead>
                           <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Amount</TableHead>
+                          <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Balance After</TableHead>
                           <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Status</TableHead>
                           <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Date</TableHead>
                           <TableHead className="py-4 w-10 text-right" />
@@ -725,6 +735,7 @@ export default function UserDetailsPage() {
                               </span>
                             </TableCell>
                             <TableCell className="font-bold">₦{transaction.amount?.toLocaleString()}</TableCell>
+                            <TableCell className="whitespace-nowrap">{renderBalanceAfter(transaction)}</TableCell>
                             <TableCell>
                               <Badge className={cn("text-[10px] font-bold border shadow-none", getStatusClass(transaction.status))}>
                                 {transaction.status}

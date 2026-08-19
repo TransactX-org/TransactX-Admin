@@ -183,6 +183,13 @@ export interface UserTransaction {
   created_at: string
   date: string
   updated_at: string
+  /**
+   * Written as the transaction completes, so present only on settled records.
+   * Also carried inside `payload`; read either through `getBalanceAfter` /
+   * `getBalanceBefore` rather than reaching for them directly.
+   */
+  balance_before?: number | string | null
+  balance_after?: number | string | null
 }
 
 export interface UserStats {
@@ -486,6 +493,13 @@ export interface TransactionSummary {
   type: string
   status: string
   date: string
+  /**
+   * Written as the transaction completes, so present only on settled records.
+   * Also carried inside `payload`; read either through `getBalanceAfter` /
+   * `getBalanceBefore` rather than reaching for them directly.
+   */
+  balance_before?: number | string | null
+  balance_after?: number | string | null
 }
 
 export interface TransactionDetail {
